@@ -1,8 +1,17 @@
-<?php 
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-$conn = new mysqli ("localhost","root","","pds_system");
+$servername = "127.0.0.1";  // use 127.0.0.1 to force TCP connection
+$username = "root";
+$password = "";              // empty because XAMPP root has no password
+$dbname = "pds_system";
 
-if ($conn->connect_error){
-    die("connection failed")
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
 ?>
