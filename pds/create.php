@@ -17,7 +17,7 @@ Name Extension
 <input name="extension">
 
 Date of Birth
-<input type="date" name="dob">
+<input type="date" name="dob" required> 
 
 Place of Birth
 <input name="birth_place">
@@ -187,6 +187,7 @@ function addEducation() {
     <br>
     Level
     <select name="education_level[]">
+
       <option>Elementary</option>
       <option>Secondary</option>
       <option>Vocational / Trade Course</option>

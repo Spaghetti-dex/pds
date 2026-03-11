@@ -10,11 +10,15 @@ $message = "";
 // Handle search
 if(isset($_GET['search'])){
     $search_name = trim($_GET['search']);
-    $stmt = $conn->prepare("SELECT * FROM personal_info WHERE CONCAT(firstname, ' ', surname) LIKE ?");
+
+    $stmt = $conn->prepare("SELECT * FROM personal_info WHERE CONCAT(surname,' ',firstname) LIKE ?");
+    
     $like = "%".$search_name."%";
     $stmt->bind_param("s", $like);
+    
     $stmt->execute();
     $result = $stmt->get_result();
+
     if($result->num_rows > 0){
         $person = $result->fetch_assoc();
     } else {

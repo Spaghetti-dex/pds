@@ -6,6 +6,7 @@
         return htmlspecialchars(trim($data));
     }
 
+    //  personal information
     $surname = clean($_POST['surname']);
     $firstname = clean($_POST['firstname']);
     $middlename = clean($_POST['middlename']);
@@ -30,152 +31,63 @@
 
     $citizenship = $_POST['citizenship'];
     $dual_country = clean($_POST['dual_country']);
-
     $telephone = clean($_POST['telephone']);
     $mobile = clean($_POST['mobile']);
     $email = clean($_POST['email']);
+    
+    
 
+    //if(empty($surname)){
+        //die("Surname and Firstname are required.");
+    //}
 
-    // VALIDATION
-
-    if(empty($surname) || empty($firstname)){
-        die("Surname and Firstname are required.");
-    }
-
-    if(!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)){
-        die("Invalid email format");
-    }
+    //if(!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)){
+        //die("Invalid email format");
+    //}
 
 
     // INSERT PERSONAL INFO
 
-    $sql = "INSERT INTO personal_info
-        (surname,firstname,middlename,extension,dob,birth_place,sex,civil_status,
-        height,weight,blood_type,umid,pagibig,philhealth,philsys,tin,agency_employee,
-        citizenship,dual_country,telephone,mobile,email)
-    VALUES
-        ('$surname','$firstname','$middlename','$extension','$dob','$birth_place','$sex','$civil_status',
-        '$height','$weight','$blood_type','$umid','$pagibig','$philhealth','$philsys','$tin','$agency_employee',
-        '$citizenship','$dual_country','$telephone','$mobile','$email')";
+   // $sql = "INSERT INTO personal_info
+       // (surname, firstname, middlename, extension,dob, birth_place, sex, civil_status,
+        //height, weight, blood_type, umid, pagibig, philhealth, philsys, tin, agency_employee,
+        //citizenship, dual_country, telephone, mobile, email)
+  // VALUES
+        //('$surname', '$firstname', '$middlename', '$extension', '$dob', '$birth_place', '$sex', '$civil_status',
+       // '$height','$weight','$blood_type','$umid','$pagibig','$philhealth','$philsys','$tin','$agency_employee',
+        //'$citizenship','$dual_country','$telephone','$mobile','$email')";
 
-    $conn->query($sql);
+    //$conn->query($sql);
 
-    $person_id = $conn->insert_id;
-
-
-
-    // RESIDENTIAL ADDRESS
-
-    $conn->query("INSERT INTO addresses
-    (person_id,type,house,street,subdivision,barangay,city,province,zip)
-    VALUES
-        ('$person_id','residential',
-        '".$_POST['r_house']."',
-        '".$_POST['r_street']."',
-        '".$_POST['r_subdivision']."',
-        '".$_POST['r_barangay']."',
-        '".$_POST['r_city']."',
-        '".$_POST['r_province']."',
-        '".$_POST['r_zip']."')
-        ");
+    //$person_id = $conn->insert_id;
 
 
+     //residential
+    $r_house = clean($_POST['r_house']);
+    $r_street = clean($_POST['r_street']);
+    $r_subdivision = clean($_POST['r_subdivision']);
+    $r_barangay= clean($_POST['r_barangay']);
+    $r_city = clean($_POST['r_city']);
+    $r_province = clean($_POST['r_province']);
+    $r_zip = clean($_POST['r_zip']);
 
-    // PERMANENT ADDRESS
+    //permanent
 
-    $conn->query("INSERT INTO addresses
-        (person_id,type,house,street,subdivision,barangay,city,province,zip)
-    VALUES
-        ('$person_id','permanent',
-        '".$_POST['p_house']."',
-        '".$_POST['p_street']."',
-        '".$_POST['p_subdivision']."',
-        '".$_POST['p_barangay']."',
-        '".$_POST['p_city']."',
-        '".$_POST['p_province']."',
-        '".$_POST['p_zip']."')
-        ");
+    $p_house = clean($_POST['p_house']);
+    $p_street = clean($_POST['p_street']);
+    $p_subdivision = clean($_POST['p_subdivision']);
+    $p_barangay= clean($_POST['p_barangay']);
+    $p_city = clean($_POST['p_city']);
+    $p_province = clean($_POST['p_province']);
+    $p_zip = clean($_POST['p_zip']);
 
+    //insert
 
+    $sql = "INSERT INTO ADDRESSES
+        (house, street, subdivision, barangay, city, province, zip,)
 
-    // EDUCATION
-
-    $conn->query("INSERT INTO education
-    (person_id,education_level,school_name,course,edu_from,edu_to,units,year_graduated,honors)
-
-    VALUES
-        ('$person_id',
-        '".$_POST['education_level']."',
-        '".$_POST['school_name']."',
-        '".$_POST['course']."',
-        '".$_POST['edu_from']."',
-        '".$_POST['edu_to']."',
-        '".$_POST['units']."',
-        '".$_POST['year_graduated']."',
-        '".$_POST['honors']."')
-        ");
-
-
-
-    // ELIGIBILITY LOOP
-
-    if(isset($_POST['career_service'])){
-
-    for($i=0;$i<count($_POST['career_service']);$i++){
-
-    $career = $_POST['career_service'][$i];
-
-    if(empty($career)) continue;
-
-    $conn->query("INSERT INTO eligibility
-    (person_id,career_service,rating,exam_date,exam_place,license,license_number,valid_until)
-
-    VALUES
-        ('$person_id',
-        '".$career."',
-        '".$_POST['rating'][$i]."',
-        '".$_POST['exam_date'][$i]."',
-        '".$_POST['exam_place'][$i]."',
-        '".$_POST['license'][$i]."',
-        '".$_POST['license_number'][$i]."',
-        '".$_POST['valid_until'][$i]."')
-        ");
-
-    }
-
-    }
-
-
-
-    // TRAINING LOOP
-
-    if(isset($_POST['title'])){
-
-    for($i=0;$i<count($_POST['title']);$i++){
-
-    $title = $_POST['title'][$i];
-
-    if(empty($title)) continue;
-
-    $conn->query("INSERT INTO training
-    (person_id,title,training_from,training_to,hours,type,sponsor)
-
-    VALUES
-    ('$person_id',
-    '".$title."',
-    '".$_POST['training_from'][$i]."',
-    '".$_POST['training_to'][$i]."',
-    '".$_POST['hours'][$i]."',
-    '".$_POST['type'][$i]."',
-    '".$_POST['sponsor'][$i]."')
-    ");
-
-    }
-
-    }
-
-
-
-    echo "Data Saved Successfully";
-
+    VALUES 
+        ('$r_house', '$r_street' ,'$r_subdivision', '$r_barangay', '$r_city', '$r_province', '$r_zip',
+        , '$p_house, '$p_street', '$p_subdivision', '$p_barangay' , '$p_city', '$p_province', '$r_zip')";  
+    
 ?>
