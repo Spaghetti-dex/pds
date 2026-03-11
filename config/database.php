@@ -1,17 +1,22 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+    require_once __DIR__ . '/../vendor/autoload.php';
 
-$servername = "127.0.0.1";  // use 127.0.0.1 to force TCP connection
-$username = "root";
-$password = "";              // empty because XAMPP root has no password
-$dbname = "pds_system";
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv->load();
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+    $servername = $_ENV['DB_SERVER'];
+    $username   = $_ENV['DB_USERNAME'];
+    $password   = $_ENV['DB_PASSWORD'];
+    $dbname     = $_ENV['DB_NAME'];
+
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
 ?>
+

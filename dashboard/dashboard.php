@@ -5,4 +5,3 @@
 
 <a href="../pds/create.php"><button>Create</button></a>
 <a href="../pds/view.php"><button>View</button></a>
-<a href="../pds/archive.php"><button>Archive</button></a>
