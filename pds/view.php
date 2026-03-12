@@ -5,7 +5,6 @@ include "../config/database.php";
 $person = null;
 $search = "";
 
-/* DELETE */
 if(isset($_GET['delete'])){
     $id = $_GET['delete'];
 
@@ -16,13 +15,13 @@ if(isset($_GET['delete'])){
     echo "<p>Record deleted.</p>";
 }
 
-/* UPDATE */
+//type, house1, street, subdivision, barangay, city, province, zip
+
 if(isset($_POST['update'])){
 
         $stmt = $conn->prepare("UPDATE personal_info SET
         surname=?,firstname=?,middlename=?, extension=?, dob=?, birth_place=?, sex=?, civil_status=?, height=?, weight=?, blood_type=?, umid=?, pagibig=?, philhealth=?,
-        philsys=?, tin=?, agency_employee=?, citizenship=?, dual_country=?, r_house=?, r_street=?, r_subdivision=?, r_barangay=?, r_city=?, r_province=?,
-        r_zip=?, p_house=?,p_street=?, p_subdivision=?, p_barangay=?,p_city=?, p_province=?, p_zip=?, telephone=?,mobile=?, email=?
+        philsys=?, tin=?, agency_employee=?, citizenship=?, dual_country=?, telephone=?,mobile=?, email=?
             WHERE id=?");
 
                 $stmt->bind_param(
@@ -47,20 +46,6 @@ if(isset($_POST['update'])){
                         $_POST['agency_employee'],
                         $_POST['citizenship'],
                         $_POST['dual_country'],
-                        $_POST['r_house'],
-                        $_POST['r_street'],
-                        $_POST['r_subdivision'],
-                        $_POST['r_barangay'],
-                        $_POST['r_city'],
-                        $_POST['r_province'],
-                        $_POST['r_zip'],
-                        $_POST['p_house'],
-                        $_POST['p_street'],
-                        $_POST['p_subdivision'],
-                        $_POST['p_barangay'],
-                        $_POST['p_city'],
-                        $_POST['p_province'],
-                        $_POST['p_zip'],
                         $_POST['telephone'],
                         $_POST['mobile'],
                         $_POST['email'],
@@ -72,27 +57,43 @@ if(isset($_POST['update'])){
         echo "<p>Record updated successfully.</p>";
         }
 
-    /* SEARCH */
     if(isset($_GET['search'])){
+       
 
-    $search = trim($_GET['search']);
+        $search = trim($_GET['search']);
+        
 
-    $stmt = $conn->prepare("
-    SELECT * FROM personal_info
-    WHERE CONCAT(firstname,' ',surname) LIKE ?
-    OR CONCAT(surname,' ',firstname) LIKE ?
-    LIMIT 1
-    ");
+        $stmt = $conn->prepare("
+        SELECT 
+            p.*, 
+            a.*
+        FROM personal_info p
+        LEFT JOIN addresses a 
+            ON p.id = a.person_id
+        WHERE CONCAT(p.firstname,' ',p.surname) LIKE ?
+        OR CONCAT(p.surname,' ',p.firstname) LIKE ?
+        ");
 
-    $like = "%".$search."%";
+        $like = "%".$search."%";
 
-    $stmt->bind_param("ss",$like,$like);
-    $stmt->execute();
+        $stmt->bind_param("ss",$like,$like);
+        $stmt->execute();
 
-    $result = $stmt->get_result();
-    $person = $result->fetch_assoc();
-    }
-    ?>
+        $result = $stmt->get_result();
+
+        $person = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $person[] = $row;
+        }
+        
+        foreach ($person as $p) {
+            echo "<pre>";
+            print_r($p);
+            echo "</pre>";
+       }
+    }   
+?>
 
     <a href="../dashboard/dashboard.php">Home</a>
 
@@ -225,8 +226,3 @@ if(isset($_POST['update'])){
 
 <?php } ?>
 
-<?php if(isset($_GET['search']) && !$person){ ?>
-
-<p>No record found.</p>
-
-<?php } ?>

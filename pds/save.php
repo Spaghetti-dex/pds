@@ -54,30 +54,65 @@ $conn->query($sql);
 $person_id = $conn->insert_id;
 
 
-// residential
-$r_house = clean($_POST['r_house']);
-$r_street = clean($_POST['r_street']);
-$r_subdivision = clean($_POST['r_subdivision']);
-$r_barangay = clean($_POST['r_barangay']);
-$r_city = clean($_POST['r_city']);
-$r_province = clean($_POST['r_province']);
-$r_zip = clean($_POST['r_zip']);
+class address {
+    public $person_id;
+    public $type;
+    public $house1;
+    public $street;
+    public $subdivision;
+    public $barangay;
+    public $city;
+    public $province;
+    public $zip;
 
-// permanent
-$p_house = clean($_POST['p_house']);
-$p_street = clean($_POST['p_street']);
-$p_subdivision = clean($_POST['p_subdivision']);
-$p_barangay = clean($_POST['p_barangay']);
-$p_city = clean($_POST['p_city']);
-$p_province = clean($_POST['p_province']);
-$p_zip = clean($_POST['p_zip']);
+    public function _construct($person_id, $type, $house1, $street, $subdivision, $barangay, $city, $province, $zip) {
+        $this->person_id = $person_id;
+        $this->type = $type;
+        $this->house1 = $house1;
+        $this->street = $street;
+        $this->subdivision = $subdivision;
+        $this->barangay = $barangay;
+        $this->city = $city;
+        $this->province =  $province;
+        $this->zip = $zip;
+    }
+}
+
+
+$address = [];
+
+$address[] = new address($person_id, 'residential', $_POST['r_house'], $_POST['r_street'], $_POST['r_subdivision'], $_POST['r_barangay'], $_POST['r_city'], $_POST['r_province'], $_POST['r_zip']);
+$address[] = new address($person_id, 'permanent', $_POST['p_house'], $_POST['p_street'], $_POST['p_subdivision'], $_POST['p_barangay'], $_POST['p_city'], $_POST['p_province'], $_POST['p_zip']);
 
 // insert residential address
-$sql = "INSERT INTO ADDRESSES
-(houseq1, street, subdivision, barangay, city, province, zip)
-VALUES 
-($r_house','$r_street','$r_subdivision','$r_barangay','$r_city','$r_province','$r_zip')";
+$sql = "INSERT INTO addresses 
+(person_id, type, house, street, subdivision, barangay, city, province, zip) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?),
+       (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+$stmt = $conn->prepare($sql);
+
+$stmt->execute([
+    $address[0]->person_id,
+    $address[0]->type,
+    $address[0]->house,
+    $address[0]->street,
+    $address[0]->subdivision,
+    $address[0]->barangay,
+    $address[0]->city,
+    $address[0]->province,
+    $address[0]->zip,
+
+    $address[1]->person_id,
+    $address[1]->type,
+    $address[1]->house,
+    $address[1]->street,
+    $address[1]->subdivision,
+    $address[1]->barangay,
+    $address[1]->city,
+    $address[1]->province,
+    $address[1]->zip
+]);
 
 // education (form sends arrays so we take first value)
 $education_level = clean($_POST['education_level'][0] ?? '');
