@@ -90,4 +90,18 @@
         ('$r_house', '$r_street' ,'$r_subdivision', '$r_barangay', '$r_city', '$r_province', '$r_zip',
         , '$p_house, '$p_street', '$p_subdivision', '$p_barangay' , '$p_city', '$p_province', '$r_zip')";  
     
+    //education
+
+    $education_level = clean
+    $school_name =  clean
+    $course = clean
+    $edu_from = clean
+    $edu_to = clean
+    $unit = clean
+    $year_graduated = clean
+    $hours = clean
+
+
+
+
 ?>
