@@ -1,14 +1,17 @@
 <?php include "../includes/auth_check.php"; ?>
 
+
+<a href="../dashboard/dashboard.php" class="button">Home</a>
+
 <form method="POST" action="save.php">
 
 <h2>Personal Information</h2>
 
 Surname
-<input name="surname" required>
+<input name="surname" >
 
 First Name
-<input name="firstname" required>
+<input name="firstname" >
 
 Middle Name
 <input name="middlename">
@@ -17,7 +20,7 @@ Name Extension
 <input name="extension">
 
 Date of Birth
-<input type="date" name="dob" required> 
+<input type="date" name="dob" > 
 
 Place of Birth
 <input name="birth_place">
@@ -175,9 +178,6 @@ Email
 <br><br>
 <button type="submit">Save</button>
 </form>
-
-<button></button>
-
 <script>
 function addEducation() {
   const container = document.getElementById("education-container");
