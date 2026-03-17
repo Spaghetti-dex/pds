@@ -1,4 +1,4 @@
-<?php include "../includes/auth_check.php"; ?>
+<?php //include "../includes/auth_check.php"; ?>
 <?php include "../includes/header.php"; ?>
 
 <h2>Dashboard</h2>
