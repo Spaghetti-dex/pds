@@ -1,6 +1,6 @@
 <?php
-include "../includes/auth_check.php";
-include "../config/database.php";
+//include "../includes/auth_check.php";
+//include "../config/database.php";
 
 $person = null;
 $search = "";
@@ -105,8 +105,9 @@ if(isset($_POST['update'])){
     </form>
 
     <hr>
-
-    <?php if($person){ ?>
+     
+    
+    <?php if(true){ ?>
 
     <form method="POST">
 
@@ -115,104 +116,105 @@ if(isset($_POST['update'])){
     <h2>Personal Information</h2>
 
     Surname
-    <input name="surname" value="<?php echo $person['surname']; ?>">
+    <input name="surname" value="Pilapil">
 
     First Name
-    <input name="firstname" value="<?php echo $person['firstname']; ?>">
+    <input name="firstname" value="Yasmin">
 
     Middle Name
-    <input name="middlename" value="<?php echo $person['middlename']; ?>">
+    <input name="middlename" value="Ortaliza">
 
     Name Extension
-    <input name="extension" value="<?php echo $person['extension']; ?>">
+    <input name="extension" value="Jr">
 
     Date of Birth
-    <input type="date" name="dob" value="<?php echo $person['dob']; ?>">
+    <input type="date" name="dob" value="2025-16-08">
 
     Place of Birth
-    <input name="birth_place" value="<?php echo $person['birth_place']; ?>">
+    <input name="birth_place" value="Taguig City">
 
     Sex
     <select name="sex">
-    <option <?php if($person['sex']=="Male") echo "selected"; ?>>Male</option>
+    <option <?echo "selected"; ?> >Male</option>
     <option <?php if($person['sex']=="Female") echo "selected"; ?>>Female</option>
     </select>
 
     Civil Status
     <select name="civil_status">
     <option <?php if($person['civil_status']=="Single") echo "selected"; ?>>Single</option>
-    <option <?php if($person['civil_status']=="Married") echo "selected"; ?>>Married</option>
+    <option <?php echo "selected"; ?>>Married</option>
     <option <?php if($person['civil_status']=="Widowed") echo "selected"; ?>>Widowed</option>
     <option <?php if($person['civil_status']=="Separated") echo "selected"; ?>>Separated</option>
     </select>
 
     Height
-    <input name="height" value="<?php echo $person['height']; ?>">
+    <input name="height" value="168cm">
 
     Weight
-    <input name="weight" value="<?php echo $person['weight']; ?>">
+    <input name="weight" value="60kg">
+    
 
     Blood Type
-    <input name="blood_type" value="<?php echo $person['blood_type']; ?>">
+    <input name="blood_type" value="Type A+">
 
     UMID ID
-    <input name="umid" value="<?php echo $person['umid']; ?>">
+    <input name="umid" value="0123143">
 
     Pag-IBIG
-    <input name="pagibig" value="<?php echo $person['pagibig']; ?>">
+    <input name="pagibig" value="1312312">
 
     PhilHealth
-    <input name="philhealth" value="<?php echo $person['philhealth']; ?>">
+    <input name="philhealth" value="423432">
 
     PhilSys
-    <input name="philsys" value="<?php echo $person['philsys']; ?>">
+    <input name="philsys" value="131231">
 
     TIN
-    <input name="tin" value="<?php echo $person['tin']; ?>">
+    <input name="tin" value="3123213">
 
     Agency Employee
-    <input name="agency_employee" value="<?php echo $person['agency_employee']; ?>">
+    <input name="agency_employee" value="leslie">
 
     <h3>Citizenship</h3>
 
     <select name="citizenship">
-    <option <?php if($person['citizenship']=="Filipino") echo "selected"; ?>>Filipino</option>
+    <option <?php echo "selected"; ?>>Filipino</option>
     <option <?php if($person['citizenship']=="Dual Citizen") echo "selected"; ?>>Dual Citizen</option>
     </select>
 
     If Dual Citizen
-    <input name="dual_country" value="<?php echo $person['dual_country']; ?>">
+    <input name="dual_country" value="dAWDAW>">
 
     <h3>Residential Address</h3>
 
-    <input name="r_house" value="<?php echo $person['r_house']; ?>">
-    <input name="r_street" value="<?php echo $person['r_street']; ?>">
-    <input name="r_subdivision" value="<?php echo $person['r_subdivision']; ?>">
-    <input name="r_barangay" value="<?php echo $person['r_barangay']; ?>">
-    <input name="r_city" value="<?php echo $person['r_city']; ?>">
-    <input name="r_province" value="<?php echo $person['r_province']; ?>">
-    <input name="r_zip" value="<?php echo $person['r_zip']; ?>">
+    <input name="r_house" value="dawdawdw">
+    <input name="r_street" value="dDqsqsQ">
+    <input name="r_subdivision" value="DADAWG">
+    <input name="r_barangay" value="SDFSEF">
+    <input name="r_city" value="GDGDFGD">
+    <input name="r_province" value="DAWDAWD">
+    <input name="r_zip" value="DASDAWDWA">
 
     <h3>Permanent Address</h3>
 
-    <input name="p_house" value="<?php echo $person['p_house']; ?>">
-    <input name="p_street" value="<?php echo $person['p_street']; ?>">
-    <input name="p_subdivision" value="<?php echo $person['p_subdivision']; ?>">
-    <input name="p_barangay" value="<?php echo $person['p_barangay']; ?>">
-    <input name="p_city" value="<?php echo $person['p_city']; ?>">
-    <input name="p_province" value="<?php echo $person['p_province']; ?>">
-    <input name="p_zip" value="<?php echo $person['p_zip']; ?>">
+    <input name="p_house" value="DAWDAWDAW">
+    <input name="p_street" value="DAWDAWD">
+    <input name="p_subdivision" value="DAWDAW">
+    <input name="p_barangay" value="DAWDAWDAW">
+    <input name="p_city" value="DAWDAW">
+    <input name="p_province" value="DAWDAW">
+    <input name="p_zip" value="DAWDAWD">
 
     <h3>Contact Information</h3>
 
     Telephone
-    <input name="telephone" value="<?php echo $person['telephone']; ?>">
+    <input name="telephone" value="0931231231">
 
     Mobile
-    <input name="mobile" value="<?php echo $person['mobile']; ?>">
+    <input name="mobile" value="312312312">
 
     Email
-    <input name="email" value="<?php echo $person['email']; ?>">
+    <input name="email" value="YASMIN@GMAIL.COM">
 
     <br><br>
 
