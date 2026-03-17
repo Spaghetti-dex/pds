@@ -206,7 +206,7 @@ button:hover{
         <button type="submit">Login</button>
 
         <div class="forgot">
-            <a href="#">Forgot Password?</a>
+            <a href="forgot.php">Forgot Password?</a>
         </div>
 
         </form>

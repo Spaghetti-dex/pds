@@ -269,12 +269,12 @@ div[style*="float:right"] > button{
         </button>
 
         <div id="settingsSubmenu">
-            <a href="../admin/profile.php" class="menu-subitem">
+            <a href=" ../admin/change_email.php" class="menu-subitem">
                 <span class="menu-icon icon-email"></span>
                 <span>Change Email</span>
             </a>
 
-            <a href="../admin/profile.php" class="menu-subitem">
+            <a href=" ../admin/change_password.php" class="menu-subitem">
                 <span class="menu-icon icon-password"></span>
                 <span>Change Password</span>
             </a>
