@@ -1,6 +1,8 @@
 <?php
 include "../config/database.php";
 //include "../includes/auth_check.php";
+include "../includes/auth_check.php";
+include "../config/database.php";
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset("utf8mb4");
@@ -68,16 +70,6 @@ function normalize_address_row(array $row): array {
     ];
 }
 
-function get_address_house_column(array $columns): string {
-    if (in_array('house1', $columns, true)) {
-        return 'house1';
-    }
-    if (in_array('house', $columns, true)) {
-        return 'house';
-    }
-    return 'house1';
-}
-
 $search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : "";
 $selected_id = isset($_REQUEST['id']) ? (int)$_REQUEST['id'] : 0;
 
@@ -124,12 +116,14 @@ $eligibility_table = table_exists($conn, 'service_eligibility')
 $training_table = table_exists($conn, 'learning_development')
     ? 'learning_development'
     : (table_exists($conn, 'training') ? 'training' : null);
+$education_table  = first_existing_table($conn, ['education']);
+$eligibility_table = first_existing_table($conn, ['service_eligibility', 'eligibility']);
+$training_table   = first_existing_table($conn, ['learning_development', 'training']);
 
 $education_columns   = $education_table ? get_columns($conn, $education_table) : [];
 $eligibility_columns = $eligibility_table ? get_columns($conn, $eligibility_table) : [];
 $training_columns    = $training_table ? get_columns($conn, $training_table) : [];
 $address_columns     = get_columns($conn, 'addresses');
-$address_house_col   = get_address_house_column($address_columns);
 
 /*
 |--------------------------------------------------------------------------
@@ -327,7 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
             if ($existingResidential) {
                 $stmt = $conn->prepare("
                     UPDATE addresses SET
-                        `{$address_house_col}` = ?,
+                        house = ?,
                         street = ?,
                         subdivision = ?,
                         barangay = ?,
@@ -353,7 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
             } else {
                 $stmt = $conn->prepare("
                     INSERT INTO addresses
-                    (person_id, type, `{$address_house_col}`, street, subdivision, barangay, city, province, zip)
+                    (person_id, type, house1, street, subdivision, barangay, city, province, zip)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt->bind_param(
@@ -383,7 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
             if ($existingPermanent) {
                 $stmt = $conn->prepare("
                     UPDATE addresses SET
-                        `{$address_house_col}` = ?,
+                        house1 = ?,
                         street = ?,
                         subdivision = ?,
                         barangay = ?,
@@ -409,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
             } else {
                 $stmt = $conn->prepare("
                     INSERT INTO addresses
-                    (person_id, type, `{$address_house_col}`, street, subdivision, barangay, city, province, zip)
+                    (person_id, type, house1, street, subdivision, barangay, city, province, zip)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt->bind_param(
@@ -1064,7 +1058,7 @@ th{
             <div class="notice">Training / Learning and Development table not found. The page will still work without that section.</div>
         <?php endif; ?>
 
-        <form method="POST" id="editRecordForm" autocomplete="off">
+        <form method="POST">
             <input type="hidden" name="id" value="<?php echo e($person['id']); ?>">
             <input type="hidden" name="search" value="<?php echo e($search); ?>">
 
@@ -1235,7 +1229,7 @@ th{
                                 <div><label>Scholarship / Academic Honors</label><input name="honors[]" value="<?php echo e($edu['honors'] ?? ''); ?>"></div>
                             </div>
                             <div class="inline-actions">
-                                <button type="button" class="btn-danger" onclick="removeEntry(this, '.education-entry')">Remove</button>
+                                <button type="button" class="btn-danger" onclick="this.closest('.education-entry').remove()">Remove</button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -1261,7 +1255,7 @@ th{
                             <div><label>Scholarship / Academic Honors</label><input name="honors[]"></div>
                         </div>
                         <div class="inline-actions">
-                            <button type="button" class="btn-danger" onclick="removeEntry(this, '.education-entry')">Remove</button>
+                            <button type="button" class="btn-danger" onclick="this.closest('.education-entry').remove()">Remove</button>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -1285,7 +1279,7 @@ th{
                                 <div><label>Valid Until</label><input type="date" name="valid_until[]" value="<?php echo e($elig['valid_until'] ?? ''); ?>"></div>
                             </div>
                             <div class="inline-actions">
-                                <button type="button" class="btn-danger" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+                                <button type="button" class="btn-danger" onclick="this.closest('.eligibility-entry').remove()">Remove</button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -1301,7 +1295,7 @@ th{
                             <div><label>Valid Until</label><input type="date" name="valid_until[]"></div>
                         </div>
                         <div class="inline-actions">
-                            <button type="button" class="btn-danger" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+                            <button type="button" class="btn-danger" onclick="this.closest('.eligibility-entry').remove()">Remove</button>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -1324,7 +1318,7 @@ th{
                                 <div><label>Sponsor</label><input name="sponsor[]" value="<?php echo e($train['sponsor'] ?? ''); ?>"></div>
                             </div>
                             <div class="inline-actions">
-                                <button type="button" class="btn-danger" onclick="removeEntry(this, '.training-entry')">Remove</button>
+                                <button type="button" class="btn-danger" onclick="this.closest('.training-entry').remove()">Remove</button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -1339,7 +1333,7 @@ th{
                             <div><label>Sponsor</label><input name="sponsor[]"></div>
                         </div>
                         <div class="inline-actions">
-                            <button type="button" class="btn-danger" onclick="removeEntry(this, '.training-entry')">Remove</button>
+                            <button type="button" class="btn-danger" onclick="this.closest('.training-entry').remove()">Remove</button>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -1364,10 +1358,9 @@ th{
 </div>
 
 <script>
-function addEducation(data = {}) {
+function addEducation() {
     const container = document.getElementById("education-container");
     if (!container) return;
-
     const div = document.createElement("div");
     div.className = "entry-box education-entry";
     div.innerHTML = `
@@ -1391,28 +1384,15 @@ function addEducation(data = {}) {
             <div><label>Scholarship / Academic Honors</label><input name="honors[]"></div>
         </div>
         <div class="inline-actions">
-            <button type="button" class="btn-danger" onclick="removeEntry(this, '.education-entry')">Remove</button>
+            <button type="button" class="btn-danger" onclick="this.closest('.education-entry').remove()">Remove</button>
         </div>
     `;
-
     container.appendChild(div);
-
-    div.querySelector('[name="education_level[]"]').value = data.education_level || 'Elementary';
-    div.querySelector('[name="school_name[]"]').value = data.school_name || '';
-    div.querySelector('[name="course[]"]').value = data.course || '';
-    div.querySelector('[name="units[]"]').value = data.units || '';
-    div.querySelector('[name="edu_from[]"]').value = data.edu_from || '';
-    div.querySelector('[name="edu_to[]"]').value = data.edu_to || '';
-    div.querySelector('[name="year_graduated[]"]').value = data.year_graduated || '';
-    div.querySelector('[name="honors[]"]').value = data.honors || '';
-
-    saveFormDraft();
 }
 
-function addEligibility(data = {}) {
+function addEligibility() {
     const container = document.getElementById("eligibility-container");
     if (!container) return;
-
     const div = document.createElement("div");
     div.className = "entry-box eligibility-entry";
     div.innerHTML = `
@@ -1426,27 +1406,15 @@ function addEligibility(data = {}) {
             <div><label>Valid Until</label><input type="date" name="valid_until[]"></div>
         </div>
         <div class="inline-actions">
-            <button type="button" class="btn-danger" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+            <button type="button" class="btn-danger" onclick="this.closest('.eligibility-entry').remove()">Remove</button>
         </div>
     `;
-
     container.appendChild(div);
-
-    div.querySelector('[name="career_service[]"]').value = data.career_service || '';
-    div.querySelector('[name="rating[]"]').value = data.rating || '';
-    div.querySelector('[name="exam_date[]"]').value = data.exam_date || '';
-    div.querySelector('[name="exam_place[]"]').value = data.exam_place || '';
-    div.querySelector('[name="license[]"]').value = data.license || '';
-    div.querySelector('[name="license_number[]"]').value = data.license_number || '';
-    div.querySelector('[name="valid_until[]"]').value = data.valid_until || '';
-
-    saveFormDraft();
 }
 
-function addTraining(data = {}) {
+function addTraining() {
     const container = document.getElementById("training-container");
     if (!container) return;
-
     const div = document.createElement("div");
     div.className = "entry-box training-entry";
     div.innerHTML = `
@@ -1459,172 +1427,11 @@ function addTraining(data = {}) {
             <div><label>Sponsor</label><input name="sponsor[]"></div>
         </div>
         <div class="inline-actions">
-            <button type="button" class="btn-danger" onclick="removeEntry(this, '.training-entry')">Remove</button>
+            <button type="button" class="btn-danger" onclick="this.closest('.training-entry').remove()">Remove</button>
         </div>
     `;
-
     container.appendChild(div);
-
-    div.querySelector('[name="title[]"]').value = data.title || '';
-    div.querySelector('[name="hours[]"]').value = data.hours || '';
-    div.querySelector('[name="training_from[]"]').value = data.training_from || '';
-    div.querySelector('[name="training_to[]"]').value = data.training_to || '';
-    div.querySelector('[name="type[]"]').value = data.type || '';
-    div.querySelector('[name="sponsor[]"]').value = data.sponsor || '';
-
-    saveFormDraft();
 }
-
-function removeEntry(button, selector) {
-    const item = button.closest(selector);
-    if (item) {
-        item.remove();
-        saveFormDraft();
-    }
-}
-
-function getDraftKey() {
-    const form = document.getElementById('editRecordForm');
-    if (!form) return null;
-
-    const idInput = form.querySelector('input[name="id"]');
-    const personId = idInput ? idInput.value : 'new';
-    return 'personal_record_draft_' + personId;
-}
-
-function collectRepeatedEntries(selector, fieldNames) {
-    const entries = [];
-    document.querySelectorAll(selector).forEach(entry => {
-        const row = {};
-        fieldNames.forEach(name => {
-            const el = entry.querySelector(`[name="${name}[]"]`);
-            row[name] = el ? el.value : '';
-        });
-
-        const hasValue = Object.values(row).some(v => String(v).trim() !== '');
-        if (hasValue) {
-            entries.push(row);
-        }
-    });
-    return entries;
-}
-
-function saveFormDraft() {
-    const form = document.getElementById('editRecordForm');
-    if (!form) return;
-
-    const key = getDraftKey();
-    if (!key) return;
-
-    const data = {
-        simple: {},
-        education: collectRepeatedEntries('.education-entry', [
-            'education_level', 'school_name', 'course', 'units',
-            'edu_from', 'edu_to', 'year_graduated', 'honors'
-        ]),
-        eligibility: collectRepeatedEntries('.eligibility-entry', [
-            'career_service', 'rating', 'exam_date', 'exam_place',
-            'license', 'license_number', 'valid_until'
-        ]),
-        training: collectRepeatedEntries('.training-entry', [
-            'title', 'hours', 'training_from', 'training_to', 'type', 'sponsor'
-        ])
-    };
-
-    const fields = form.querySelectorAll('input:not([type="hidden"]):not([name$="[]"]), select:not([name$="[]"]), textarea:not([name$="[]"])');
-    fields.forEach(field => {
-        if (!field.name) return;
-        data.simple[field.name] = field.value;
-    });
-
-    localStorage.setItem(key, JSON.stringify(data));
-}
-
-function restoreSimpleFields(form, data) {
-    if (!data || !data.simple) return;
-
-    Object.keys(data.simple).forEach(name => {
-        const field = form.querySelector(`[name="${name}"]`);
-        if (field) {
-            field.value = data.simple[name];
-        }
-    });
-}
-
-function clearContainer(selector) {
-    const container = document.querySelector(selector);
-    if (container) {
-        container.innerHTML = '';
-    }
-}
-
-function restoreDraft() {
-    const form = document.getElementById('editRecordForm');
-    if (!form) return;
-
-    const key = getDraftKey();
-    if (!key) return;
-
-    const raw = localStorage.getItem(key);
-    if (!raw) return;
-
-    let data = null;
-    try {
-        data = JSON.parse(raw);
-    } catch (e) {
-        return;
-    }
-
-    restoreSimpleFields(form, data);
-
-    if (document.getElementById('education-container') && Array.isArray(data.education)) {
-        clearContainer('#education-container');
-        if (data.education.length > 0) {
-            data.education.forEach(row => addEducation(row));
-        } else {
-            addEducation();
-        }
-    }
-
-    if (document.getElementById('eligibility-container') && Array.isArray(data.eligibility)) {
-        clearContainer('#eligibility-container');
-        if (data.eligibility.length > 0) {
-            data.eligibility.forEach(row => addEligibility(row));
-        } else {
-            addEligibility();
-        }
-    }
-
-    if (document.getElementById('training-container') && Array.isArray(data.training)) {
-        clearContainer('#training-container');
-        if (data.training.length > 0) {
-            data.training.forEach(row => addTraining(row));
-        } else {
-            addTraining();
-        }
-    }
-}
-
-function clearDraft() {
-    const key = getDraftKey();
-    if (key) {
-        localStorage.removeItem(key);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('editRecordForm');
-    if (!form) return;
-
-    restoreDraft();
-
-    form.addEventListener('input', saveFormDraft);
-    form.addEventListener('change', saveFormDraft);
-
-    form.addEventListener('submit', function () {
-        clearDraft();
-    });
-});
 </script>
 </body>
 </html>
