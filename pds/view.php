@@ -31,11 +31,11 @@ function get_columns(mysqli $conn, string $table): array {
     }
 
     $stmt = $conn->prepare("
-        SELECT column_name
+        SELECT COLUMN_NAME AS colname
         FROM information_schema.columns
         WHERE table_schema = DATABASE()
           AND table_name = ?
-        ORDER BY ordinal_position
+        ORDER BY ORDINAL_POSITION
     ");
     $stmt->bind_param("s", $table);
     $stmt->execute();
@@ -43,7 +43,9 @@ function get_columns(mysqli $conn, string $table): array {
 
     $cols = [];
     while ($row = $result->fetch_assoc()) {
-        $cols[] = $row['column_name'];
+        if (isset($row['colname'])) {
+            $cols[] = $row['colname'];
+        }
     }
     $stmt->close();
 
@@ -1625,4 +1627,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 </body>
-</htm
+</html>
