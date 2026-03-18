@@ -12,7 +12,6 @@
 body{
   font-family: Arial, sans-serif;
   margin:0;
-  background:#e6e6e6;
 }
 
 /* HEADER */
@@ -48,7 +47,7 @@ body{
   position:absolute;
   left:57px;
   top:65px;
-  height:calc(100% - 200px);
+  height:0;
   width:3px;
   background:#ccc;
   z-index:1;

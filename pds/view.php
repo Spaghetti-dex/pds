@@ -831,165 +831,719 @@ if ($selected_id > 0) {
 <title>Search, View, Edit and Delete Personal Record</title>
 <style>
 body{
-    font-family: Arial, sans-serif;
-    margin:0;
-    background:#e6e6e6;
-    color:#222;
+  font-family: Arial, sans-serif;
+  margin:0;
+  background:#e6e6e6;
+  color:#222;
 }
+
 .page{
-    max-width:1300px;
-    margin:20px auto;
-    padding:0 16px 40px;
+  max-width:1300px;
+  margin:110px auto 20px;
+  padding:0 16px 40px;
 }
+
 .top-link{
-    display:inline-block;
-    margin-bottom:15px;
-    text-decoration:none;
-    color:#fff;
-    background:#2f402c;
-    padding:10px 14px;
-    border-radius:6px;
+  display:inline-block;
+  margin-bottom:15px;
+  text-decoration:none;
+  color:#fff;
+  background:#2f402c;
+  padding:10px 14px;
+  border-radius:6px;
 }
+
 h1{
-    margin:0 0 18px;
-    font-size:28px;
+  margin:0 0 18px;
+  font-size:28px;
 }
-h2{
-    margin:0 0 16px;
+
+.card-simple{
+  background:#fff;
+  border:1px solid #cfcfcf;
+  border-radius:12px;
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
-h3{
-    margin:28px 0 12px;
-    padding-bottom:6px;
-    border-bottom:2px solid #b8c3b1;
+
+.simple-grid{
+  display:grid;
+  grid-template-columns:180px 1fr 180px 1fr;
+  gap:12px 16px;
+  align-items:center;
 }
-h4{
-    margin:16px 0 10px;
-}
-.card{
-    background:#fff;
-    border:1px solid #cfcfcf;
-    border-radius:12px;
-    padding:20px;
-    margin-bottom:20px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-.grid{
-    display:grid;
-    grid-template-columns:180px 1fr 180px 1fr;
-    gap:12px 16px;
-    align-items:center;
-}
-.entry-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px 16px;
-}
-label{
-    font-size:13px;
-    font-weight:bold;
-}
-input, select, textarea{
-    width:100%;
-    padding:10px;
-    border:1px solid #777;
-    border-radius:6px;
-    box-sizing:border-box;
-    background:#f9f9f9;
-}
-.actions{
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    margin-top:24px;
-}
-button, .btn-link{
-    border:none;
-    border-radius:6px;
-    padding:10px 16px;
-    cursor:pointer;
-    font-size:14px;
-    text-decoration:none;
-    display:inline-block;
-}
-.btn-primary{
-    background:#2f402c;
-    color:#fff;
-}
-.btn-secondary{
-    background:#6c757d;
-    color:#fff;
-}
-.btn-danger{
-    background:#b42318;
-    color:#fff;
-}
+
 .message{
-    background:#e7f6e8;
-    border:1px solid #98d0a2;
-    color:#1f6b2e;
-    padding:12px 14px;
-    border-radius:8px;
-    margin-bottom:15px;
+  background:#e7f6e8;
+  border:1px solid #98d0a2;
+  color:#1f6b2e;
+  padding:12px 14px;
+  border-radius:8px;
+  margin-bottom:15px;
 }
+
 .error{
-    background:#fdecec;
-    border:1px solid #efb3b3;
-    color:#a11a1a;
-    padding:12px 14px;
-    border-radius:8px;
-    margin-bottom:15px;
+  background:#fdecec;
+  border:1px solid #efb3b3;
+  color:#a11a1a;
+  padding:12px 14px;
+  border-radius:8px;
+  margin-bottom:15px;
 }
-table{
-    width:100%;
-    border-collapse:collapse;
-}
-th, td{
-    border:1px solid #d7d7d7;
-    padding:10px;
-    text-align:left;
-    vertical-align:top;
-}
-th{
-    background:#f0f3ef;
-}
-.entry-box{
-    background:#f7f8f6;
-    border:1px solid #cfd6ca;
-    border-radius:10px;
-    padding:16px;
-    margin-bottom:14px;
-}
-.inline-actions{
-    margin-top:12px;
-}
-.muted{
-    color:#666;
-    font-size:13px;
-}
-.search-actions{
-    display:flex;
-    align-items:end;
-    gap:10px;
-}
+
 .notice{
-    background:#fff8df;
-    border:1px solid #ead48a;
-    color:#7a5d00;
-    padding:10px 12px;
-    border-radius:8px;
-    margin-bottom:15px;
+  background:#fff8df;
+  border:1px solid #ead48a;
+  color:#7a5d00;
+  padding:10px 12px;
+  border-radius:8px;
+  margin-bottom:15px;
 }
+
+.search-actions{
+  display:flex;
+  align-items:end;
+  gap:10px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-link{
+  border:none;
+  border-radius:6px;
+  padding:10px 16px;
+  cursor:pointer;
+  font-size:14px;
+  text-decoration:none;
+  display:inline-block;
+}
+
+.btn-primary{
+  background:#2f402c;
+  color:#fff;
+}
+
+.btn-secondary{
+  background:#6c757d;
+  color:#fff;
+}
+
+.btn-danger{
+  background:#b42318;
+  color:#fff;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th, td{
+  border:1px solid #d7d7d7;
+  padding:10px;
+  text-align:left;
+  vertical-align:top;
+}
+
+th{
+  background:#f0f3ef;
+}
+
+.muted{
+  color:#666;
+  font-size:13px;
+}
+
+.edit-wrapper{
+  margin-top:20px;
+}
+
+.container{
+  display:flex;
+  min-height:calc(100vh - 50px);
+}
+
+.sidebar{
+  width:270px;
+  padding:40px 20px;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:35px;
+  box-sizing:border-box;
+}
+
+.sidebar::before{
+  content:"";
+  position:absolute;
+  left:57px;
+  top:65px;
+  height:0; 
+  width:3px;
+  background:#ccc;
+  z-index:1;
+}
+
+.progress-line{
+  position:absolute;
+  left:57px;
+  top:65px;
+  width:3px;
+  height:0;
+  background:#d6c86f;
+  transition:0.4s;
+  z-index:2;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  cursor:pointer;
+  padding:10px 15px;
+  border-radius:10px;
+  transition:0.2s;
+  z-index:3;
+  position:relative;
+  background:transparent;
+}
+
+.nav-item:hover{
+  background:#f4f0d3;
+}
+
+.nav-icon{
+  width:45px;
+  height:45px;
+  object-fit:cover;
+  position:relative;
+  z-index:3;
+}
+
+.nav-label{
+  font-size:13px;
+  font-weight:bold;
+}
+
+.nav-item.active{
+  background:#efe5b6;
+  border:2px solid #a5a079;
+}
+
+.form-area{
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:20px;
+  overflow-y:auto;
+  box-sizing:border-box;
+}
+
+.card{
+  width:1150px;
+  min-height:700px;
+  max-width:100%;
+  background:#c7d1c3;
+  padding:20px 40px 30px;
+  border-radius:15px;
+  border:3px solid black;
+  box-sizing:border-box;
+}
+
+.title{
+  text-align:center;
+  font-size:22px;
+  font-weight:800;
+  margin-bottom:25px;
+  margin-top:5px;
+}
+
+/* PERSONAL INFORMATION */
+.personal-grid{
+  display:grid;
+  grid-template-columns:160px 1fr 160px 1fr;
+  gap:18px 5px;
+  align-items:center;
+  width:100%;
+}
+
+.personal-grid label,
+.personal-row label{
+  font-size:14px;
+  font-weight:600;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.personal-grid input,
+.personal-grid select,
+.personal-row input,
+.personal-row select{
+  width:100%;
+  height:36px;
+  padding:6px 10px;
+  border:1px solid #555;
+  border-radius:6px;
+  background:#e9e9ee;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+.personal-row{
+  display:grid;
+  grid-template-columns:1fr auto 140px auto 140px auto 140px;
+  justify-content:center;
+  align-items:center;
+  gap:15px 5px;
+  margin-top:20px;
+}
+
+.personal-row.small input,
+.personal-row.small select{
+  width:140px;
+}
+
+.citizenship-row{
+  display:grid;
+  grid-template-columns:160px 285px 240px 1fr;
+  gap:18px 5px;
+  align-items:center;
+  margin-top:25px;
+  width:100%;
+}
+
+.citizenship-row label{
+  font-size:14px;
+  font-weight:600;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.citizenship-row select,
+.citizenship-row input{
+  width:100%;
+  height:36px;
+  padding:6px 10px;
+  border:1px solid #555;
+  border-radius:6px;
+  background:#e9e9ee;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+/* ADDRESS */
+.address-section{
+  padding-top:10px;
+}
+
+.address-title{
+  text-align:center;
+  font-size:25px;
+  font-weight:800;
+  margin:0 0 28px 0;
+}
+
+.address-block{
+  width:100%;
+  margin:0 0 28px 0;
+}
+
+.address-house-row{
+  display:grid;
+  grid-template-columns:160px 1fr;
+  align-items:center;
+  gap:18px 5px;
+  margin-bottom:18px;
+  width:100%;
+}
+
+.address-two-col{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px 30px;
+  width:100%;
+}
+
+.address-col{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.address-row{
+  display:grid;
+  grid-template-columns:160px 1fr;
+  align-items:center;
+  gap:18px 5px;
+  width:100%;
+}
+
+.address-house-row label,
+.address-row label{
+  font-size:14px;
+  font-weight:600;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.address-house-row input,
+.address-row input{
+  width:100%;
+  height:36px;
+  padding:6px 10px;
+  border:1px solid #555;
+  border-radius:6px;
+  background:#e9e9ee;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+/* CONTACT */
+.contact-section{
+  padding-top:110px;
+}
+
+.contact-title{
+  text-align:center;
+  font-size:28px;
+  font-weight:800;
+  margin:0 0 48px 0;
+}
+
+.contact-grid{
+  width:390px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:28px;
+}
+
+.contact-row{
+  display:grid;
+  grid-template-columns:145px 1fr;
+  align-items:center;
+  column-gap:10px;
+}
+
+.contact-row label{
+  font-size:14px;
+  font-weight:700;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.contact-row input{
+  width:100%;
+  height:36px;
+  padding:6px 10px;
+  border:1px solid #555;
+  border-radius:6px;
+  background:#e9e9ee;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+/* EDUCATION */
+.education-box{
+  background:#d7dfd3;
+  border:1px solid #777;
+  border-radius:8px;
+  padding:15px;
+  margin-bottom:15px;
+}
+
+.education-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 15px;
+}
+
+.education-grid label{
+  font-size:13px;
+  font-weight:bold;
+}
+
+.education-grid input,
+.education-grid select{
+  width:100%;
+  height:36px;
+  padding:6px 10px;
+  border:1px solid #555;
+  border-radius:6px;
+  background:#e9e9ee;
+  font-size:14px; 
+  box-sizing:border-box;
+}
+
+/* ELIGIBILITY */
+.eligibility-box{
+  background:#d7dfd3;
+  border:1px solid #777;
+  border-radius:8px;
+  padding:15px;
+  margin-bottom:15px;
+}
+
+.eligibility-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 15px;
+}
+
+.eligibility-grid label{
+  font-size:13px;
+  font-weight:bold;
+}
+
+.eligibility-grid input{
+  width:100%;
+  height:36px;
+  padding:6px 10px;
+  border:1px solid #555;
+  border-radius:6px;
+  background:#e9e9ee;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+/* TRAINING */
+.training-box{
+  background:#d7dfd3;
+  border:1px solid #777;
+  border-radius:8px;
+  padding:15px;
+  margin-bottom:15px;
+}
+
+.training-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 15px;
+}
+
+.training-grid label{
+  font-size:13px;
+  font-weight:bold;
+}
+
+.training-grid input{
+  width:100%;
+  height:36px;
+  padding:6px 10px;
+  border:1px solid #555;
+  border-radius:6px;
+  background:#e9e9ee;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+/* GENERAL */
+label{
+  font-size:13px;
+  font-weight:bold;
+}
+
+input, select{
+  width:100%;
+  padding:8px;
+  border:1px solid #666;
+  border-radius:4px;
+  box-sizing:border-box;
+}
+
+button{
+  margin-top:20px;
+  padding:8px 20px;
+  cursor:pointer;
+}
+
+.section{
+  display:none;
+  opacity:0;
+  transform:translateY(20px);
+  transition:0.3s;
+}
+
+.section.active{
+  display:block;
+  opacity:1;
+  transform:translateY(0);
+}
+
+.nav-buttons{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:20px;
+}
+
+.next-btn,
+.save-btn,
+.add-btn{
+  background:#2f402c;
+  color:#fff;
+  border:none;
+  padding:10px 22px;
+  border-radius:6px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+  margin-top:0;
+  text-decoration:none;
+  display:inline-block;
+}
+
+.next-btn:hover,
+.save-btn:hover,
+.add-btn:hover{
+  background:#3b5237;
+}
+
+.remove-btn{
+  background:#8b2c2c;
+  color:#fff;
+  border:none;
+  padding:8px 16px;
+  border-radius:6px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+  margin-top:10px;
+}
+
+.remove-btn:hover{
+  background:#a63a3a;
+}
+
+.add-btn{
+  margin-top:10px;
+}
+
+.sidebar-delete-form{
+  margin-top:auto;
+  padding:10px 15px 0;
+  position:relative;
+  z-index:3;
+}
+
+.sidebar-delete-btn{
+  width:100%;
+  background:#8b2c2c;
+  color:#fff;
+  border:none;
+  padding:10px 16px;
+  border-radius:6px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  margin-top:0;
+}
+
+.sidebar-delete-btn:hover{
+  background:#a63a3a;
+}
+
 @media (max-width: 950px){
-    .grid,
-    .entry-grid{
-        grid-template-columns:1fr;
-    }
+  .simple-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width: 900px){
+  .container{
+    flex-direction:column;
+  }
+
+  .sidebar{
+    width:100%;
+    max-height:none;
+    gap:15px;
+  }
+
+  .sidebar::before,
+  .progress-line{
+    display:none;
+  }
+
+  .personal-grid,
+  .citizenship-row,
+  .education-grid,
+  .eligibility-grid,
+  .training-grid{
+    grid-template-columns:1fr;
+  }
+
+  .personal-row{
+    grid-template-columns:1fr;
+    align-items:stretch;
+  }
+
+  .contact-section{
+    padding-top:40px;
+  }
+
+  .contact-grid{
+    width:100%;
+    max-width:390px;
+  }
+
+  .contact-row{
+    grid-template-columns:1fr;
+    row-gap:8px;
+  }
+
+  .address-house-row,
+  .address-row{
+    grid-template-columns:1fr;
+    row-gap:8px;
+  }
+
+  .address-two-col{
+    grid-template-columns:1fr;
+    column-gap:0;
+    row-gap:18px;
+  }
+
+  .personal-grid input,
+  .personal-grid select,
+  .personal-row input,
+  .personal-row select,
+  .citizenship-row input,
+  .citizenship-row select,
+  .address-house-row input,
+  .address-row input,
+  .education-grid input,
+  .education-grid select,
+  .eligibility-grid input,
+  .training-grid input,
+  .contact-row input{
+    width:100%;
+  }
+
+  .personal-grid label,
+  .personal-row label,
+  .citizenship-row label,
+  .contact-row label,
+  .address-house-row label,
+  .address-row label{
+    text-align:left;
+  }
+
+  .sidebar-delete-form{
+    padding:0;
+  }
 }
 </style>
 </head>
 <body>
+
 <div class="page">
-    <a href="../dashboard/dashboard.php" class="top-link">← Home</a>
+    <a href="../dashboard/dashboard.php" class="top-link">Home</a>
 
     <h1>Search, View, Edit and Delete Personal Record</h1>
 
@@ -1001,10 +1555,10 @@ th{
         <div class="error"><?php echo e($error); ?></div>
     <?php endif; ?>
 
-    <div class="card">
+    <div class="card-simple">
         <h2>Search</h2>
         <form method="GET">
-            <div class="grid">
+            <div class="simple-grid">
                 <div><label>Search Name</label></div>
                 <div><input type="text" name="search" value="<?php echo e($search); ?>" placeholder="Enter first name or surname"></div>
                 <div></div>
@@ -1017,7 +1571,7 @@ th{
     </div>
 
     <?php if ($search !== ""): ?>
-    <div class="card">
+    <div class="card-simple">
         <h2>Search Results</h2>
         <?php if (count($results) > 0): ?>
             <table>
@@ -1049,9 +1603,7 @@ th{
     <?php endif; ?>
 
     <?php if ($person): ?>
-    <div class="card">
-        <h2>Edit Record</h2>
-        <p class="muted">This page safely supports your existing database tables.</p>
+    <div class="edit-wrapper">
 
         <?php if (!$education_table): ?>
             <div class="notice">Education table not found. The page will still work without that section.</div>
@@ -1065,337 +1617,695 @@ th{
             <div class="notice">Training / Learning and Development table not found. The page will still work without that section.</div>
         <?php endif; ?>
 
-        <form method="POST" id="editRecordForm" autocomplete="off">
-            <input type="hidden" name="id" value="<?php echo e($person['id']); ?>">
-            <input type="hidden" name="search" value="<?php echo e($search); ?>">
+        <div class="container">
+            <div class="sidebar">
+                <div class="progress-line" id="progressLine"></div>
 
-            <h3>Personal Information</h3>
-            <div class="grid">
-                <div><label>Surname</label></div>
-                <div><input name="surname" value="<?php echo e($person['surname'] ?? ''); ?>"></div>
-
-                <div><label>First Name</label></div>
-                <div><input name="firstname" value="<?php echo e($person['firstname'] ?? ''); ?>"></div>
-
-                <div><label>Middle Name</label></div>
-                <div><input name="middlename" value="<?php echo e($person['middlename'] ?? ''); ?>"></div>
-
-                <div><label>Name Extension</label></div>
-                <div><input name="extension" value="<?php echo e($person['extension'] ?? ''); ?>"></div>
-
-                <div><label>Date of Birth</label></div>
-                <div><input type="date" name="dob" value="<?php echo e($person['dob'] ?? ''); ?>" required></div>
-
-                <div><label>Place of Birth</label></div>
-                <div><input name="birth_place" value="<?php echo e($person['birth_place'] ?? ''); ?>"></div>
-
-                <div><label>Sex</label></div>
-                <div>
-                    <select name="sex">
-                        <option value=""></option>
-                        <option value="Male" <?php echo (($person['sex'] ?? '') === 'Male') ? 'selected' : ''; ?>>Male</option>
-                        <option value="Female" <?php echo (($person['sex'] ?? '') === 'Female') ? 'selected' : ''; ?>>Female</option>
-                    </select>
+                <div class="nav-item active" onclick="goToSection(0)">
+                    <img src="../assets/profile.png" alt="Profile" class="nav-icon">
+                    <div class="nav-label">PERSONAL INFORMATION</div>
                 </div>
 
-                <div><label>Civil Status</label></div>
-                <div>
-                    <select name="civil_status">
-                        <option value=""></option>
-                        <option value="Single" <?php echo (($person['civil_status'] ?? '') === 'Single') ? 'selected' : ''; ?>>Single</option>
-                        <option value="Married" <?php echo (($person['civil_status'] ?? '') === 'Married') ? 'selected' : ''; ?>>Married</option>
-                        <option value="Widowed" <?php echo (($person['civil_status'] ?? '') === 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
-                        <option value="Separated" <?php echo (($person['civil_status'] ?? '') === 'Separated') ? 'selected' : ''; ?>>Separated</option>
-                    </select>
+                <div class="nav-item" onclick="goToSection(1)">
+                    <img src="../assets/address.png" alt="Address" class="nav-icon">
+                    <div class="nav-label">ADDRESS</div>
                 </div>
 
-                <div><label>Height</label></div>
-                <div><input name="height" value="<?php echo e($person['height'] ?? ''); ?>"></div>
-
-                <div><label>Weight</label></div>
-                <div><input name="weight" value="<?php echo e($person['weight'] ?? ''); ?>"></div>
-
-                <div><label>Blood Type</label></div>
-                <div><input name="blood_type" value="<?php echo e($person['blood_type'] ?? ''); ?>"></div>
-
-                <div><label>UMID ID</label></div>
-                <div><input name="umid" value="<?php echo e($person['umid'] ?? ''); ?>"></div>
-
-                <div><label>Pag-IBIG ID No.</label></div>
-                <div><input name="pagibig" value="<?php echo e($person['pagibig'] ?? ''); ?>"></div>
-
-                <div><label>PhilHealth No.</label></div>
-                <div><input name="philhealth" value="<?php echo e($person['philhealth'] ?? ''); ?>"></div>
-
-                <div><label>PhilSys No. (PSN)</label></div>
-                <div><input name="philsys" value="<?php echo e($person['philsys'] ?? ''); ?>"></div>
-
-                <div><label>TIN No.</label></div>
-                <div><input name="tin" value="<?php echo e($person['tin'] ?? ''); ?>"></div>
-
-                <div><label>Agency Employee No.</label></div>
-                <div><input name="agency_employee" value="<?php echo e($person['agency_employee'] ?? ''); ?>"></div>
-
-                <div><label>Citizenship</label></div>
-                <div>
-                    <select name="citizenship">
-                        <option value=""></option>
-                        <option value="Filipino" <?php echo (($person['citizenship'] ?? '') === 'Filipino') ? 'selected' : ''; ?>>Filipino</option>
-                        <option value="Dual Citizen" <?php echo (($person['citizenship'] ?? '') === 'Dual Citizen') ? 'selected' : ''; ?>>Dual Citizen</option>
-                    </select>
+                <div class="nav-item" onclick="goToSection(2)">
+                    <img src="../assets/contact.png" alt="Contact" class="nav-icon">
+                    <div class="nav-label">CONTACT INFORMATION</div>
                 </div>
 
-                <div><label>If Dual Citizen (Country)</label></div>
-                <div><input name="dual_country" value="<?php echo e($person['dual_country'] ?? ''); ?>"></div>
+                <?php if ($education_table): ?>
+                <div class="nav-item" onclick="goToSection(3)">
+                    <img src="../assets/education.png" alt="Education" class="nav-icon">
+                    <div class="nav-label">EDUCATIONAL BACKGROUND</div>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($eligibility_table): ?>
+                <div class="nav-item" onclick="goToSection(<?php echo $education_table ? '4' : '3'; ?>)">
+                    <img src="../assets/service.png" alt="Service" class="nav-icon">
+                    <div class="nav-label">SERVICE ELIGIBILITY</div>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($training_table): ?>
+                <div class="nav-item" onclick="goToSection(
+                    <?php
+                        if ($education_table && $eligibility_table) echo '5';
+                        elseif ($education_table || $eligibility_table) echo '4';
+                        else echo '3';
+                    ?>
+                )">
+                    <img src="../assets/learning.png" alt="Training" class="nav-icon">
+                    <div class="nav-label">LEARNING AND DEVELOPMENT</div>
+                </div>
+                <?php endif; ?>
+
+                <form method="POST" class="sidebar-delete-form" onsubmit="return confirm('Delete this record? This action cannot be undone.');">
+                    <input type="hidden" name="id" value="<?php echo e($person['id']); ?>">
+                    <input type="hidden" name="search" value="<?php echo e($search); ?>">
+                    <button type="submit" name="delete" class="sidebar-delete-btn">Delete Record</button>
+                </form>
             </div>
 
-            <h3>Address</h3>
-            <h4>Residential Address</h4>
-            <div class="grid">
-                <div><label>House/Block/Lot No.</label></div>
-                <div><input name="r_house1" value="<?php echo e($residential['house1']); ?>"></div>
+            <div class="form-area">
+                <div class="card">
+                    <form method="POST" id="editRecordForm" autocomplete="off">
+                        <input type="hidden" name="id" value="<?php echo e($person['id']); ?>">
+                        <input type="hidden" name="search" value="<?php echo e($search); ?>">
 
-                <div><label>Street</label></div>
-                <div><input name="r_street" value="<?php echo e($residential['street']); ?>"></div>
+                        <div id="personal" class="section active">
+                            <div class="title">PERSONAL INFORMATION</div>
 
-                <div><label>Subdivision/Village</label></div>
-                <div><input name="r_subdivision" value="<?php echo e($residential['subdivision']); ?>"></div>
+                            <div class="personal-grid">
+                                <label>Last Name:</label>
+                                <input name="surname" value="<?php echo e($person['surname'] ?? ''); ?>">
 
-                <div><label>Barangay</label></div>
-                <div><input name="r_barangay" value="<?php echo e($residential['barangay']); ?>"></div>
+                                <label>Name Extension:</label>
+                                <input name="extension" value="<?php echo e($person['extension'] ?? ''); ?>">
 
-                <div><label>City/Municipality</label></div>
-                <div><input name="r_city" value="<?php echo e($residential['city']); ?>"></div>
+                                <label>First Name:</label>
+                                <input name="firstname" value="<?php echo e($person['firstname'] ?? ''); ?>">
 
-                <div><label>Province</label></div>
-                <div><input name="r_province" value="<?php echo e($residential['province']); ?>"></div>
+                                <label>Date of Birth:</label>
+                                <input type="date" name="dob" value="<?php echo e($person['dob'] ?? ''); ?>" required>
 
-                <div><label>Zip Code</label></div>
-                <div><input name="r_zip" value="<?php echo e($residential['zip']); ?>"></div>
-            </div>
+                                <label>Middle Name:</label>
+                                <input name="middlename" value="<?php echo e($person['middlename'] ?? ''); ?>">
 
-            <h4>Permanent Address</h4>
-            <div class="grid">
-                <div><label>House/Block/Lot No.</label></div>
-                <div><input name="p_house1" value="<?php echo e($permanent['house1']); ?>"></div>
-
-                <div><label>Street</label></div>
-                <div><input name="p_street" value="<?php echo e($permanent['street']); ?>"></div>
-
-                <div><label>Subdivision/Village</label></div>
-                <div><input name="p_subdivision" value="<?php echo e($permanent['subdivision']); ?>"></div>
-
-                <div><label>Barangay</label></div>
-                <div><input name="p_barangay" value="<?php echo e($permanent['barangay']); ?>"></div>
-
-                <div><label>City/Municipality</label></div>
-                <div><input name="p_city" value="<?php echo e($permanent['city']); ?>"></div>
-
-                <div><label>Province</label></div>
-                <div><input name="p_province" value="<?php echo e($permanent['province']); ?>"></div>
-
-                <div><label>Zip Code</label></div>
-                <div><input name="p_zip" value="<?php echo e($permanent['zip']); ?>"></div>
-            </div>
-
-            <h3>Contact Information</h3>
-            <div class="grid">
-                <div><label>Telephone No.</label></div>
-                <div><input name="telephone" value="<?php echo e($person['telephone'] ?? ''); ?>"></div>
-
-                <div><label>Mobile No.</label></div>
-                <div><input name="mobile" value="<?php echo e($person['mobile'] ?? ''); ?>"></div>
-
-                <div><label>Email</label></div>
-                <div><input type="email" name="email" value="<?php echo e($person['email'] ?? ''); ?>"></div>
-            </div>
-
-            <?php if ($education_table): ?>
-            <h3>Educational Background</h3>
-            <div id="education-container">
-                <?php if (!empty($education_records)): ?>
-                    <?php foreach ($education_records as $edu): ?>
-                        <div class="entry-box education-entry">
-                            <div class="entry-grid">
-                                <div>
-                                    <label>Level</label>
-                                    <select name="education_level[]">
-                                        <option value="Elementary" <?php echo (($edu['education_level'] ?? '') === 'Elementary') ? 'selected' : ''; ?>>Elementary</option>
-                                        <option value="Secondary" <?php echo (($edu['education_level'] ?? '') === 'Secondary') ? 'selected' : ''; ?>>Secondary</option>
-                                        <option value="Vocational / Trade Course" <?php echo (($edu['education_level'] ?? '') === 'Vocational / Trade Course') ? 'selected' : ''; ?>>Vocational / Trade Course</option>
-                                        <option value="College" <?php echo (($edu['education_level'] ?? '') === 'College') ? 'selected' : ''; ?>>College</option>
-                                        <option value="Graduate Studies" <?php echo (($edu['education_level'] ?? '') === 'Graduate Studies') ? 'selected' : ''; ?>>Graduate Studies</option>
-                                    </select>
-                                </div>
-                                <div><label>Name of School</label><input name="school_name[]" value="<?php echo e($edu['school_name'] ?? ''); ?>"></div>
-                                <div><label>Basic Education / Degree / Course</label><input name="course[]" value="<?php echo e($edu['course'] ?? ''); ?>"></div>
-                                <div><label>Highest Level / Units Earned</label><input name="units[]" value="<?php echo e($edu['units'] ?? ''); ?>"></div>
-                                <div><label>Period of Attendance From</label><input type="date" name="edu_from[]" value="<?php echo e($edu['edu_from'] ?? ''); ?>"></div>
-                                <div><label>To</label><input type="date" name="edu_to[]" value="<?php echo e($edu['edu_to'] ?? ''); ?>"></div>
-                                <div><label>Year Graduated</label><input name="year_graduated[]" value="<?php echo e($edu['year_graduated'] ?? ''); ?>"></div>
-                                <div><label>Scholarship / Academic Honors</label><input name="honors[]" value="<?php echo e($edu['honors'] ?? ''); ?>"></div>
+                                <label>Place of Birth:</label>
+                                <input name="birth_place" value="<?php echo e($person['birth_place'] ?? ''); ?>">
                             </div>
-                            <div class="inline-actions">
-                                <button type="button" class="btn-danger" onclick="removeEntry(this, '.education-entry')">Remove</button>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="entry-box education-entry">
-                        <div class="entry-grid">
-                            <div>
-                                <label>Level</label>
-                                <select name="education_level[]">
-                                    <option value="Elementary">Elementary</option>
-                                    <option value="Secondary">Secondary</option>
-                                    <option value="Vocational / Trade Course">Vocational / Trade Course</option>
-                                    <option value="College">College</option>
-                                    <option value="Graduate Studies">Graduate Studies</option>
+
+                            <div class="personal-row small">
+                                <label>Civil Status:</label>
+                                <select name="civil_status">
+                                    <option value=""></option>
+                                    <option value="Single" <?php echo (($person['civil_status'] ?? '') === 'Single') ? 'selected' : ''; ?>>Single</option>
+                                    <option value="Married" <?php echo (($person['civil_status'] ?? '') === 'Married') ? 'selected' : ''; ?>>Married</option>
+                                    <option value="Widowed" <?php echo (($person['civil_status'] ?? '') === 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
+                                    <option value="Separated" <?php echo (($person['civil_status'] ?? '') === 'Separated') ? 'selected' : ''; ?>>Separated</option>
                                 </select>
-                            </div>
-                            <div><label>Name of School</label><input name="school_name[]"></div>
-                            <div><label>Basic Education / Degree / Course</label><input name="course[]"></div>
-                            <div><label>Highest Level / Units Earned</label><input name="units[]"></div>
-                            <div><label>Period of Attendance From</label><input type="date" name="edu_from[]"></div>
-                            <div><label>To</label><input type="date" name="edu_to[]"></div>
-                            <div><label>Year Graduated</label><input name="year_graduated[]"></div>
-                            <div><label>Scholarship / Academic Honors</label><input name="honors[]"></div>
-                        </div>
-                        <div class="inline-actions">
-                            <button type="button" class="btn-danger" onclick="removeEntry(this, '.education-entry')">Remove</button>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-            <button type="button" class="btn-secondary" onclick="addEducation()">Add More Education</button>
-            <?php endif; ?>
 
-            <?php if ($eligibility_table): ?>
-            <h3>Service Eligibility</h3>
-            <div id="eligibility-container">
-                <?php if (!empty($eligibility_records)): ?>
-                    <?php foreach ($eligibility_records as $elig): ?>
-                        <div class="entry-box eligibility-entry">
-                            <div class="entry-grid">
-                                <div><label>Career Service / CSC / CES</label><input name="career_service[]" value="<?php echo e($elig['career_service'] ?? ''); ?>"></div>
-                                <div><label>Rating</label><input name="rating[]" value="<?php echo e($elig['rating'] ?? ''); ?>"></div>
-                                <div><label>Exam Date</label><input type="date" name="exam_date[]" value="<?php echo e($elig['exam_date'] ?? ''); ?>"></div>
-                                <div><label>Place of Examination</label><input name="exam_place[]" value="<?php echo e($elig['exam_place'] ?? ''); ?>"></div>
-                                <div><label>License</label><input name="license[]" value="<?php echo e($elig['license'] ?? ''); ?>"></div>
-                                <div><label>License Number</label><input name="license_number[]" value="<?php echo e($elig['license_number'] ?? ''); ?>"></div>
-                                <div><label>Valid Until</label><input type="date" name="valid_until[]" value="<?php echo e($elig['valid_until'] ?? ''); ?>"></div>
-                            </div>
-                            <div class="inline-actions">
-                                <button type="button" class="btn-danger" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="entry-box eligibility-entry">
-                        <div class="entry-grid">
-                            <div><label>Career Service / CSC / CES</label><input name="career_service[]"></div>
-                            <div><label>Rating</label><input name="rating[]"></div>
-                            <div><label>Exam Date</label><input type="date" name="exam_date[]"></div>
-                            <div><label>Place of Examination</label><input name="exam_place[]"></div>
-                            <div><label>License</label><input name="license[]"></div>
-                            <div><label>License Number</label><input name="license_number[]"></div>
-                            <div><label>Valid Until</label><input type="date" name="valid_until[]"></div>
-                        </div>
-                        <div class="inline-actions">
-                            <button type="button" class="btn-danger" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-            <button type="button" class="btn-secondary" onclick="addEligibility()">Add More Eligibility</button>
-            <?php endif; ?>
+                                <label>Sex:</label>
+                                <select name="sex">
+                                    <option value=""></option>
+                                    <option value="Male" <?php echo (($person['sex'] ?? '') === 'Male') ? 'selected' : ''; ?>>Male</option>
+                                    <option value="Female" <?php echo (($person['sex'] ?? '') === 'Female') ? 'selected' : ''; ?>>Female</option>
+                                </select>
 
-            <?php if ($training_table): ?>
-            <h3>Learning and Development</h3>
-            <div id="training-container">
-                <?php if (!empty($training_records)): ?>
-                    <?php foreach ($training_records as $train): ?>
-                        <div class="entry-box training-entry">
-                            <div class="entry-grid">
-                                <div><label>Training Title</label><input name="title[]" value="<?php echo e($train['title'] ?? ''); ?>"></div>
-                                <div><label>Hours</label><input name="hours[]" value="<?php echo e($train['hours'] ?? ''); ?>"></div>
-                                <div><label>From</label><input type="date" name="training_from[]" value="<?php echo e($train['training_from'] ?? ''); ?>"></div>
-                                <div><label>To</label><input type="date" name="training_to[]" value="<?php echo e($train['training_to'] ?? ''); ?>"></div>
-                                <div><label>Type</label><input name="type[]" value="<?php echo e($train['type'] ?? ''); ?>"></div>
-                                <div><label>Sponsor</label><input name="sponsor[]" value="<?php echo e($train['sponsor'] ?? ''); ?>"></div>
+                                <label>Blood Type:</label>
+                                <input name="blood_type" value="<?php echo e($person['blood_type'] ?? ''); ?>">
                             </div>
-                            <div class="inline-actions">
-                                <button type="button" class="btn-danger" onclick="removeEntry(this, '.training-entry')">Remove</button>
+
+                            <div class="personal-row small">
+                                <label>Height:</label>
+                                <input name="height" value="<?php echo e($person['height'] ?? ''); ?>">
+
+                                <label>Weight:</label>
+                                <input name="weight" value="<?php echo e($person['weight'] ?? ''); ?>">
+                            </div>
+
+                            <div class="personal-grid" style="margin-top:25px;">
+                                <label>UMID ID:</label>
+                                <input name="umid" value="<?php echo e($person['umid'] ?? ''); ?>">
+
+                                <label>PhilSys No.(PSN):</label>
+                                <input name="philsys" value="<?php echo e($person['philsys'] ?? ''); ?>">
+
+                                <label>Pag-IBIG ID No:</label>
+                                <input name="pagibig" value="<?php echo e($person['pagibig'] ?? ''); ?>">
+
+                                <label>TIN No:</label>
+                                <input name="tin" value="<?php echo e($person['tin'] ?? ''); ?>">
+
+                                <label>PhilHealth No:</label>
+                                <input name="philhealth" value="<?php echo e($person['philhealth'] ?? ''); ?>">
+
+                                <label>Agency Employee No:</label>
+                                <input name="agency_employee" value="<?php echo e($person['agency_employee'] ?? ''); ?>">
+                            </div>
+
+                            <div class="citizenship-row">
+                                <label>Citizenship:</label>
+                                <select name="citizenship">
+                                    <option value=""></option>
+                                    <option value="Filipino" <?php echo (($person['citizenship'] ?? '') === 'Filipino') ? 'selected' : ''; ?>>Filipino</option>
+                                    <option value="Dual Citizen" <?php echo (($person['citizenship'] ?? '') === 'Dual Citizen') ? 'selected' : ''; ?>>Dual Citizen</option>
+                                </select>
+
+                                <label>If Dual Citizen(Indicate Country):</label>
+                                <input name="dual_country" value="<?php echo e($person['dual_country'] ?? ''); ?>">
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="entry-box training-entry">
-                        <div class="entry-grid">
-                            <div><label>Training Title</label><input name="title[]"></div>
-                            <div><label>Hours</label><input name="hours[]"></div>
-                            <div><label>From</label><input type="date" name="training_from[]"></div>
-                            <div><label>To</label><input type="date" name="training_to[]"></div>
-                            <div><label>Type</label><input name="type[]"></div>
-                            <div><label>Sponsor</label><input name="sponsor[]"></div>
-                        </div>
-                        <div class="inline-actions">
-                            <button type="button" class="btn-danger" onclick="removeEntry(this, '.training-entry')">Remove</button>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-            <button type="button" class="btn-secondary" onclick="addTraining()">Add More Training</button>
-            <?php endif; ?>
 
-            <div class="actions">
-                <button type="submit" name="update" class="btn-primary">Update Record</button>
-            </div>
-        </form>
+                        <div id="address" class="section">
+                            <div class="address-section">
+                                <div class="address-title">RESIDENTIAL ADDRESS</div>
+                                <div class="address-block">
+                                    <div class="address-house-row">
+                                        <label>House / Block / Lot No.</label>
+                                        <input name="r_house1" value="<?php echo e($residential['house1']); ?>">
+                                    </div>
 
-        <form method="POST" onsubmit="return confirm('Delete this record? This action cannot be undone.');">
-            <input type="hidden" name="id" value="<?php echo e($person['id']); ?>">
-            <input type="hidden" name="search" value="<?php echo e($search); ?>">
-            <div class="actions">
-                <button type="submit" name="delete" class="btn-danger">Delete Record</button>
+                                    <div class="address-two-col">
+                                        <div class="address-col">
+                                            <div class="address-row">
+                                                <label>Street:</label>
+                                                <input name="r_street" value="<?php echo e($residential['street']); ?>">
+                                            </div>
+
+                                            <div class="address-row">
+                                                <label>Subdivision / Village:</label>
+                                                <input name="r_subdivision" value="<?php echo e($residential['subdivision']); ?>">
+                                            </div>
+
+                                            <div class="address-row">
+                                                <label>City / Municipality:</label>
+                                                <input name="r_city" value="<?php echo e($residential['city']); ?>">
+                                            </div>
+                                        </div>
+
+                                        <div class="address-col">
+                                            <div class="address-row">
+                                                <label>Barangay:</label>
+                                                <input name="r_barangay" value="<?php echo e($residential['barangay']); ?>">
+                                            </div>
+
+                                            <div class="address-row">
+                                                <label>Province:</label>
+                                                <input name="r_province" value="<?php echo e($residential['province']); ?>">
+                                            </div>
+
+                                            <div class="address-row">
+                                                <label>Zip Code:</label>
+                                                <input name="r_zip" value="<?php echo e($residential['zip']); ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="address-title" style="margin-top:18px;">PERMANENT ADDRESS</div>
+                                <div class="address-block">
+                                    <div class="address-house-row">
+                                        <label>House / Block / Lot No.</label>
+                                        <input name="p_house1" value="<?php echo e($permanent['house1']); ?>">
+                                    </div>
+
+                                    <div class="address-two-col">
+                                        <div class="address-col">
+                                            <div class="address-row">
+                                                <label>Street:</label>
+                                                <input name="p_street" value="<?php echo e($permanent['street']); ?>">
+                                            </div>
+
+                                            <div class="address-row">
+                                                <label>Subdivision / Village:</label>
+                                                <input name="p_subdivision" value="<?php echo e($permanent['subdivision']); ?>">
+                                            </div>
+
+                                            <div class="address-row">
+                                                <label>City / Municipality:</label>
+                                                <input name="p_city" value="<?php echo e($permanent['city']); ?>">
+                                            </div>
+                                        </div>
+
+                                        <div class="address-col">
+                                            <div class="address-row">
+                                                <label>Barangay:</label>
+                                                <input name="p_barangay" value="<?php echo e($permanent['barangay']); ?>">
+                                            </div>
+
+                                            <div class="address-row">
+                                                <label>Province:</label>
+                                                <input name="p_province" value="<?php echo e($permanent['province']); ?>">
+                                            </div>
+
+                                            <div class="address-row">
+                                                <label>Zip Code:</label>
+                                                <input name="p_zip" value="<?php echo e($permanent['zip']); ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="contact" class="section">
+                            <div class="contact-section">
+                                <div class="contact-title">CONTACT INFORMATION</div>
+
+                                <div class="contact-grid">
+                                    <div class="contact-row">
+                                        <label>Telephone Number:</label>
+                                        <input name="telephone" value="<?php echo e($person['telephone'] ?? ''); ?>">
+                                    </div>
+
+                                    <div class="contact-row">
+                                        <label>Mobile Number:</label>
+                                        <input name="mobile" value="<?php echo e($person['mobile'] ?? ''); ?>">
+                                    </div>
+
+                                    <div class="contact-row">
+                                        <label>E-Mail:</label>
+                                        <input type="email" name="email" value="<?php echo e($person['email'] ?? ''); ?>">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <?php if ($education_table): ?>
+                        <div id="education" class="section">
+                            <div class="title">EDUCATIONAL BACKGROUND</div>
+
+                            <div id="education-container">
+                                <?php if (!empty($education_records)): ?>
+                                    <?php foreach ($education_records as $edu): ?>
+                                        <div class="education-entry education-box">
+                                            <div class="education-grid">
+                                                <div>
+                                                    <label>Level</label>
+                                                    <select name="education_level[]">
+                                                        <option value="Elementary" <?php echo (($edu['education_level'] ?? '') === 'Elementary') ? 'selected' : ''; ?>>Elementary</option>
+                                                        <option value="Secondary" <?php echo (($edu['education_level'] ?? '') === 'Secondary') ? 'selected' : ''; ?>>Secondary</option>
+                                                        <option value="Vocational / Trade Course" <?php echo (($edu['education_level'] ?? '') === 'Vocational / Trade Course') ? 'selected' : ''; ?>>Vocational / Trade Course</option>
+                                                        <option value="College" <?php echo (($edu['education_level'] ?? '') === 'College') ? 'selected' : ''; ?>>College</option>
+                                                        <option value="Graduate Studies" <?php echo (($edu['education_level'] ?? '') === 'Graduate Studies') ? 'selected' : ''; ?>>Graduate Studies</option>
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <label>Name of School</label>
+                                                    <input name="school_name[]" value="<?php echo e($edu['school_name'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Basic Education /Degree /Course</label>
+                                                    <input name="course[]" value="<?php echo e($edu['course'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Highest Level /Units Earned</label>
+                                                    <input name="units[]" value="<?php echo e($edu['units'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Period of Attendance From</label>
+                                                    <input type="date" name="edu_from[]" value="<?php echo e($edu['edu_from'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>To</label>
+                                                    <input type="date" name="edu_to[]" value="<?php echo e($edu['edu_to'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Year Graduated</label>
+                                                    <input name="year_graduated[]" value="<?php echo e($edu['year_graduated'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Scholarship /Academic Honors</label>
+                                                    <input name="honors[]" value="<?php echo e($edu['honors'] ?? ''); ?>">
+                                                </div>
+                                            </div>
+
+                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="education-entry education-box">
+                                        <div class="education-grid">
+                                            <div>
+                                                <label>Level</label>
+                                                <select name="education_level[]">
+                                                    <option>Elementary</option>
+                                                    <option>Secondary</option>
+                                                    <option>Vocational / Trade Course</option>
+                                                    <option>College</option>
+                                                    <option>Graduate Studies</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label>Name of School</label>
+                                                <input name="school_name[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Basic Education /Degree /Course</label>
+                                                <input name="course[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Highest Level /Units Earned</label>
+                                                <input name="units[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Period of Attendance From</label>
+                                                <input type="date" name="edu_from[]">
+                                            </div>
+
+                                            <div>
+                                                <label>To</label>
+                                                <input type="date" name="edu_to[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Year Graduated</label>
+                                                <input name="year_graduated[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Scholarship /Academic Honors</label>
+                                                <input name="honors[]">
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <button type="button" class="add-btn" onclick="addEducation()">Add More</button>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($eligibility_table): ?>
+                        <div id="eligibility-section" class="section">
+                            <div class="title">SERVICE ELIGIBILITY</div>
+
+                            <div id="eligibility-container">
+                                <?php if (!empty($eligibility_records)): ?>
+                                    <?php foreach ($eligibility_records as $elig): ?>
+                                        <div class="eligibility-entry eligibility-box">
+                                            <div class="eligibility-grid">
+                                                <div>
+                                                    <label>Career Service /CSC /CES</label>
+                                                    <input name="career_service[]" value="<?php echo e($elig['career_service'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Rating</label>
+                                                    <input name="rating[]" value="<?php echo e($elig['rating'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Exam Date</label>
+                                                    <input type="date" name="exam_date[]" value="<?php echo e($elig['exam_date'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Place of Examination</label>
+                                                    <input name="exam_place[]" value="<?php echo e($elig['exam_place'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>License</label>
+                                                    <input name="license[]" value="<?php echo e($elig['license'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>License Number</label>
+                                                    <input name="license_number[]" value="<?php echo e($elig['license_number'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Valid Until</label>
+                                                    <input type="date" name="valid_until[]" value="<?php echo e($elig['valid_until'] ?? ''); ?>">
+                                                </div>
+                                            </div>
+
+                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="eligibility-entry eligibility-box">
+                                        <div class="eligibility-grid">
+                                            <div>
+                                                <label>Career Service /CSC /CES</label>
+                                                <input name="career_service[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Rating</label>
+                                                <input name="rating[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Exam Date</label>
+                                                <input type="date" name="exam_date[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Place of Examination</label>
+                                                <input name="exam_place[]">
+                                            </div>
+
+                                            <div>
+                                                <label>License</label>
+                                                <input name="license[]">
+                                            </div>
+
+                                            <div>
+                                                <label>License Number</label>
+                                                <input name="license_number[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Valid Until</label>
+                                                <input type="date" name="valid_until[]">
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <button type="button" class="add-btn" onclick="addEligibility()">Add More</button>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($training_table): ?>
+                        <div id="training-section" class="section">
+                            <div class="title">LEARNING AND DEVELOPMENT</div>
+
+                            <div id="training-container">
+                                <?php if (!empty($training_records)): ?>
+                                    <?php foreach ($training_records as $train): ?>
+                                        <div class="training-entry training-box">
+                                            <div class="training-grid">
+                                                <div>
+                                                    <label>Training Title</label>
+                                                    <input name="title[]" value="<?php echo e($train['title'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Hours</label>
+                                                    <input name="hours[]" value="<?php echo e($train['hours'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>From</label>
+                                                    <input type="date" name="training_from[]" value="<?php echo e($train['training_from'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>To</label>
+                                                    <input type="date" name="training_to[]" value="<?php echo e($train['training_to'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Type</label>
+                                                    <input name="type[]" value="<?php echo e($train['type'] ?? ''); ?>">
+                                                </div>
+
+                                                <div>
+                                                    <label>Sponsor</label>
+                                                    <input name="sponsor[]" value="<?php echo e($train['sponsor'] ?? ''); ?>">
+                                                </div>
+                                            </div>
+
+                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="training-entry training-box">
+                                        <div class="training-grid">
+                                            <div>
+                                                <label>Training Title</label>
+                                                <input name="title[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Hours</label>
+                                                <input name="hours[]">
+                                            </div>
+
+                                            <div>
+                                                <label>From</label>
+                                                <input type="date" name="training_from[]">
+                                            </div>
+
+                                            <div>
+                                                <label>To</label>
+                                                <input type="date" name="training_to[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Type</label>
+                                                <input name="type[]">
+                                            </div>
+
+                                            <div>
+                                                <label>Sponsor</label>
+                                                <input name="sponsor[]">
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <button type="button" class="add-btn" onclick="addTraining()">Add More</button>
+                        </div>
+                        <?php endif; ?>
+
+                        <div class="nav-buttons">
+                            <button type="button" class="next-btn" id="nextBtn" onclick="nextSection()">Next</button>
+                            <button type="submit" name="update" class="save-btn" id="saveBtn" style="display:none;">Update Record</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
     <?php endif; ?>
 </div>
 
 <script>
+let currentSection = 0;
+
+function getVisibleSections() {
+    return document.querySelectorAll(".section");
+}
+
+function getVisibleNavItems() {
+    return document.querySelectorAll(".sidebar .nav-item");
+}
+
+function updateProgress(index){
+    const sections = getVisibleSections();
+    const navItems = getVisibleNavItems();
+
+    sections.forEach((sec, i) => {
+        sec.classList.toggle("active", i === index);
+    });
+
+    navItems.forEach((nav, i) => {
+        nav.classList.remove("active", "completed");
+        if(i < index){
+            nav.classList.add("completed");
+        }
+    });
+
+    if (navItems[index]) {
+        navItems[index].classList.add("active");
+    }
+
+    if (navItems.length > 0 && document.getElementById("progressLine")) {
+        const stepHeight = navItems[0].offsetHeight + 35;
+        document.getElementById("progressLine").style.height = (index * stepHeight) + "px";
+    }
+
+    currentSection = index;
+
+    const nextBtn = document.getElementById("nextBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    if(nextBtn && saveBtn){
+        if(index === sections.length - 1){
+            nextBtn.style.display = "none";
+            saveBtn.style.display = "inline-block";
+        } else {
+            nextBtn.style.display = "inline-block";
+            saveBtn.style.display = "none";
+        }
+    }
+}
+
+function goToSection(index){
+    updateProgress(index);
+}
+
+function nextSection(){
+    const sections = getVisibleSections();
+    if(currentSection < sections.length - 1){
+        updateProgress(currentSection + 1);
+    }
+}
+
 function addEducation(data = {}) {
     const container = document.getElementById("education-container");
     if (!container) return;
 
     const div = document.createElement("div");
-    div.className = "entry-box education-entry";
+    div.classList.add("education-entry", "education-box");
     div.innerHTML = `
-        <div class="entry-grid">
+        <div class="education-grid">
             <div>
                 <label>Level</label>
                 <select name="education_level[]">
-                    <option value="Elementary">Elementary</option>
-                    <option value="Secondary">Secondary</option>
-                    <option value="Vocational / Trade Course">Vocational / Trade Course</option>
-                    <option value="College">College</option>
-                    <option value="Graduate Studies">Graduate Studies</option>
+                    <option>Elementary</option>
+                    <option>Secondary</option>
+                    <option>Vocational / Trade Course</option>
+                    <option>College</option>
+                    <option>Graduate Studies</option>
                 </select>
             </div>
-            <div><label>Name of School</label><input name="school_name[]"></div>
-            <div><label>Basic Education / Degree / Course</label><input name="course[]"></div>
-            <div><label>Highest Level / Units Earned</label><input name="units[]"></div>
-            <div><label>Period of Attendance From</label><input type="date" name="edu_from[]"></div>
-            <div><label>To</label><input type="date" name="edu_to[]"></div>
-            <div><label>Year Graduated</label><input name="year_graduated[]"></div>
-            <div><label>Scholarship / Academic Honors</label><input name="honors[]"></div>
-        </div>
-        <div class="inline-actions">
-            <button type="button" class="btn-danger" onclick="removeEntry(this, '.education-entry')">Remove</button>
-        </div>
-    `;
 
+            <div>
+                <label>Name of School</label>
+                <input name="school_name[]" placeholder="School Name">
+            </div>
+
+            <div>
+                <label>Basic Education / Degree / Course</label>
+                <input name="course[]" placeholder="Course / Degree">
+            </div>
+
+            <div>
+                <label>Highest Level / Units Earned</label>
+                <input name="units[]" placeholder="Highest Level / Units">
+            </div>
+
+            <div>
+                <label>Period of Attendance From</label>
+                <input type="date" name="edu_from[]">
+            </div>
+
+            <div>
+                <label>To</label>
+                <input type="date" name="edu_to[]">
+            </div>
+
+            <div>
+                <label>Year Graduated</label>
+                <input name="year_graduated[]" placeholder="Year Graduated">
+            </div>
+
+            <div>
+                <label>Scholarship / Academic Honors</label>
+                <input name="honors[]" placeholder="Scholarship / Honors">
+            </div>
+        </div>
+        <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
+    `;
     container.appendChild(div);
 
     div.querySelector('[name="education_level[]"]').value = data.education_level || 'Elementary';
@@ -1415,22 +2325,46 @@ function addEligibility(data = {}) {
     if (!container) return;
 
     const div = document.createElement("div");
-    div.className = "entry-box eligibility-entry";
+    div.classList.add("eligibility-entry", "eligibility-box");
     div.innerHTML = `
-        <div class="entry-grid">
-            <div><label>Career Service / CSC / CES</label><input name="career_service[]"></div>
-            <div><label>Rating</label><input name="rating[]"></div>
-            <div><label>Exam Date</label><input type="date" name="exam_date[]"></div>
-            <div><label>Place of Examination</label><input name="exam_place[]"></div>
-            <div><label>License</label><input name="license[]"></div>
-            <div><label>License Number</label><input name="license_number[]"></div>
-            <div><label>Valid Until</label><input type="date" name="valid_until[]"></div>
-        </div>
-        <div class="inline-actions">
-            <button type="button" class="btn-danger" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
-        </div>
-    `;
+        <div class="eligibility-grid">
+            <div>
+                <label>Career Service / CSC / CES</label>
+                <input name="career_service[]" placeholder="Career Service / CSC / CES">
+            </div>
 
+            <div>
+                <label>Rating</label>
+                <input name="rating[]" placeholder="Rating">
+            </div>
+
+            <div>
+                <label>Exam Date</label>
+                <input type="date" name="exam_date[]">
+            </div>
+
+            <div>
+                <label>Place of Examination</label>
+                <input name="exam_place[]" placeholder="Place of Examination">
+            </div>
+
+            <div>
+                <label>License</label>
+                <input name="license[]" placeholder="License">
+            </div>
+
+            <div>
+                <label>License Number</label>
+                <input name="license_number[]" placeholder="License Number">
+            </div>
+
+            <div>
+                <label>Valid Until</label>
+                <input type="date" name="valid_until[]">
+            </div>
+        </div>
+        <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+    `;
     container.appendChild(div);
 
     div.querySelector('[name="career_service[]"]').value = data.career_service || '';
@@ -1449,21 +2383,41 @@ function addTraining(data = {}) {
     if (!container) return;
 
     const div = document.createElement("div");
-    div.className = "entry-box training-entry";
+    div.classList.add("training-entry", "training-box");
     div.innerHTML = `
-        <div class="entry-grid">
-            <div><label>Training Title</label><input name="title[]"></div>
-            <div><label>Hours</label><input name="hours[]"></div>
-            <div><label>From</label><input type="date" name="training_from[]"></div>
-            <div><label>To</label><input type="date" name="training_to[]"></div>
-            <div><label>Type</label><input name="type[]"></div>
-            <div><label>Sponsor</label><input name="sponsor[]"></div>
-        </div>
-        <div class="inline-actions">
-            <button type="button" class="btn-danger" onclick="removeEntry(this, '.training-entry')">Remove</button>
-        </div>
-    `;
+        <div class="training-grid">
+            <div>
+                <label>Training Title</label>
+                <input name="title[]" placeholder="Training Title">
+            </div>
 
+            <div>
+                <label>Hours</label>
+                <input name="hours[]" placeholder="Hours">
+            </div>
+
+            <div>
+                <label>From</label>
+                <input type="date" name="training_from[]">
+            </div>
+
+            <div>
+                <label>To</label>
+                <input type="date" name="training_to[]">
+            </div>
+
+            <div>
+                <label>Type</label>
+                <input name="type[]" placeholder="Managerial / Technical">
+            </div>
+
+            <div>
+                <label>Sponsor</label>
+                <input name="sponsor[]" placeholder="Sponsor">
+            </div>
+        </div>
+        <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+    `;
     container.appendChild(div);
 
     div.querySelector('[name="title[]"]').value = data.title || '';
@@ -1618,6 +2572,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!form) return;
 
     restoreDraft();
+    updateProgress(0);
 
     form.addEventListener('input', saveFormDraft);
     form.addEventListener('change', saveFormDraft);
