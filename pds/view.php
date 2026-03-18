@@ -1,6 +1,6 @@
 <?php
-include "../includes/auth_check.php";
 include "../config/database.php";
+//include "../includes/auth_check.php";
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset("utf8mb4");
@@ -10,20 +10,13 @@ function e($value) {
 }
 
 function table_exists(mysqli $conn, string $table): bool {
-    $db = '';
-    $res = $conn->query("SELECT DATABASE() AS db");
-    if ($row = $res->fetch_assoc()) {
-        $db = $row['db'];
-    }
-    $res->close();
-
     $stmt = $conn->prepare("
         SELECT COUNT(*) AS cnt
         FROM information_schema.tables
-        WHERE table_schema = ?
+        WHERE table_schema = DATABASE()
           AND table_name = ?
     ");
-    $stmt->bind_param("ss", $db, $table);
+    $stmt->bind_param("s", $table);
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
@@ -37,21 +30,14 @@ function get_columns(mysqli $conn, string $table): array {
         return [];
     }
 
-    $db = '';
-    $res = $conn->query("SELECT DATABASE() AS db");
-    if ($row = $res->fetch_assoc()) {
-        $db = $row['db'];
-    }
-    $res->close();
-
     $stmt = $conn->prepare("
         SELECT column_name
         FROM information_schema.columns
-        WHERE table_schema = ?
+        WHERE table_schema = DATABASE()
           AND table_name = ?
         ORDER BY ordinal_position
     ");
-    $stmt->bind_param("ss", $db, $table);
+    $stmt->bind_param("s", $table);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -66,15 +52,6 @@ function get_columns(mysqli $conn, string $table): array {
 
 function has_column(array $columns, string $name): bool {
     return in_array($name, $columns, true);
-}
-
-function first_existing_table(mysqli $conn, array $candidates): ?string {
-    foreach ($candidates as $table) {
-        if (table_exists($conn, $table)) {
-            return $table;
-        }
-    }
-    return null;
 }
 
 function normalize_address_row(array $row): array {
@@ -131,9 +108,20 @@ $education_records = [];
 $eligibility_records = [];
 $training_records = [];
 
-$education_table   = first_existing_table($conn, ['education']);
-$eligibility_table = first_existing_table($conn, ['service_eligibility', 'eligibility']);
-$training_table    = first_existing_table($conn, ['learning_development', 'training']);
+/*
+|--------------------------------------------------------------------------
+| EXACT TABLE NAMES
+|--------------------------------------------------------------------------
+*/
+$education_table = table_exists($conn, 'education') ? 'education' : null;
+
+$eligibility_table = table_exists($conn, 'service_eligibility')
+    ? 'service_eligibility'
+    : (table_exists($conn, 'eligibility') ? 'eligibility' : null);
+
+$training_table = table_exists($conn, 'learning_development')
+    ? 'learning_development'
+    : (table_exists($conn, 'training') ? 'training' : null);
 
 $education_columns   = $education_table ? get_columns($conn, $education_table) : [];
 $eligibility_columns = $eligibility_table ? get_columns($conn, $eligibility_table) : [];
@@ -1637,4 +1625,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 </body>
-</html>
+</htm
