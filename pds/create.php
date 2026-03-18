@@ -48,7 +48,11 @@ body{
   position:absolute;
   left:57px;
   top:65px;
+<<<<<<< HEAD
   height:calc(100% - 200px);
+=======
+  height:calc(100% - 140px);
+>>>>>>> main
   width:3px;
   background:#ccc;
   z-index:1;
@@ -93,6 +97,7 @@ body{
   z-index:3;
 }
 
+<<<<<<< HEAD
 .profile {
   height: 50px;
 }
@@ -177,15 +182,123 @@ body{
   background:#e9e9ee;
   font-size:14px;
   box-sizing:border-box;
+=======
+/* COMPLETED STEP CHECKMARK */
+.nav-item.completed::after{
+  content:"✓";
+  position:absolute;
+  left:28px;
+  top:50%;
+  transform:translateY(-50%);
+  color:green;
+  font-size:18px;
+  font-weight:bold;
+  z-index:4;
+  background:rgba(255,255,255,0.85);
+  border-radius:50%;
+  width:20px;
+  height:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* TEXT */
+.nav-label{
+  font-size:13px;
+  font-weight:bold;
+}
+
+/* ACTIVE SIDEBAR */
+.nav-item.active{
+  background:#efe5b6;
+  border:2px solid #a5a079;
+}
+
+/* FORM AREA */
+.form-area{
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:20px;
+  overflow-y:auto;
+  box-sizing:border-box;
+}
+
+/* FORM CARD */
+.card{
+  width:1150px;
+  min-height:700px;
+  max-width:100%;
+  background:#c7d1c3;
+  padding:20px 40px 30px;
+  border-radius:15px;
+  border:3px solid black;
+  box-sizing:border-box;
+}
+
+/* TITLE */
+.title{
+  text-align:center;
+  font-size:22px;
+  font-weight:800;
+  margin-bottom:25px;
+  margin-top:5px;
+}
+
+/* PERSONAL INFO GRID */
+.personal-grid{
+  display:grid;
+  grid-template-columns:160px 1fr 160px 1fr;
+  gap:18px 22px;
+  align-items:center;
+  width:100%;
+}
+
+.personal-grid label,
+.personal-row label{
+  font-size:14px;
+  font-weight:600;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.personal-grid input,
+.personal-grid select,
+.personal-row input,
+.personal-row select{
+  width:100%;
+  height:36px;
+  padding:6px 10px;
+  border:1px solid #555;
+  border-radius:6px;
+  background:#e9e9ee;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+/* make only dual_country wider */
+input[name="dual_country"]{
+  min-width:280px;
+>>>>>>> main
 }
 
 .personal-row{
   display:grid;
+<<<<<<< HEAD
   grid-template-columns:1fr auto 140px auto 140px auto 140px;
   justify-content:center;
   align-items:center;
   gap:15px 5px;
   margin-top:20px;
+=======
+  grid-template-columns:auto 140px auto 140px auto 140px;
+  justify-content:center;
+  align-items:center;
+  gap:15px 20px;
+  margin-top:18px;
+>>>>>>> main
 }
 
 .personal-row.small input,
@@ -193,6 +306,7 @@ body{
   width:140px;
 }
 
+<<<<<<< HEAD
 .citizenship-row{
   display:grid;
   grid-template-columns:160px 285px 240px 1fr;
@@ -566,11 +680,123 @@ button{
     grid-template-columns:1fr;
   }
 
+=======
+.grid{
+  display:grid;
+  grid-template-columns:180px 1fr 180px 1fr;
+  gap:12px 18px;
+  align-items:center;
+  width:100%;
+}
+
+label{
+  font-size:13px;
+  font-weight:bold;
+}
+
+input, select{
+  width:100%;
+  padding:8px;
+  border:1px solid #666;
+  border-radius:4px;
+  box-sizing:border-box;
+}
+
+button{
+  margin-top:20px;
+  padding:8px 20px;
+  cursor:pointer;
+}
+
+.section{
+  display:none;
+  opacity:0;
+  transform:translateY(20px);
+  transition:0.3s;
+}
+
+.section.active{
+  display:block;
+  opacity:1;
+  transform:translateY(0);
+}
+
+.nav-buttons{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:20px;
+}
+
+.entry-box{
+  background:#d7dfd3;
+  border:1px solid #777;
+  border-radius:8px;
+  padding:15px;
+  margin-bottom:15px;
+}
+
+.entry-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 15px;
+}
+
+.section-subtitle{
+  font-size:17px;
+  font-weight:bold;
+  margin:20px 0 10px;
+}
+
+.top-actions{
+  margin-bottom:20px;
+}
+
+.top-actions a{
+  display:inline-block;
+  text-decoration:none;
+  background:#2f402c;
+  color:#fff;
+  padding:8px 15px;
+  border-radius:6px;
+}
+
+.save-btn{
+  display:block;
+  margin-left:auto;
+  margin-right:auto;
+  margin-top:20px;
+}
+
+@media (max-width: 900px){
+  .container{
+    flex-direction:column;
+  }
+
+  .sidebar{
+    width:100%;
+    max-height:none;
+    gap:15px;
+  }
+
+  .sidebar::before,
+  .progress-line{
+    display:none;
+  }
+
+  .grid,
+  .personal-grid,
+  .entry-grid{
+    grid-template-columns:1fr;
+  }
+
+>>>>>>> main
   .personal-row{
     grid-template-columns:1fr;
     align-items:stretch;
   }
 
+<<<<<<< HEAD
   .contact-section{
     padding-top:40px;
   }
@@ -610,17 +836,33 @@ button{
   .eligibility-grid input,
   .training-grid input,
   .contact-row input{
+=======
+  .personal-grid input,
+  .personal-grid select,
+  .personal-row input,
+  .personal-row select{
+>>>>>>> main
     width:100%;
   }
 
   .personal-grid label,
   .personal-row label,
+<<<<<<< HEAD
   .citizenship-row label,
   .contact-row label,
   .address-house-row label,
   .address-row label{
     text-align:left;
   }
+=======
+  .grid label{
+    text-align:left;
+  }
+
+  input[name="dual_country"]{
+    min-width:100%;
+  }
+>>>>>>> main
 }
 </style>
 </head>
@@ -640,7 +882,11 @@ button{
     <div class="progress-line" id="progressLine"></div>
 
     <div class="nav-item active" onclick="goToSection(0)">
+<<<<<<< HEAD
       <img src="../assets/profile.png" alt="Profile" class="nav-icon profile">
+=======
+      <img src="../assets/profile.png" alt="Profile" class="nav-icon">
+>>>>>>> main
       <div class="nav-label">PERSONAL INFORMATION</div>
     </div>
 
@@ -665,7 +911,11 @@ button{
     </div>
 
     <div class="nav-item" onclick="goToSection(5)">
+<<<<<<< HEAD
       <img src="../assets/learning.png" alt="Training" class="nav-icon learning">
+=======
+      <img src="../assets/learning.png" alt="Training" class="nav-icon">
+>>>>>>> main
       <div class="nav-label">LEARNING AND DEVELOPMENT</div>
     </div>
   </div>
@@ -736,6 +986,7 @@ button{
             <label>UMID ID:</label>
             <input name="umid">
 
+<<<<<<< HEAD
             <label>PhilSys No.(PSN):</label>
             <input name="philsys">
 
@@ -753,6 +1004,23 @@ button{
           </div>
 
           <div class="citizenship-row">
+=======
+            <label>PhilSys No. (PSN):</label>
+            <input name="philsys">
+
+            <label>Pag-IBIG ID No.:</label>
+            <input name="pagibig">
+
+            <label>TIN No.:</label>
+            <input name="tin">
+
+            <label>PhilHealth No.:</label>
+            <input name="philhealth">
+
+            <label>Agency Employee No.:</label>
+            <input name="agency_employee">
+
+>>>>>>> main
             <label>Citizenship:</label>
             <select name="citizenship">
               <option value=""></option>
@@ -767,6 +1035,7 @@ button{
 
         <!-- ADDRESS -->
         <div id="address" class="section">
+<<<<<<< HEAD
           <div class="address-section">
 
             <div class="address-title">RESIDENTIAL ADDRESS</div>
@@ -857,11 +1126,62 @@ button{
               </div>
             </div>
 
+=======
+          <div class="title">ADDRESS</div>
+
+          <div class="section-subtitle">Residential Address</div>
+          <div class="grid">
+            <label>House/Block/Lot No.:</label>
+            <input name="r_house" placeholder="House/Block/Lot No.">
+
+            <label>Street:</label>
+            <input name="r_street" placeholder="Street">
+
+            <label>Subdivision/Village:</label>
+            <input name="r_subdivision" placeholder="Subdivision/Village">
+
+            <label>Barangay:</label>
+            <input name="r_barangay" placeholder="Barangay">
+
+            <label>City/Municipality:</label>
+            <input name="r_city" placeholder="City/Municipality">
+
+            <label>Province:</label>
+            <input name="r_province" placeholder="Province">
+
+            <label>Zip Code:</label>
+            <input name="r_zip" placeholder="Zip Code">
+          </div>
+
+          <div class="section-subtitle">Permanent Address</div>
+          <div class="grid">
+            <label>House/Block/Lot No.:</label>
+            <input name="p_house" placeholder="House/Block/Lot No.">
+
+            <label>Street:</label>
+            <input name="p_street" placeholder="Street">
+
+            <label>Subdivision/Village:</label>
+            <input name="p_subdivision" placeholder="Subdivision/Village">
+
+            <label>Barangay:</label>
+            <input name="p_barangay" placeholder="Barangay">
+
+            <label>City/Municipality:</label>
+            <input name="p_city" placeholder="City/Municipality">
+
+            <label>Province:</label>
+            <input name="p_province" placeholder="Province">
+
+            <label>Zip Code:</label>
+            <input name="p_zip" placeholder="Zip Code">
+>>>>>>> main
           </div>
         </div>
 
         <!-- CONTACT -->
         <div id="contact" class="section">
+<<<<<<< HEAD
           <div class="contact-section">
             <div class="contact-title">CONTACT INFORMATION</div>
 
@@ -881,6 +1201,19 @@ button{
                 <input type="email" name="email">
               </div>
             </div>
+=======
+          <div class="title">CONTACT INFORMATION</div>
+
+          <div class="grid">
+            <label>Telephone No.:</label>
+            <input name="telephone">
+
+            <label>Mobile No.:</label>
+            <input name="mobile">
+
+            <label>Email:</label>
+            <input type="email" name="email">
+>>>>>>> main
           </div>
         </div>
 
@@ -889,8 +1222,13 @@ button{
           <div class="title">EDUCATIONAL BACKGROUND</div>
 
           <div id="education-container">
+<<<<<<< HEAD
             <div class="education-entry education-box">
               <div class="education-grid">
+=======
+            <div class="education-entry entry-box">
+              <div class="entry-grid">
+>>>>>>> main
                 <div>
                   <label>Level</label>
                   <select name="education_level[]">
@@ -908,12 +1246,20 @@ button{
                 </div>
 
                 <div>
+<<<<<<< HEAD
                   <label>Basic Education /Degree /Course</label>
+=======
+                  <label>Basic Education / Degree / Course</label>
+>>>>>>> main
                   <input name="course[]" placeholder="Course / Degree">
                 </div>
 
                 <div>
+<<<<<<< HEAD
                   <label>Highest Level /Units Earned</label>
+=======
+                  <label>Highest Level / Units Earned</label>
+>>>>>>> main
                   <input name="units[]" placeholder="Highest Level / Units">
                 </div>
 
@@ -933,16 +1279,28 @@ button{
                 </div>
 
                 <div>
+<<<<<<< HEAD
                   <label>Scholarship /Academic Honors</label>
+=======
+                  <label>Scholarship / Academic Honors</label>
+>>>>>>> main
                   <input name="honors[]" placeholder="Scholarship / Honors">
                 </div>
               </div>
 
+<<<<<<< HEAD
               <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
             </div>
           </div>
 
           <button type="button" class="add-btn" onclick="addEducation()">Add More</button>
+=======
+              <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            </div>
+          </div>
+
+          <button type="button" onclick="addEducation()">Add More</button>
+>>>>>>> main
         </div>
 
         <!-- ELIGIBILITY -->
@@ -950,10 +1308,17 @@ button{
           <div class="title">SERVICE ELIGIBILITY</div>
 
           <div id="eligibility">
+<<<<<<< HEAD
             <div class="eligibility-entry eligibility-box">
               <div class="eligibility-grid">
                 <div>
                   <label>Career Service /CSC /CES</label>
+=======
+            <div class="eligibility-entry entry-box">
+              <div class="entry-grid">
+                <div>
+                  <label>Career Service / CSC / CES</label>
+>>>>>>> main
                   <input name="career_service[]" placeholder="Career Service / CSC / CES">
                 </div>
 
@@ -988,11 +1353,19 @@ button{
                 </div>
               </div>
 
+<<<<<<< HEAD
               <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
             </div>
           </div>
 
           <button type="button" class="add-btn" onclick="addEligibility()">Add More</button>
+=======
+              <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            </div>
+          </div>
+
+          <button type="button" onclick="addEligibility()">Add More</button>
+>>>>>>> main
         </div>
 
         <!-- TRAINING -->
@@ -1000,8 +1373,13 @@ button{
           <div class="title">LEARNING AND DEVELOPMENT</div>
 
           <div id="training">
+<<<<<<< HEAD
             <div class="training-entry training-box">
               <div class="training-grid">
+=======
+            <div class="training-entry entry-box">
+              <div class="entry-grid">
+>>>>>>> main
                 <div>
                   <label>Training Title</label>
                   <input name="title[]" placeholder="Training Title">
@@ -1033,6 +1411,7 @@ button{
                 </div>
               </div>
 
+<<<<<<< HEAD
               <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
             </div>
           </div>
@@ -1044,6 +1423,21 @@ button{
           <button type="button" class="next-btn" id="nextBtn" onclick="nextSection()">Next</button>
           <button type="submit" class="save-btn" id="saveBtn" style="display:none;">Save</button>
         </div>
+=======
+              <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            </div>
+          </div>
+
+          <button type="button" onclick="addTraining()">Add More</button>
+        </div>
+
+        <div class="nav-buttons">
+          <button type="button" onclick="prevSection()">Previous</button>
+          <button type="button" onclick="nextSection()">Next</button>
+        </div>
+
+        <button type="submit" class="save-btn">Save</button>
+>>>>>>> main
       </form>
 
     </div>
@@ -1068,6 +1462,7 @@ function updateProgress(index){
   });
 
   navItems[index].classList.add("active");
+<<<<<<< HEAD
 
   const stepHeight = navItems[0].offsetHeight + 35;
   document.getElementById("progressLine").style.height = (index * stepHeight) + "px";
@@ -1084,6 +1479,10 @@ function updateProgress(index){
     nextBtn.style.display = "inline-block";
     saveBtn.style.display = "none";
   }
+=======
+  document.getElementById("progressLine").style.height = (index * 80) + "px";
+  currentSection = index;
+>>>>>>> main
 }
 
 function goToSection(index){
@@ -1096,12 +1495,27 @@ function nextSection(){
   }
 }
 
+<<<<<<< HEAD
 function addEducation() {
   const container = document.getElementById("education-container");
   const div = document.createElement("div");
   div.classList.add("education-entry", "education-box");
   div.innerHTML = `
     <div class="education-grid">
+=======
+function prevSection(){
+  if(currentSection > 0){
+    updateProgress(currentSection - 1);
+  }
+}
+
+function addEducation() {
+  const container = document.getElementById("education-container");
+  const div = document.createElement("div");
+  div.classList.add("education-entry", "entry-box");
+  div.innerHTML = `
+    <div class="entry-grid">
+>>>>>>> main
       <div>
         <label>Level</label>
         <select name="education_level[]">
@@ -1148,7 +1562,11 @@ function addEducation() {
         <input name="honors[]" placeholder="Scholarship / Honors">
       </div>
     </div>
+<<<<<<< HEAD
     <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+=======
+    <button type="button" onclick="this.parentElement.remove()">Remove</button>
+>>>>>>> main
   `;
   container.appendChild(div);
 }
@@ -1156,9 +1574,15 @@ function addEducation() {
 function addEligibility() {
   const container = document.getElementById("eligibility");
   const div = document.createElement("div");
+<<<<<<< HEAD
   div.classList.add("eligibility-entry", "eligibility-box");
   div.innerHTML = `
     <div class="eligibility-grid">
+=======
+  div.classList.add("eligibility-entry", "entry-box");
+  div.innerHTML = `
+    <div class="entry-grid">
+>>>>>>> main
       <div>
         <label>Career Service / CSC / CES</label>
         <input name="career_service[]" placeholder="Career Service / CSC / CES">
@@ -1194,7 +1618,11 @@ function addEligibility() {
         <input type="date" name="valid_until[]">
       </div>
     </div>
+<<<<<<< HEAD
     <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+=======
+    <button type="button" onclick="this.parentElement.remove()">Remove</button>
+>>>>>>> main
   `;
   container.appendChild(div);
 }
@@ -1202,9 +1630,15 @@ function addEligibility() {
 function addTraining() {
   const container = document.getElementById("training");
   const div = document.createElement("div");
+<<<<<<< HEAD
   div.classList.add("training-entry", "training-box");
   div.innerHTML = `
     <div class="training-grid">
+=======
+  div.classList.add("training-entry", "entry-box");
+  div.innerHTML = `
+    <div class="entry-grid">
+>>>>>>> main
       <div>
         <label>Training Title</label>
         <input name="title[]" placeholder="Training Title">
@@ -1235,12 +1669,19 @@ function addTraining() {
         <input name="sponsor[]" placeholder="Sponsor">
       </div>
     </div>
+<<<<<<< HEAD
     <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
   `;
   container.appendChild(div);
 }
 
 updateProgress(0);
+=======
+    <button type="button" onclick="this.parentElement.remove()">Remove</button>
+  `;
+  container.appendChild(div);
+}
+>>>>>>> main
 </script>
 
 </body>
