@@ -23,7 +23,7 @@ body{
 .dashboard-wrap{
     width:100%;
     text-align:center;
-    padding-top:230px; /* pushes buttons lower */
+    padding-top:230px;
     box-sizing:border-box;
 }
 
@@ -36,39 +36,39 @@ a[href*="view.php"]{
     vertical-align:top;
 }
 
-/* dashboard cards */
+/* dashboard cards (UPDATED SIZE) */
 a[href*="create.php"] button,
 a[href*="view.php"] button{
-    width:250px; /* bigger yellow square */
-    height:220px;
+    width:350px;
+    height:320px;
     background:#ece7be;
     border:2px solid #8f8a6a;
-    border-radius:10px;
+    border-radius:12px;
     cursor:pointer;
     font-size:0;
     position:relative;
-    box-shadow:0 3px 8px rgba(0,0,0,0.2);
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
     transition:all .25s ease;
 }
 
 /* hover effect */
 a[href*="create.php"] button:hover,
 a[href*="view.php"] button:hover{
-    transform:translateY(-8px);
-    box-shadow:0 10px 22px rgba(0,0,0,0.35);
+    transform:translateY(-10px);
+    box-shadow:0 14px 28px rgba(0,0,0,0.35);
     background:#f1ecc8;
 }
 
-/* icon area */
+/* icon area (BIGGER ICON) */
 a[href*="create.php"] button::before,
 a[href*="view.php"] button::before{
     content:"";
     position:absolute;
-    top:25px;
+    top:40px;
     left:50%;
     transform:translateX(-50%);
-    width:120px;
-    height:120px;
+    width:180px;
+    height:180px;
     background-repeat:no-repeat;
     background-position:center;
     background-size:contain;
@@ -83,15 +83,15 @@ a[href*="view.php"] button::before{
     background-image:url("../assets/view.png");
 }
 
-/* label text */
+/* label text (ADJUSTED) */
 a[href*="create.php"] button::after,
 a[href*="view.php"] button::after{
     position:absolute;
-    bottom:20px;
+    bottom:30px;
     left:0;
     right:0;
     text-align:center;
-    font-size:20px;
+    font-size:24px;
     font-weight:bold;
     color:#000;
     text-transform:uppercase;
@@ -108,17 +108,16 @@ a[href*="view.php"] button::after{
 
 </style>
 
-
 <div class="dashboard-wrap">
 
 <h2 class="dashboard-title">Dashboard</h2>
 
 <a href="../pds/create.php">
-<button>Create</button>
+    <button>Create</button>
 </a>
 
 <a href="../pds/view.php">
-<button>View</button>
+    <button>View</button>
 </a>
 
 </div>
