@@ -1,5 +1,6 @@
-<?php //include "../includes/auth_check.php"; ?>
-<?php include "../includes/header.php"; ?>
+<?php 
+require_once "../includes/auth_check.php";
+include "../includes/header.php"; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -690,7 +691,7 @@ button{
             <input name="middlename">
 
             <label>Place of Birth:</label>
-            <input name="birth_place">
+            <input name="birth_place"required>
           </div>
 
           <div class="personal-row small">
@@ -755,7 +756,7 @@ button{
           </div>
         </div>
 
-        <!-- ADDRESS -->
+        
         <div id="address" class="section">
           <div class="address-section">
 
@@ -850,7 +851,7 @@ button{
           </div>
         </div>
 
-        <!-- CONTACT -->
+        
         <div id="contact" class="section">
           <div class="contact-section">
             <div class="contact-title">CONTACT INFORMATION</div>
@@ -874,7 +875,7 @@ button{
           </div>
         </div>
 
-        <!-- EDUCATION -->
+        
         <div id="education" class="section">
           <div class="title">EDUCATIONAL BACKGROUND</div>
 
@@ -909,17 +910,17 @@ button{
 
                 <div>
                   <label>Period of Attendance From</label>
-                  <input type="date" name="edu_from[]">
+                  <input type="date" name="edu_from[]"required>
                 </div>
 
                 <div>
                   <label>To</label>
-                  <input type="date" name="edu_to[]">
+                  <input type="date" name="edu_to[]"required>
                 </div>
 
                 <div>
                   <label>Year Graduated</label>
-                  <input name="year_graduated[]" placeholder="Year Graduated">
+                  <input name="year_graduated[]" placeholder="Year Graduated"required>
                 </div>
 
                 <div>
@@ -935,7 +936,7 @@ button{
           <button type="button" class="add-btn" onclick="addEducation()">Add More</button>
         </div>
 
-        <!-- ELIGIBILITY -->
+       
         <div id="eligibility-section" class="section">
           <div class="title">SERVICE ELIGIBILITY</div>
 
@@ -954,7 +955,7 @@ button{
 
                 <div>
                   <label>Exam Date</label>
-                  <input type="date" name="exam_date[]">
+                  <input type="date" name="exam_date[]"required>
                 </div>
 
                 <div>
@@ -985,7 +986,7 @@ button{
           <button type="button" class="add-btn" onclick="addEligibility()">Add More</button>
         </div>
 
-        <!-- TRAINING -->
+        
         <div id="training-section" class="section">
           <div class="title">LEARNING AND DEVELOPMENT</div>
 
@@ -999,17 +1000,17 @@ button{
 
                 <div>
                   <label>Hours</label>
-                  <input name="hours[]" placeholder="Hours">
+                  <input name="hours[]" placeholder="Hours"required>
                 </div>
 
                 <div>
                   <label>From</label>
-                  <input type="date" name="training_from[]">
+                  <input type="date" name="training_from[]"required>
                 </div>
 
                 <div>
                   <label>To</label>
-                  <input type="date" name="training_to[]">
+                  <input type="date" name="training_to[]"required>
                 </div>
 
                 <div>

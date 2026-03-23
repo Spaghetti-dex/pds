@@ -1,121 +1,57 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 session_start();
+
+if (!isset($_SESSION['reset_email'])) {
+    header("Location: forgot.php");
+    exit();
+}
 include "../config/database.php";
 
 $msg = "";
-$success = false;
 
-/* prevent direct access */
-if(!isset($_SESSION['reset_email'])){
-    echo "Session expired. Please request OTP again.";
+if (!isset($_SESSION['reset_email'])) {
+    header("Location: forgot_password.php");
     exit;
 }
 
 $email = $_SESSION['reset_email'];
 
-if(isset($_POST['verify'])){
+if (isset($_POST['verify'])) {
+    $otp = trim($_POST['otp'] ?? '');
 
-    $otp = trim($_POST['otp']);
-    $new = trim($_POST['password']);
-
-    if($otp == "" || $new == ""){
-        $msg = "All fields required.";
-    }
-    else{
-
-        $stmt = $conn->prepare("SELECT otp_code, otp_expire FROM users WHERE email=?");
-        $stmt->bind_param("s",$email);
+    if (empty($otp)) {
+        $msg = "Please enter the OTP.";
+    } else {
+        $stmt = $conn->prepare("SELECT id, reset_token, reset_expiry FROM users WHERE email = ? LIMIT 1");
+        $stmt->bind_param("s", $email);
         $stmt->execute();
-        $stmt->store_result();
+        $result = $stmt->get_result();
 
-        if($stmt->num_rows == 0){
+        if ($user = $result->fetch_assoc()) {
+            if ($user['reset_token'] === $otp) {
+                if (strtotime($user['reset_expiry']) >= time()) {
+                    $_SESSION['otp_verified'] = true;
+                    header("Location: reset.php");
+                    exit;
+                } else {
+                    $msg = "OTP has expired.";
+                }
+            } else {
+                $msg = "Invalid OTP.";
+            }
+        } else {
             $msg = "User not found.";
-        }
-        else{
-            $stmt->bind_result($db_otp,$expire);
-            $stmt->fetch();
         }
 
         $stmt->close();
-
-        if($msg == ""){
-
-            if($otp != $db_otp){
-                $msg = "Invalid OTP.";
-            }
-            elseif(strtotime($expire) < time()){
-                $msg = "OTP expired.";
-            }
-            else{
-
-                $hash = password_hash($new,PASSWORD_DEFAULT);
-
-                $stmt2 = $conn->prepare("UPDATE users 
-                    SET password=?, otp_code=NULL, otp_expire=NULL 
-                    WHERE email=?");
-
-                $stmt2->bind_param("ss",$hash,$email);
-
-                if($stmt2->execute()){
-                    session_destroy();
-                    $msg = "Password reset successful.";
-                    $success = true;
-                }else{
-                    $msg = "Update failed.";
-                }
-
-                $stmt2->close();
-            }
-        }
     }
 }
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-<title>Verify OTP</title>
-</head>
-<body>
 
 <h2>Verify OTP</h2>
-
-<?php if($msg!=""){ ?>
-    <p><?php echo $msg; ?></p>
-<?php } ?>
-
-<?php if($success){ ?>
-    <p>Redirecting to login in <span id="count">3</span> seconds...</p>
-
-    <script>
-        let c = 3;
-        let timer = setInterval(function(){
-
-            c--;
-            document.getElementById("count").innerHTML = c;
-
-            if(c <= 0){
-                clearInterval(timer);
-                window.location.href = "/pds/auth/login.php";
-            }
-
-        },1000);
-    </script>
-<?php } ?>
+<?php if ($msg != "") echo "<p>$msg</p>"; ?>
 
 <form method="POST">
-
-OTP Code<br>
-<input type="text" name="otp"><br><br>
-
-New Password<br>
-<input type="password" name="password"><br><br>
-
-<button name="verify">Reset Password</button>
-
+    <input type="text" name="otp" maxlength="6" placeholder="Enter 6-digit OTP" required><br><br>
+    <button type="submit" name="verify">Verify OTP</button>
 </form>
-
-</body>
-</html>

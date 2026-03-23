@@ -1,9 +1,10 @@
-<?php //include "../includes/auth_check.php"; ?>
-<?php include "../includes/header.php"; ?>
+<?php
+require_once "../includes/auth_check.php";
+include "../includes/header.php"; ?>
 
 <style>
 
-/* background */
+
 body{
     margin:0;
     font-family:Arial, Helvetica, sans-serif;
@@ -14,12 +15,12 @@ body{
     background-attachment:fixed;
 }
 
-/* hide dashboard title */
+
 .dashboard-title{
     display:none;
 }
 
-/* main dashboard container */
+
 .dashboard-wrap{
     width:100%;
     text-align:center;
@@ -27,7 +28,7 @@ body{
     box-sizing:border-box;
 }
 
-/* card links */
+
 a[href*="create.php"],
 a[href*="view.php"]{
     text-decoration:none;
@@ -36,7 +37,7 @@ a[href*="view.php"]{
     vertical-align:top;
 }
 
-/* dashboard cards (UPDATED SIZE) */
+
 a[href*="create.php"] button,
 a[href*="view.php"] button{
     width:350px;
@@ -51,7 +52,7 @@ a[href*="view.php"] button{
     transition:all .25s ease;
 }
 
-/* hover effect */
+
 a[href*="create.php"] button:hover,
 a[href*="view.php"] button:hover{
     transform:translateY(-10px);
@@ -59,7 +60,7 @@ a[href*="view.php"] button:hover{
     background:#f1ecc8;
 }
 
-/* icon area (BIGGER ICON) */
+
 a[href*="create.php"] button::before,
 a[href*="view.php"] button::before{
     content:"";
@@ -74,7 +75,7 @@ a[href*="view.php"] button::before{
     background-size:contain;
 }
 
-/* icons */
+
 a[href*="create.php"] button::before{
     background-image:url("../assets/create.png");
 }
@@ -83,7 +84,7 @@ a[href*="view.php"] button::before{
     background-image:url("../assets/view.png");
 }
 
-/* label text (ADJUSTED) */
+
 a[href*="create.php"] button::after,
 a[href*="view.php"] button::after{
     position:absolute;
@@ -97,7 +98,6 @@ a[href*="view.php"] button::after{
     text-transform:uppercase;
 }
 
-/* labels */
 a[href*="create.php"] button::after{
     content:"CREATE";
 }

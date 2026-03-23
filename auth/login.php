@@ -234,6 +234,16 @@ togglePassword.addEventListener("click", function () {
 
 });
 </script>
+<?php
+$error = $_GET['error'] ?? '';
 
+if ($error === "invalid_user") {
+    echo "<script>alert('Invalid username');</script>";
+} elseif ($error === "invalid_password") {
+    echo "<script>alert('Invalid password');</script>";
+} elseif ($error === "empty") {
+    echo "<script>alert('Please enter both username and password');</script>";
+}
+?>
 </body>
 </html>

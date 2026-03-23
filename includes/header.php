@@ -1,5 +1,10 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $account_name = "Account User";
+$is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 
 if (isset($_SESSION['fullname']) && !empty($_SESSION['fullname'])) {
     $account_name = $_SESSION['fullname'];
@@ -18,7 +23,7 @@ body{
     background-size:cover;
 }
 
-/* top header bar */
+
 .topbar{
     height:70px;
     background:#22361e;
@@ -33,7 +38,7 @@ body{
     box-sizing:border-box;
 }
 
-/* logo area */
+
 .topbar-left{
     display:flex;
     align-items:center;
@@ -48,7 +53,7 @@ body{
     flex-shrink:0;
 }
 
-/* header text */
+
 .topbar-text{
     line-height:1.05;
     color:#fff;
@@ -71,7 +76,7 @@ body{
     font-style:italic;
 }
 
-/* profile container */
+
 div[style*="float:right"]{
     position:fixed;
     top:0;
@@ -84,7 +89,7 @@ div[style*="float:right"]{
     margin:0 !important;
 }
 
-/* profile button */
+
 div[style*="float:right"] > button{
     width:40px;
     height:40px;
@@ -101,7 +106,6 @@ div[style*="float:right"] > button{
     box-shadow:0 2px 4px rgba(0,0,0,.25);
 }
 
-/* main account dropdown */
 #menu{
     position:absolute;
     top:58px;
@@ -115,7 +119,7 @@ div[style*="float:right"] > button{
     padding:0;
 }
 
-/* signed in section */
+
 .menu-header{
     padding:14px 18px 10px 18px;
     background:#f3f3f3;
@@ -136,7 +140,6 @@ div[style*="float:right"] > button{
     word-break:break-word;
 }
 
-/* menu blocks */
 .menu-main{
     padding:4px 0;
     background:#f3f3f3;
@@ -185,7 +188,7 @@ div[style*="float:right"] > button{
     background:#e8e8e8;
 }
 
-/* icons */
+
 .menu-icon{
     width:18px;
     height:18px;
@@ -207,6 +210,10 @@ div[style*="float:right"] > button{
     background-image:url("../assets/pass.png");
 }
 
+.icon-add{
+    background-image:url("../assets/settings.png");
+}
+
 .icon-about{
     background-image:url("../assets/about.png");
 }
@@ -215,7 +222,7 @@ div[style*="float:right"] > button{
     background-image:url("../assets/logout.png");
 }
 
-/* arrow */
+
 .menu-arrow{
     margin-left:auto;
     width:10px;
@@ -227,13 +234,13 @@ div[style*="float:right"] > button{
     flex-shrink:0;
 }
 
-/* arrow open state */
+
 .menu-arrow.open{
     transform:rotate(225deg);
     margin-top:4px;
 }
 
-/* settings dropdown area */
+
 #settingsSubmenu{
     display:none;
 }
@@ -262,6 +269,8 @@ div[style*="float:right"] > button{
     </div>
 
     <div class="menu-main">
+
+        <?php if ($is_admin): ?>
         <button type="button" class="menu-item" onclick="toggleSettings()">
             <span class="menu-icon icon-settings"></span>
             <span>Settings</span>
@@ -269,18 +278,34 @@ div[style*="float:right"] > button{
         </button>
 
         <div id="settingsSubmenu">
-            <a href="../admin/profile.php" class="menu-subitem">
-                <span class="menu-icon icon-email"></span>
-                <span>Change Email</span>
-            </a>
+                <a href="../admin/add_account.php" class="menu-subitem">
+                    <span class="menu-icon icon-add"></span>
+                    <span>Add Account</span>
+                </a>
 
-            <a href="../admin/profile.php" class="menu-subitem">
-                <span class="menu-icon icon-password"></span>
-                <span>Change Password</span>
-            </a>
+                <a href="../admin/change_username.php" class="menu-subitem">
+                    <span class="menu-icon icon-settings"></span>
+                    <span>Change Username</span>
+                </a>
+
+                <a href="../admin/change_email.php" class="menu-subitem">
+                    <span class="menu-icon icon-email"></span>
+                    <span>Change Email</span>
+                </a>
+
+                <a href="../admin/change_password.php" class="menu-subitem">
+                    <span class="menu-icon icon-password"></span>
+                    <span>Change Password</span>
+                </a>
+
+                <a href="../admin/account_modifier.php" class="menu-subitem">
+                    <span class="menu-icon icon-settings"></span>
+                    <span>Admin Account Modifier</span>
+                </a>
         </div>
+        <?php endif; ?>
 
-        <a href="#" class="menu-subitem" style="padding-left:18px;">
+        <a href="../auth/about.php" class="menu-subitem" style="padding-left:18px;">
             <span class="menu-icon icon-about"></span>
             <span>About</span>
         </a>
@@ -299,20 +324,24 @@ div[style*="float:right"] > button{
 
 <script>
 function menu(){
-let m=document.getElementById("menu");
-m.style.display = m.style.display=="none" ? "block":"none";
+    let m = document.getElementById("menu");
+    m.style.display = m.style.display == "none" ? "block" : "none";
 }
 
 function toggleSettings(){
-let s=document.getElementById("settingsSubmenu");
-let a=document.getElementById("settingsArrow");
+    let s = document.getElementById("settingsSubmenu");
+    let a = document.getElementById("settingsArrow");
 
-if(s.style.display=="none" || s.style.display==""){
-    s.style.display="block";
-    a.classList.add("open");
-}else{
-    s.style.display="none";
-    a.classList.remove("open");
-}
+    if(!s || !a){
+        return;
+    }
+
+    if(s.style.display == "none" || s.style.display == ""){
+        s.style.display = "block";
+        a.classList.add("open");
+    }else{
+        s.style.display = "none";
+        a.classList.remove("open");
+    }
 }
 </script>

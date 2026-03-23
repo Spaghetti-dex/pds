@@ -1,4 +1,5 @@
 <?php
+require_once "../includes/auth_check.php";
 include "../includes/header.php"; 
 include "../config/database.php";
 //include "../includes/auth_check.php";
