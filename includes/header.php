@@ -202,25 +202,31 @@ div[style*="float:right"] > button{
     background-image:url("../assets/settings.png");
 }
 
-.icon-email{
-    background-image:url("../assets/email.png");
+.icon-admin{
+    background-image:url("../assets/admin.jpg.png");
 }
 
-.icon-password{
-    background-image:url("../assets/pass.png");
+.icon-user{
+    background-image:url("../assets/service.png");
 }
 
 .icon-add{
-    background-image:url("../assets/settings.png");
+    background-image:url("../assets/create.png");
 }
 
 .icon-about{
     background-image:url("../assets/about.png");
 }
 
+.icon-slogs{
+    background-image:url("../assets/slogs.png");
+}
+
 .icon-logout{
     background-image:url("../assets/logout.png");
 }
+
+
 
 
 .menu-arrow{
@@ -283,25 +289,20 @@ div[style*="float:right"] > button{
                     <span>Add Account</span>
                 </a>
 
-                <a href="../admin/change_username.php" class="menu-subitem">
-                    <span class="menu-icon icon-settings"></span>
-                    <span>Change Username</span>
-                </a>
-
-                <a href="../admin/change_email.php" class="menu-subitem">
-                    <span class="menu-icon icon-email"></span>
-                    <span>Change Email</span>
-                </a>
-
-                <a href="../admin/change_password.php" class="menu-subitem">
-                    <span class="menu-icon icon-password"></span>
-                    <span>Change Password</span>
-                </a>
-
                 <a href="../admin/account_modifier.php" class="menu-subitem">
-                    <span class="menu-icon icon-settings"></span>
+                    <span class="menu-icon icon-admin"></span>
                     <span>Admin Account Modifier</span>
                 </a>
+                <a href="../admin/manage_user_account.php" class="menu-subitem">
+                    <span class="menu-icon icon-user"></span>
+                    <span>Manage User Account</span>
+                </a>
+
+                <a href="../admin/logs.php" class="menu-subitem">
+                    <span class="menu-icon icon-slogs"></span>
+                    <span>System Logs</span>
+                </a>
+
         </div>
         <?php endif; ?>
 
