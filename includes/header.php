@@ -298,7 +298,7 @@ div[style*="float:right"] > button{
                     <span>Manage User Account</span>
                 </a>
 
-                <a href="../admin/logs.php" class="menu-subitem">
+                <a href="../pds/logs.php" class="menu-subitem">
                     <span class="menu-icon icon-slogs"></span>
                     <span>System Logs</span>
                 </a>

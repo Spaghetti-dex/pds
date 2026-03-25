@@ -1,8 +1,8 @@
 <?php
 require_once "../includes/auth_check.php";
-include "../includes/header.php"; 
+require_once "./../includes/audit_log.php";
 include "../config/database.php";
-//include "../includes/auth_check.php";
+
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset("utf8mb4");
@@ -178,9 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
         $stmt->close();
 
         $conn->commit();
+        write_audit_log(
+            $conn,
+            $delete_id,
+            'DELETE',
+            "Deleted PDS record with ID " . $delete_id
+        );
         $message = "Record deleted successfully.";
-        $selected_id = 0;
-        $person = null;
     } catch (Exception $ex) {
         $conn->rollback();
         $error = "Delete failed: " . $ex->getMessage();
@@ -726,6 +730,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
         }
 
         $conn->commit();
+
+    $full_name = trim($firstname . ' ' . $middlename . ' ' . $surname . ' ' . $extension);
+    write_audit_log($conn, $id, 'UPDATE', "Updated PDS record for " . $full_name);
+
         $message = "Record updated successfully.";
     } catch (Exception $ex) {
         $conn->rollback();
@@ -773,21 +781,30 @@ if ($selected_id > 0) {
     $stmt->close();
 
     if ($person) {
-        if (table_exists($conn, 'addresses')) {
-            $stmt = $conn->prepare("SELECT * FROM addresses WHERE person_id = ?");
-            $stmt->bind_param("i", $selected_id);
-            $stmt->execute();
-            $addrResult = $stmt->get_result();
+        $full_name = trim(
+            ($person['firstname'] ?? '') . ' ' .
+            ($person['middlename'] ?? '') . ' ' .
+            ($person['surname'] ?? '') . ' ' .
+            ($person['extension'] ?? '')
+        );
 
-            while ($row = $addrResult->fetch_assoc()) {
-                if (strcasecmp($row['type'] ?? '', 'Residential') === 0) {
-                    $residential = normalize_address_row($row);
-                } elseif (strcasecmp($row['type'] ?? '', 'Permanent') === 0) {
-                    $permanent = normalize_address_row($row);
-                }
-            }
-            $stmt->close();
+        write_audit_log($conn, $selected_id, 'OPEN_EDIT', "Opened edit page for " . $full_name);
+    }
+
+    if ($person) {
+        $address_rows = [];
+        $stmt = $conn->prepare("SELECT * FROM addresses WHERE person_id = ? ORDER BY id ASC");
+        $stmt->bind_param("i", $selected_id);
+        $stmt->execute();
+        $addrResult = $stmt->get_result();
+        while ($row = $addrResult->fetch_assoc()) {
+            $address_rows[] = $row;
         }
+        $stmt->close();
+
+        $education_records = [];
+        $eligibility_records = [];
+        $training_records = [];
 
         if ($education_table && has_column($education_columns, 'person_id')) {
             $stmt = $conn->prepare("SELECT * FROM `{$education_table}` WHERE person_id = ? ORDER BY id ASC");
