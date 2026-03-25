@@ -612,7 +612,73 @@ button{
   .address-row label{
     text-align:left;
   }
+.error-summary{
+  display:none;
+  background:#ffe3e3;
+  color:#8b1e1e;
+  border:1px solid #d99;
+  padding:12px 15px;
+  border-radius:8px;
+  margin-bottom:15px;
+  font-size:14px;
+  font-weight:600;
 }
+
+.field-error{
+  border:2px solid #c62828 !important;
+  background:#fff3f3 !important;
+}
+
+.field-error-message{
+  color:#c62828;
+  font-size:12px;
+  font-weight:600;
+  margin-top:4px;
+}
+
+label.required::after {
+  content: "*";
+  color: #c62828;
+  font-weight: bold;
+}
+
+label.required {
+  color: #c62828;
+}
+.error-summary{
+  display:none;
+  background:#ffe3e3;
+  color:#b71c1c;
+  border:1px solid #e0a4a4;
+  padding:12px 14px;
+  border-radius:8px;
+  margin-bottom:15px;
+  font-weight:700;
+}
+
+.field-error{
+  border:2px solid #c62828 !important;
+  background:#fff4f4 !important;
+}
+
+.field-error-message{
+  color:#c62828;
+  font-size:12px;
+  font-weight:700;
+  margin-top:4px;
+}
+
+label.required{
+  color:#c62828;
+  font-weight:700;
+}
+
+label.required::after{
+  content:" *";
+  color:#c62828;
+}
+
+  }
 </style>
 </head>
 <body>
@@ -668,29 +734,31 @@ button{
         <a href="../dashboard/dashboard.php" class="button">Home</a>
       </div>
 
-      <form method="POST" action="save.php">
+      <form method="POST" action="save.php" id="pdsForm" novalidate>
+
+      <div id="errorSummary" class="error-summary" style="display:none;"></div>
 
         <!-- PERSONAL INFORMATION -->
         <div id="personal" class="section active">
           <div class="title">PERSONAL INFORMATION</div>
 
           <div class="personal-grid">
-            <label>Last Name:</label>
+            <label class="required">Last Name: *</label>
             <input name="surname">
 
             <label>Name Extension:</label>
             <input name="extension">
 
-            <label>First Name:</label>
+            <label class="required">First Name: *</label>
             <input name="firstname">
 
-            <label>Date of Birth:</label>
+            <label class="required">Date of Birth: *</label>
             <input type="date" name="dob">
 
             <label>Middle Name:</label>
             <input name="middlename">
 
-            <label>Place of Birth:</label>
+            <label class="required">Place of Birth: *</label>
             <input name="birth_place"required>
           </div>
 
@@ -909,17 +977,17 @@ button{
                 </div>
 
                 <div>
-                  <label>Period of Attendance From</label>
+                  <label class="required">Period of Attendance From *</label>
                   <input type="date" name="edu_from[]"required>
                 </div>
 
                 <div>
-                  <label>To</label>
+                  <label class="required">To *</label>
                   <input type="date" name="edu_to[]"required>
                 </div>
 
                 <div>
-                  <label>Year Graduated</label>
+                  <label class="required">Year Graduated *</label>
                   <input name="year_graduated[]" placeholder="Year Graduated"required>
                 </div>
 
@@ -954,7 +1022,7 @@ button{
                 </div>
 
                 <div>
-                  <label>Exam Date</label>
+                  <label class="required">Exam Date *</label>
                   <input type="date" name="exam_date[]"required>
                 </div>
 
@@ -974,7 +1042,7 @@ button{
                 </div>
 
                 <div>
-                  <label>Valid Until</label>
+                  <label class="required">Valid Until *</label>
                   <input type="date" name="valid_until[]">
                 </div>
               </div>
@@ -999,17 +1067,17 @@ button{
                 </div>
 
                 <div>
-                  <label>Hours</label>
+                  <label class="required">Hours *</label>
                   <input name="hours[]" placeholder="Hours"required>
                 </div>
 
                 <div>
-                  <label>From</label>
+                  <label class="required">From *</label>
                   <input type="date" name="training_from[]"required>
                 </div>
 
                 <div>
-                  <label>To</label>
+                  <label class="required">To *</label>
                   <input type="date" name="training_to[]"required>
                 </div>
 
@@ -1042,196 +1110,528 @@ button{
 </div>
 
 <script>
-let currentSection = 0;
-const sections = document.querySelectorAll(".section");
-const navItems = document.querySelectorAll(".nav-item");
+        let currentSection = 0;
+        const sections = document.querySelectorAll(".section");
+        const navItems = document.querySelectorAll(".nav-item");
+        const form = document.getElementById("createRecordForm");
+        const errorSummary = document.getElementById("errorSummary");
 
-function updateProgress(index){
-  sections.forEach((sec, i) => {
-    sec.classList.toggle("active", i === index);
-  });
+        function updateProgress(index){
+          sections.forEach((sec, i) => {
+            sec.classList.toggle("active", i === index);
+          });
 
-  navItems.forEach((nav, i) => {
-    nav.classList.remove("active", "completed");
-    if(i < index){
-      nav.classList.add("completed");
-    }
-  });
+          navItems.forEach((nav, i) => {
+            nav.classList.remove("active", "completed");
+            if(i < index){
+              nav.classList.add("completed");
+            }
+          });
 
-  navItems[index].classList.add("active");
+          if (navItems[index]) {
+            navItems[index].classList.add("active");
+          }
 
-  const stepHeight = navItems[0].offsetHeight + 35;
-  document.getElementById("progressLine").style.height = (index * stepHeight) + "px";
+          const stepHeight = navItems[0].offsetHeight + 35;
+          document.getElementById("progressLine").style.height = (index * stepHeight) + "px";
 
-  currentSection = index;
+          currentSection = index;
 
-  const nextBtn = document.getElementById("nextBtn");
-  const saveBtn = document.getElementById("saveBtn");
+          const nextBtn = document.getElementById("nextBtn");
+          const saveBtn = document.getElementById("saveBtn");
 
-  if(index === sections.length - 1){
-    nextBtn.style.display = "none";
-    saveBtn.style.display = "inline-block";
-  } else {
-    nextBtn.style.display = "inline-block";
-    saveBtn.style.display = "none";
-  }
-}
+          if(index === sections.length - 1){
+            nextBtn.style.display = "none";
+            saveBtn.style.display = "inline-block";
+          } else {
+            nextBtn.style.display = "inline-block";
+            saveBtn.style.display = "none";
+          }
+        }
 
-function goToSection(index){
-  updateProgress(index);
-}
+        function goToSection(index){
+          updateProgress(index);
+        }
 
-function nextSection(){
-  if(currentSection < sections.length - 1){
-    updateProgress(currentSection + 1);
-  }
-}
+        function showSummary(message){
+          errorSummary.style.display = "block";
+          errorSummary.textContent = message;
+        }
 
-function addEducation() {
-  const container = document.getElementById("education-container");
-  const div = document.createElement("div");
-  div.classList.add("education-entry", "education-box");
-  div.innerHTML = `
-    <div class="education-grid">
-      <div>
-        <label>Level</label>
-        <select name="education_level[]">
-          <option>Elementary</option>
-          <option>Secondary</option>
-          <option>Vocational / Trade Course</option>
-          <option>College</option>
-          <option>Graduate Studies</option>
-        </select>
-      </div>
+        function hideSummary(){
+          errorSummary.style.display = "none";
+          errorSummary.textContent = "";
+        }
 
-      <div>
-        <label>Name of School</label>
-        <input name="school_name[]" placeholder="School Name">
-      </div>
+        function clearFieldErrors(){
+          document.querySelectorAll(".field-error").forEach(el => {
+            el.classList.remove("field-error");
+          });
 
-      <div>
-        <label>Basic Education / Degree / Course</label>
-        <input name="course[]" placeholder="Course / Degree">
-      </div>
+          document.querySelectorAll(".field-error-message").forEach(el => {
+            el.remove();
+          });
+        }
 
-      <div>
-        <label>Highest Level / Units Earned</label>
-        <input name="units[]" placeholder="Highest Level / Units">
-      </div>
+        function addFieldError(input, message){
+          input.classList.add("field-error");
 
-      <div>
-        <label>Period of Attendance From</label>
-        <input type="date" name="edu_from[]">
-      </div>
+          const wrapper = input.parentElement;
+          if (!wrapper) return;
 
-      <div>
-        <label>To</label>
-        <input type="date" name="edu_to[]">
-      </div>
+          const old = wrapper.querySelector(".field-error-message");
+          if (old) old.remove();
 
-      <div>
-        <label>Year Graduated</label>
-        <input name="year_graduated[]" placeholder="Year Graduated">
-      </div>
+          const msg = document.createElement("div");
+          msg.className = "field-error-message";
+          msg.textContent = message;
+          wrapper.appendChild(msg);
+        }
 
-      <div>
-        <label>Scholarship / Academic Honors</label>
-        <input name="honors[]" placeholder="Scholarship / Honors">
-      </div>
-    </div>
-    <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
-  `;
-  container.appendChild(div);
-}
+        function getSectionName(sectionId){
+          const names = {
+            personal: "Personal Information",
+            address: "Address",
+            contact: "Contact Information",
+            education: "Educational Background",
+            "eligibility-section": "Service Eligibility",
+            "training-section": "Learning and Development"
+          };
+          return names[sectionId] || "this section";
+        }
 
-function addEligibility() {
-  const container = document.getElementById("eligibility");
-  const div = document.createElement("div");
-  div.classList.add("eligibility-entry", "eligibility-box");
-  div.innerHTML = `
-    <div class="eligibility-grid">
-      <div>
-        <label>Career Service / CSC / CES</label>
-        <input name="career_service[]" placeholder="Career Service / CSC / CES">
-      </div>
+        function validateSection(section){
+          let firstInvalid = null;
+          const requiredFields = section.querySelectorAll("[required]");
 
-      <div>
-        <label>Rating</label>
-        <input name="rating[]" placeholder="Rating">
-      </div>
+          requiredFields.forEach(input => {
+            const value = (input.value || "").trim();
+            if(value === ""){
+              addFieldError(input, "This field is required.");
+              if(!firstInvalid){
+                firstInvalid = input;
+              }
+            }
+          });
 
-      <div>
-        <label>Exam Date</label>
-        <input type="date" name="exam_date[]">
-      </div>
+          return firstInvalid;
+        }
 
-      <div>
-        <label>Place of Examination</label>
-        <input name="exam_place[]" placeholder="Place of Examination">
-      </div>
+        function validateAllSections(){
+          clearFieldErrors();
+          hideSummary();
 
-      <div>
-        <label>License</label>
-        <input name="license[]" placeholder="License">
-      </div>
+          for(let i = 0; i < sections.length; i++){
+            const invalidField = validateSection(sections[i]);
 
-      <div>
-        <label>License Number</label>
-        <input name="license_number[]" placeholder="License Number">
-      </div>
+            if(invalidField){
+              updateProgress(i);
+              showSummary("Please complete the required field(s) in " + getSectionName(sections[i].id) + ".");
+              setTimeout(() => {
+                invalidField.focus();
+                invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 100);
+              return false;
+            }
+          }
 
-      <div>
-        <label>Valid Until</label>
-        <input type="date" name="valid_until[]">
-      </div>
-    </div>
-    <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
-  `;
-  container.appendChild(div);
-}
+          return true;
+        }
 
-function addTraining() {
-  const container = document.getElementById("training");
-  const div = document.createElement("div");
-  div.classList.add("training-entry", "training-box");
-  div.innerHTML = `
-    <div class="training-grid">
-      <div>
-        <label>Training Title</label>
-        <input name="title[]" placeholder="Training Title">
-      </div>
+        function nextSection(){
+          clearFieldErrors();
+          hideSummary();
 
-      <div>
-        <label>Hours</label>
-        <input name="hours[]" placeholder="Hours">
-      </div>
+          const invalidField = validateSection(sections[currentSection]);
+          if(invalidField){
+            showSummary("You forgot a required field in " + getSectionName(sections[currentSection].id) + ".");
+            invalidField.focus();
+            invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+            saveFormDraft();
+            return;
+          }
 
-      <div>
-        <label>From</label>
-        <input type="date" name="training_from[]">
-      </div>
+          if(currentSection < sections.length - 1){
+            updateProgress(currentSection + 1);
+          }
+        }
 
-      <div>
-        <label>To</label>
-        <input type="date" name="training_to[]">
-      </div>
+        /* -------------------------
+          DRAFT SAVE / RESTORE
+        ------------------------- */
+        function getDraftKey() {
+          return "personal_record_create_draft";
+        }
 
-      <div>
-        <label>Type</label>
-        <input name="type[]" placeholder="Managerial / Technical">
-      </div>
+        function collectRepeatedEntries(selector, fieldNames) {
+          const entries = [];
+          document.querySelectorAll(selector).forEach(entry => {
+            const row = {};
+            fieldNames.forEach(name => {
+              const el = entry.querySelector(`[name="${name}[]"]`);
+              row[name] = el ? el.value : '';
+            });
 
-      <div>
-        <label>Sponsor</label>
-        <input name="sponsor[]" placeholder="Sponsor">
-      </div>
-    </div>
-    <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
-  `;
-  container.appendChild(div);
-}
+            const hasValue = Object.values(row).some(v => String(v).trim() !== '');
+            if (hasValue) {
+              entries.push(row);
+            }
+          });
+          return entries;
+        }
 
-updateProgress(0);
+        function saveFormDraft() {
+          if (!form) return;
+
+          const data = {
+            simple: {},
+            education: collectRepeatedEntries('.education-entry', [
+              'education_level', 'school_name', 'course', 'units',
+              'edu_from', 'edu_to', 'year_graduated', 'honors'
+            ]),
+            eligibility: collectRepeatedEntries('.eligibility-entry', [
+              'career_service', 'rating', 'exam_date', 'exam_place',
+              'license', 'license_number', 'valid_until'
+            ]),
+            training: collectRepeatedEntries('.training-entry', [
+              'title', 'hours', 'training_from', 'training_to', 'type', 'sponsor'
+            ])
+          };
+
+          const fields = form.querySelectorAll('input:not([type="hidden"]):not([name$="[]"]), select:not([name$="[]"]), textarea:not([name$="[]"])');
+          fields.forEach(field => {
+            if (!field.name) return;
+
+            if (field.type === 'checkbox' || field.type === 'radio') {
+              if (field.checked) {
+                data.simple[field.name] = field.value;
+              }
+            } else {
+              data.simple[field.name] = field.value;
+            }
+          });
+
+          data.currentSection = currentSection;
+
+          localStorage.setItem(getDraftKey(), JSON.stringify(data));
+        }
+
+        function restoreSimpleFields(data) {
+          if (!data || !data.simple) return;
+
+          Object.keys(data.simple).forEach(name => {
+            const field = form.querySelector(`[name="${name}"]`);
+            if (field) {
+              field.value = data.simple[name];
+            }
+          });
+        }
+
+        function clearContainer(selector) {
+          const container = document.querySelector(selector);
+          if (container) {
+            container.innerHTML = '';
+          }
+        }
+
+        function restoreDraft() {
+          if (!form) return;
+
+          const raw = localStorage.getItem(getDraftKey());
+          if (!raw) return;
+
+          let data = null;
+          try {
+            data = JSON.parse(raw);
+          } catch (e) {
+            return;
+          }
+
+          restoreSimpleFields(data);
+
+          if (document.getElementById('education-container') && Array.isArray(data.education)) {
+            clearContainer('#education-container');
+            if (data.education.length > 0) {
+              data.education.forEach(row => addEducation(row));
+            } else {
+              addEducation();
+            }
+          }
+
+          if (document.getElementById('eligibility') && Array.isArray(data.eligibility)) {
+            clearContainer('#eligibility');
+            if (data.eligibility.length > 0) {
+              data.eligibility.forEach(row => addEligibility(row));
+            } else {
+              addEligibility();
+            }
+          }
+
+          if (document.getElementById('training') && Array.isArray(data.training)) {
+            clearContainer('#training');
+            if (data.training.length > 0) {
+              data.training.forEach(row => addTraining(row));
+            } else {
+              addTraining();
+            }
+          }
+
+          if (typeof data.currentSection === 'number') {
+            updateProgress(data.currentSection);
+          }
+        }
+
+        function clearDraft() {
+          localStorage.removeItem(getDraftKey());
+        }
+
+        /* -------------------------
+          DYNAMIC SECTIONS
+        ------------------------- */
+        function addEducation(data = {}) {
+          const container = document.getElementById("education-container");
+          const div = document.createElement("div");
+          div.classList.add("education-entry", "education-box");
+          div.innerHTML = `
+            <div class="education-grid">
+              <div>
+                <label>Level</label>
+                <select name="education_level[]">
+                  <option>Elementary</option>
+                  <option>Secondary</option>
+                  <option>Vocational / Trade Course</option>
+                  <option>College</option>
+                  <option>Graduate Studies</option>
+                </select>
+              </div>
+
+              <div>
+                <label>Name of School</label>
+                <input name="school_name[]" placeholder="School Name">
+              </div>
+
+              <div>
+                <label>Basic Education / Degree / Course</label>
+                <input name="course[]" placeholder="Course / Degree">
+              </div>
+
+              <div>
+                <label>Highest Level / Units Earned</label>
+                <input name="units[]" placeholder="Highest Level / Units">
+              </div>
+
+              <div>
+                <label class="required">Period of Attendance From</label>
+                <input type="date" name="edu_from[]" required>
+              </div>
+
+              <div>
+                <label class="required">To</label>
+                <input type="date" name="edu_to[]" required>
+              </div>
+
+              <div>
+                <label class="required">Year Graduated</label>
+                <input name="year_graduated[]" placeholder="Year Graduated" required>
+              </div>
+
+              <div>
+                <label>Scholarship / Academic Honors</label>
+                <input name="honors[]" placeholder="Scholarship / Honors">
+              </div>
+            </div>
+            <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
+          `;
+          container.appendChild(div);
+
+          div.querySelector('[name="education_level[]"]').value = data.education_level || 'Elementary';
+          div.querySelector('[name="school_name[]"]').value = data.school_name || '';
+          div.querySelector('[name="course[]"]').value = data.course || '';
+          div.querySelector('[name="units[]"]').value = data.units || '';
+          div.querySelector('[name="edu_from[]"]').value = data.edu_from || '';
+          div.querySelector('[name="edu_to[]"]').value = data.edu_to || '';
+          div.querySelector('[name="year_graduated[]"]').value = data.year_graduated || '';
+          div.querySelector('[name="honors[]"]').value = data.honors || '';
+
+          saveFormDraft();
+        }
+
+        function addEligibility(data = {}) {
+          const container = document.getElementById("eligibility");
+          const div = document.createElement("div");
+          div.classList.add("eligibility-entry", "eligibility-box");
+          div.innerHTML = `
+            <div class="eligibility-grid">
+              <div>
+                <label>Career Service / CSC / CES</label>
+                <input name="career_service[]" placeholder="Career Service / CSC / CES">
+              </div>
+
+              <div>
+                <label>Rating</label>
+                <input name="rating[]" placeholder="Rating">
+              </div>
+
+              <div>
+                <label class="required">Exam Date</label>
+                <input type="date" name="exam_date[]" required>
+              </div>
+
+              <div>
+                <label>Place of Examination</label>
+                <input name="exam_place[]" placeholder="Place of Examination">
+              </div>
+
+              <div>
+                <label>License</label>
+                <input name="license[]" placeholder="License">
+              </div>
+
+              <div>
+                <label>License Number</label>
+                <input name="license_number[]" placeholder="License Number">
+              </div>
+
+              <div>
+                <label>Valid Until</label>
+                <input type="date" name="valid_until[]">
+              </div>
+            </div>
+            <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+          `;
+          container.appendChild(div);
+
+          div.querySelector('[name="career_service[]"]').value = data.career_service || '';
+          div.querySelector('[name="rating[]"]').value = data.rating || '';
+          div.querySelector('[name="exam_date[]"]').value = data.exam_date || '';
+          div.querySelector('[name="exam_place[]"]').value = data.exam_place || '';
+          div.querySelector('[name="license[]"]').value = data.license || '';
+          div.querySelector('[name="license_number[]"]').value = data.license_number || '';
+          div.querySelector('[name="valid_until[]"]').value = data.valid_until || '';
+
+          saveFormDraft();
+        }
+
+        function addTraining(data = {}) {
+          const container = document.getElementById("training");
+          const div = document.createElement("div");
+          div.classList.add("training-entry", "training-box");
+          div.innerHTML = `
+            <div class="training-grid">
+              <div>
+                <label>Training Title</label>
+                <input name="title[]" placeholder="Training Title">
+              </div>
+
+              <div>
+                <label class="required">Hours</label>
+                <input name="hours[]" placeholder="Hours" required>
+              </div>
+
+              <div>
+                <label class="required">From</label>
+                <input type="date" name="training_from[]" required>
+              </div>
+
+              <div>
+                <label class="required">To</label>
+                <input type="date" name="training_to[]" required>
+              </div>
+
+              <div>
+                <label>Type</label>
+                <input name="type[]" placeholder="Managerial / Technical">
+              </div>
+
+              <div>
+                <label>Sponsor</label>
+                <input name="sponsor[]" placeholder="Sponsor">
+              </div>
+            </div>
+            <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+          `;
+          container.appendChild(div);
+
+          div.querySelector('[name="title[]"]').value = data.title || '';
+          div.querySelector('[name="hours[]"]').value = data.hours || '';
+          div.querySelector('[name="training_from[]"]').value = data.training_from || '';
+          div.querySelector('[name="training_to[]"]').value = data.training_to || '';
+          div.querySelector('[name="type[]"]').value = data.type || '';
+          div.querySelector('[name="sponsor[]"]').value = data.sponsor || '';
+
+          saveFormDraft();
+        }
+
+        function removeEntry(button, selector) {
+          const item = button.closest(selector);
+          if (item) {
+            item.remove();
+            saveFormDraft();
+          }
+        }
+
+        /* -------------------------
+          AUTO MARK REQUIRED LABELS
+        ------------------------- */
+        function markRequiredLabels() {
+          document.querySelectorAll("[required]").forEach(input => {
+            const wrapper = input.parentElement;
+            if (!wrapper) return;
+            const label = wrapper.querySelector("label");
+            if (label) {
+              label.classList.add("required");
+            }
+          });
+        }
+
+        /* -------------------------
+          EVENTS
+        ------------------------- */
+        document.addEventListener("input", function(e){
+          if(e.target.matches("input, select, textarea")){
+            if((e.target.value || "").trim() !== ""){
+              e.target.classList.remove("field-error");
+              const wrapper = e.target.parentElement;
+              if (wrapper) {
+                const msg = wrapper.querySelector(".field-error-message");
+                if(msg) msg.remove();
+              }
+            }
+            saveFormDraft();
+          }
+        });
+
+        document.addEventListener("change", function(e){
+          if(e.target.matches("input, select, textarea")){
+            saveFormDraft();
+          }
+        });
+
+        form.addEventListener("submit", function(e){
+          saveFormDraft();
+
+          if(!validateAllSections()){
+            e.preventDefault();
+            return false;
+          }
+
+          clearDraft();
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+          restoreDraft();
+          markRequiredLabels();
+          if (localStorage.getItem(getDraftKey())) {
+            const raw = JSON.parse(localStorage.getItem(getDraftKey()));
+            if (typeof raw.currentSection === "number") {
+              updateProgress(raw.currentSection);
+            } else {
+              updateProgress(0);
+            }
+          } else {
+            updateProgress(0);
+          }
+        });
 </script>
 
 </body>

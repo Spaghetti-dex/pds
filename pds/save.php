@@ -97,9 +97,9 @@ if (!empty($_POST['education_level']) && is_array($_POST['education_level'])) {
 
         if ($education_level !== '' || $school_name !== '' || $course !== '') {
             $sql_education = "INSERT INTO EDUCATION
-            (person_id, education_level, school_name, course, edu_from, edu_to, units, year_graduated, hours)
+            (person_id, education_level, school_name, course, edu_from, edu_to, units, year_graduated )
             VALUES
-            ('$person_id','$education_level','$school_name','$course','$edu_from','$edu_to','$units','$year_graduated','$hours')";
+            ('$person_id','$education_level','$school_name','$course','$edu_from','$edu_to','$units','$year_graduated')";
             $conn->query($sql_education);
         }
     }
