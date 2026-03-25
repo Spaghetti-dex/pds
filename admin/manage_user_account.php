@@ -29,7 +29,6 @@ if (isset($_POST['update'])) {
     } elseif (!filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email format.";
     } else {
-        // confirm selected account is a USER account
         $checkUser = $conn->prepare("SELECT id FROM users WHERE id = ? AND role = 'user' LIMIT 1");
         $checkUser->bind_param("i", $target_id);
         $checkUser->execute();
@@ -38,7 +37,6 @@ if (isset($_POST['update'])) {
         if ($userResult->num_rows === 0) {
             $message = "Selected user account not found.";
         } else {
-            // check duplicate username
             $checkUsername = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ? LIMIT 1");
             $checkUsername->bind_param("si", $new_username, $target_id);
             $checkUsername->execute();
@@ -47,7 +45,6 @@ if (isset($_POST['update'])) {
             if ($usernameResult->num_rows > 0) {
                 $message = "Username is already in use.";
             } else {
-                // check duplicate email
                 $checkEmail = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
                 $checkEmail->bind_param("si", $new_email, $target_id);
                 $checkEmail->execute();
@@ -56,12 +53,10 @@ if (isset($_POST['update'])) {
                 if ($emailResult->num_rows > 0) {
                     $message = "Email is already in use.";
                 } else {
-                    // update username + email
                     $stmt = $conn->prepare("UPDATE users SET username = ?, email = ? WHERE id = ? AND role = 'user'");
                     $stmt->bind_param("ssi", $new_username, $new_email, $target_id);
 
                     if ($stmt->execute()) {
-                        // update password only if entered
                         if ($new_password !== '' || $confirm_password !== '') {
                             if (strlen($new_password) < 6) {
                                 $message = "Password must be at least 6 characters.";
@@ -106,6 +101,7 @@ if (isset($_POST['update'])) {
 <head>
 <meta charset="UTF-8">
 <title>Manage User Account</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -120,13 +116,17 @@ if (isset($_POST['update'])) {
 body{
     background:#efefef url("../assets/bg-wave.png") no-repeat center center fixed;
     background-size:cover;
-    min-height:100vh;
-    padding:110px 20px 30px 20px;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
 }
 
 .container{
     width:500px;
-    margin:auto;
+    max-width:95vw;
+    max-height:95vh;
     background:#f8f8f8;
     border:3px solid #22361e;
     border-radius:25px;
@@ -135,32 +135,54 @@ body{
 }
 
 .header{
+    position:relative;
     background:#22361e;
     color:#fff;
     text-align:center;
-    padding:28px 20px;
-    font-size:28px;
+    padding:24px 20px;
+    font-size:26px;
     font-weight:bold;
 }
 
+.home-btn{
+    position:absolute;
+    left:15px;
+    top:50%;
+    transform:translateY(-50%);
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.home-btn:hover{
+    background:rgba(255,255,255,0.35);
+}
+
 .form-area{
-    padding:30px;
+    padding:20px;
 }
 
 label{
     display:block;
-    margin-bottom:8px;
+    margin-bottom:6px;
     font-weight:bold;
     color:#22361e;
 }
 
 input, select{
     width:100%;
-    padding:11px 12px;
+    padding:10px 12px;
     border:2px solid #888;
     border-radius:10px;
     background:#efe8c2;
-    margin-bottom:16px;
+    margin-bottom:14px;
     font-size:14px;
 }
 
@@ -173,54 +195,74 @@ input:focus, select:focus{
     background:#eef4ec;
     border:1px solid #c7d5c2;
     border-radius:12px;
-    padding:14px;
-    margin-bottom:18px;
+    padding:12px;
+    margin-bottom:14px;
 }
 
 .info-row{
-    margin-bottom:8px;
-    font-size:14px;
+    font-size:13px;
+    margin-bottom:6px;
 }
 
-.info-label{
-    font-weight:bold;
-    color:#22361e;
+.info-row:last-child{
+    margin-bottom:0;
 }
 
 .password-wrap{
     position:relative;
+    margin-bottom:14px;
 }
 
 .password-wrap input{
-    padding-right:42px;
+    width:100%;
+    height:52px;
+    padding:10px 50px 10px 14px;
+    border:2px solid #888;
+    border-radius:18px;
+    background:#cfd8e7;
+    font-size:15px;
+    margin-bottom:0;
 }
 
 .eye{
     position:absolute;
-    right:12px;
-    top:40%;
+    right:16px;
+    top:50%;
     transform:translateY(-50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+    font-size:15px;
+    color:#3b3128;
     cursor:pointer;
-    color:#333;
+    line-height:1;
+}
+
+.eye:hover{
+    color:#000;
 }
 
 button{
-    padding:11px 24px;
+    width: 45%;
+    padding:11px;
     border:none;
     border-radius:20px;
     background:#8fae8d;
     font-weight:bold;
     cursor:pointer;
     transition:0.3s;
+    display: block;
+    margin: 20px auto 0; /* centers horizontally */
 }
 
 button:hover{
     background:#789c78;
-    transform:scale(1.03);
 }
 
 .message{
-    margin-bottom:15px;
+    margin-bottom:12px;
     font-weight:bold;
     color:#b00020;
 }
@@ -231,16 +273,21 @@ button:hover{
 
 .note{
     font-size:12px;
+    margin-top:-4px;
+    margin-bottom:12px;
     color:#444;
-    margin-top:-10px;
-    margin-bottom:14px;
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">Manage User Account</div>
+    <div class="header">
+        <a href="../dashboard/dashboard.php" class="home-btn" title="Home">
+            <i class="fa-solid fa-house"></i>
+        </a>
+        Manage User Account
+    </div>
 
     <div class="form-area">
 
@@ -269,20 +316,32 @@ button:hover{
 
             <div class="info-box">
                 <div class="info-row">
-                    <span class="info-label">Current Username:</span>
+                    <strong>Current Username:</strong>
                     <span id="current_username">None</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Current Email:</span>
+                    <strong>Current Email:</strong>
                     <span id="current_email_text">None</span>
                 </div>
             </div>
 
             <label>New Username</label>
-            <input type="text" name="new_username" id="new_username" value="<?php echo htmlspecialchars($_POST['new_username'] ?? ''); ?>" required>
+            <input
+                type="text"
+                name="new_username"
+                id="new_username"
+                value="<?php echo htmlspecialchars($_POST['new_username'] ?? ''); ?>"
+                required
+            >
 
             <label>New Email</label>
-            <input type="email" name="new_email" id="new_email" value="<?php echo htmlspecialchars($_POST['new_email'] ?? ''); ?>" required>
+            <input
+                type="email"
+                name="new_email"
+                id="new_email"
+                value="<?php echo htmlspecialchars($_POST['new_email'] ?? ''); ?>"
+                required
+            >
 
             <label>New Password</label>
             <div class="password-wrap">

@@ -21,16 +21,24 @@ if (!isset($_SESSION['username'])) {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+/* ✅ FIXED BODY (NO SCROLL + CENTERED) */
 body{
     background:#efefef url("../assets/bg-wave.png") no-repeat center center fixed;
     background-size:cover;
-    min-height:100vh;
-    padding:110px 20px 30px 20px;
+
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    overflow:hidden;
 }
 
+/* ✅ CONTAINER FIT SCREEN */
 .about-container{
     max-width:800px;
-    margin:0 auto;
+    width:100%;
+    max-height:95vh;
     background:#f8f8f8;
     border:3px solid #22361e;
     border-radius:25px;
@@ -38,33 +46,34 @@ body{
     box-shadow:0 8px 20px rgba(0,0,0,0.20);
 }
 
+/* HEADER */
 .about-header{
     background:#22361e;
     color:#fff;
     text-align:center;
-    padding:30px 20px;
+    padding:25px 20px;
 }
 
 .about-header h1{
-    font-size:30px;
-    margin-bottom:8px;
-    letter-spacing:1px;
+    font-size:28px;
+    margin-bottom:6px;
 }
 
 .about-header p{
-    font-size:14px;
-    opacity:0.95;
+    font-size:13px;
 }
 
+/* BODY */
 .about-body{
-    padding:35px 30px;
+    padding:25px 25px; /* reduced */
     text-align:center;
 }
 
+/* LOGO */
 .logo-box{
-    width:120px;
-    height:120px;
-    margin:0 auto 20px auto;
+    width:100px;
+    height:100px;
+    margin:0 auto 15px auto;
     border-radius:50%;
     border:3px solid #22361e;
     background:#fff url("../assets/rtu_logo.png") no-repeat center center;
@@ -73,55 +82,52 @@ body{
 }
 
 .system-title{
-    font-size:28px;
+    font-size:24px;
     font-weight:bold;
     color:#22361e;
-    margin-bottom:15px;
+    margin-bottom:10px;
 }
 
 .system-desc{
-    font-size:16px;
+    font-size:15px;
     color:#333;
-    line-height:1.8;
-    margin-bottom:25px;
+    line-height:1.6;
+    margin-bottom:20px;
 }
 
 .line{
     width:100%;
     height:1px;
     background:#cfcfcf;
-    margin:25px 0;
+    margin:20px 0;
 }
 
 .section-title{
-    font-size:20px;
+    font-size:18px;
     color:#22361e;
-    margin-bottom:18px;
+    margin-bottom:15px;
     font-weight:bold;
 }
 
 .dev-list{
     list-style:none;
-    padding:0;
-    margin:0;
 }
 
 .dev-list li{
     background:#e9efe7;
-    margin:10px auto;
-    padding:12px 15px;
-    border-radius:12px;
-    max-width:420px;
-    font-size:16px;
+    margin:8px auto;
+    padding:10px;
+    border-radius:10px;
+    max-width:400px;
+    font-size:15px;
     font-weight:bold;
-    color:#1d1d1d;
     border:1px solid #c9d6c5;
 }
 
 .back-btn{
     display:inline-block;
-    margin-top:25px;
-    padding:12px 24px;
+    margin-top:20px;
+    padding:10px 22px;
     background:#8fae8d;
     color:#000;
     text-decoration:none;
@@ -133,6 +139,15 @@ body{
 .back-btn:hover{
     background:#789c78;
     transform:scale(1.05);
+}
+
+/* ✅ OPTIONAL: allow scroll only on very small screens */
+@media (max-height: 700px){
+    body{
+        overflow:auto;
+        align-items:flex-start;
+        padding:20px;
+    }
 }
 </style>
 </head>

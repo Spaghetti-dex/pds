@@ -13,6 +13,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 }
 
 $message = "";
+$messageType = "";
 
 if (isset($_POST['create'])) {
     $username = trim($_POST['username'] ?? '');
@@ -22,58 +23,35 @@ if (isset($_POST['create'])) {
 
     if (empty($username) || empty($email) || empty($password)) {
         $message = "Please fill in all fields.";
+        $messageType = "error";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email format.";
+        $messageType = "error";
     } elseif (strlen($password) < 6) {
         $message = "Password must be at least 6 characters.";
-    } elseif (!in_array($role, ['admin', 'user'])) {
-        $message = "Invalid role selected.";
+        $messageType = "error";
     } else {
-        $check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1");
+        $check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
         $check->bind_param("ss", $username, $email);
         $check->execute();
         $result = $check->get_result();
 
         if ($result->num_rows > 0) {
             $message = "Username or email already exists.";
+            $messageType = "error";
         } else {
             $hash = password_hash($password, PASSWORD_DEFAULT);
 
             $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("ssss", $username, $email, $hash, $role);
-        if ($stmt->execute()) {
-                $message = '
-                    <div class="success-content">
-                        <span class="hourglass">⌛</span>
-                        <span>
-                            Account created successfully.<br>
-                            Redirecting in <strong id="countdown">3</strong> seconds...
-                        </span>
-                    </div>
 
-                    <script>
-                        let timeLeft = 3;
-                        const countdownEl = document.getElementById("countdown");
-
-                        const timer = setInterval(function () {
-                            timeLeft--;
-
-                            if (countdownEl) {
-                                countdownEl.textContent = timeLeft;
-                            }
-
-                            if (timeLeft <= 0) {
-                                clearInterval(timer);
-                                window.location.href = "../dashboard/dashboard.php";
-                            }
-                        }, 1000);
-                    </script>
-                ';
+            if ($stmt->execute()) {
+                $messageType = "success";
+                $message = "Account created successfully!";
             } else {
                 $message = "Error creating account.";
+                $messageType = "error";
             }
-            
-            
 
             $stmt->close();
         }
@@ -86,112 +64,243 @@ if (isset($_POST['create'])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Add Account</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Account</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
-        body{
-                font-family:Arial, Helvetica, sans-serif;
-                background:#f5f5f5;
-                padding:40px;
-            }
-            .container{
-                width:400px;
-                margin:auto;
-                background:white;
-                padding:25px;
-                border-radius:12px;
-                box-shadow:0 0 10px rgba(0,0,0,0.1);
-            }
-            input, select{
-                width:100%;
-                padding:10px;
-                margin-top:8px;
-                margin-bottom:15px;
-                border:1px solid #ccc;
-                border-radius:8px;
-            }
-            button{
-                padding:10px 20px;
-                border:none;
-                background:#2f3f28;
-                color:white;
-                border-radius:8px;
-                cursor:pointer;
-            }
-            button:hover{
-                background:#44573c;
-            }
-            .message{
-                margin-bottom:15px;
-                color:#c00;
-                font-weight:bold;
-            }
-            .success{
-                color:green;
-            }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
 
-            .success{
-                color: #1f5f1f;
-                background: #eef8ea;
-                border: 1px solid #b7d7b0;
-                padding: 12px;
-                border-radius: 10px;
-                margin-bottom: 15px;
-            }
+        body {
+            background: #e9e9e9;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
 
-            .success-content{
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
+        .wrapper {
+            width: 100%;
+            max-width: 600px;
+            max-height: 95vh;
+            background: #f5f5f5;
+            border: 3px solid #2d4725;
+            border-radius: 28px;
+            overflow: hidden;
+        }
 
-            .hourglass{
-                font-size: 24px;
-                animation: flipGlass 1s infinite;
-            }
+        .header {
+            position: relative;
+            background: linear-gradient(90deg, #1f4a18, #173714);
+            color: #fff;
+            text-align: center;
+            padding: 25px 15px;
+        }
 
-            #countdown{
-                font-size: 16px;
-                font-weight: bold;
-            }
+        .header h1 {
+            font-size: 28px;
+        }
 
-            @keyframes flipGlass{
-                0%{ transform: rotate(0deg); }
-                50%{ transform: rotate(180deg); }
-                100%{ transform: rotate(360deg); }
-            }
+        .home-btn {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.14);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 16px;
+            text-decoration: none;
+            transition: 0.2s ease;
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .content {
+            padding: 25px 30px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background: #dde4da;
+            color: #1f5f1f;
+        }
+
+        .message.error {
+            background: #f3dede;
+            color: #8a1f1f;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            height: 48px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 2px solid #8e8e8e;
+            outline: none;
+        }
+
+        .input-blue {
+            background: #cfd8e7;
+        }
+
+        .input-yellow {
+            background: #dfd7b3;
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-wrap input {
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .btn {
+            width: 40%;
+            background: #98b38e;
+            border: none;
+            padding: 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s ease;
+            display: block;
+            margin: 20px auto 0; /* centers horizontally */
+        }
+
+        .btn:hover {
+            background: #87a57d;
+        }
     </style>
 </head>
-     <body>
+<body>
 
-        <div class="container">
-            <h2>Add Account</h2>
+<div class="wrapper">
+    <div class="header">
+        <a href="../dashboard/dashboard.php" class="home-btn" title="Home">
+            <i class="fa-solid fa-house"></i>
+        </a>
+        <h1>Add User Account</h1>
+    </div>
 
-            <?php if ($message != ""): ?>
-            <div class="message success">
+    <div class="content">
+        <?php if ($message): ?>
+            <div class="message <?php echo $messageType; ?>">
                 <?php echo $message; ?>
             </div>
-            <?php endif; ?>
+        <?php endif; ?>
 
-            <form method="POST">
+        <form method="POST">
+            <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" required>
+                <input
+                    type="text"
+                    name="username"
+                    class="input-blue"
+                    value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
+                    required
+                >
+            </div>
 
+            <div class="form-group">
                 <label>Email</label>
-                <input type="email" name="email" required>
+                <input
+                    type="email"
+                    name="email"
+                    class="input-yellow"
+                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
+                    required
+                >
+            </div>
 
+            <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" required>
+                <div class="password-wrap">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="input-blue"
+                        required
+                    >
+                    <span class="toggle-password" onclick="togglePassword()">
+                        <i id="eyeIcon" class="fa-solid fa-eye-slash"></i>
+                    </span>
+                </div>
+            </div>
 
+            <div class="form-group">
                 <label>Role</label>
-                <select name="role">
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-              </select>
+                <select name="role" class="input-yellow">
+                    <option value="user" <?php echo (($_POST['role'] ?? '') === 'user') ? 'selected' : ''; ?>>User</option>
+                    <option value="admin" <?php echo (($_POST['role'] ?? '') === 'admin') ? 'selected' : ''; ?>>Admin</option>
+                </select>
+            </div>
 
-         <button type="submit" name="create">Create Account</button>
-    </form>
+            <button type="submit" name="create" class="btn">Create Account</button>
+        </form>
+    </div>
 </div>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById("password");
+    const icon = document.getElementById("eyeIcon");
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    }
+}
+</script>
 
 </body>
 </html>
