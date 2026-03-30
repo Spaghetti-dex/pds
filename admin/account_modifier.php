@@ -207,7 +207,7 @@ if (isset($_POST['update'])) {
 
         .input-blue {
             background: #cfd8e7;
-
+    
         }
 
         .input-yellow {

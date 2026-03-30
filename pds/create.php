@@ -1620,17 +1620,8 @@ label.required::after{
 
         document.addEventListener("DOMContentLoaded", function () {
           restoreDraft();
-          markRequiredLabels();
-          if (localStorage.getItem(getDraftKey())) {
-            const raw = JSON.parse(localStorage.getItem(getDraftKey()));
-            if (typeof raw.currentSection === "number") {
-              updateProgress(raw.currentSection);
-            } else {
-              updateProgress(0);
-            }
-          } else {
-            updateProgress(0);
-          }
+
+          
         });
 </script>
 

@@ -82,6 +82,9 @@ function get_address_house_column(array $columns): string {
 
 $search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : "";
 $selected_id = isset($_REQUEST['id']) ? (int)$_REQUEST['id'] : 0;
+$sort = isset($_REQUEST['sort']) ? strtolower(trim($_REQUEST['sort'])) : 'asc';
+$sort = ($sort === 'desc') ? 'desc' : 'asc';
+$order = ($sort === 'desc') ? 'DESC' : 'ASC';
 
 $message = "";
 $error = "";
@@ -754,7 +757,7 @@ if ($search !== "") {
            OR CONCAT(surname, ' ', firstname) LIKE ?
            OR firstname LIKE ?
            OR surname LIKE ?
-        ORDER BY surname, firstname
+        ORDER BY surname " . $order . ", firstname " . $order . "
     ");
     $like = "%{$search}%";
     $stmt->bind_param("ssss", $like, $like, $like, $like);
@@ -1579,6 +1582,10 @@ button{
             <div class="simple-grid">
                 <div><label>Search Name</label></div>
                 <div><input type="text" name="search" value="<?php echo e($search); ?>" placeholder="Enter first name or surname"></div>
+                <select name="sort">
+                    <option value="asc" <?php echo ($sort === 'asc') ? 'selected' : ''; ?>>A - Z</option>
+                    <option value="desc" <?php echo ($sort === 'desc') ? 'selected' : ''; ?>>Z - A</option>
+                </select>
                 <div></div>
                 <div class="search-actions">
                     <button type="submit" class="btn-primary">Search</button>
