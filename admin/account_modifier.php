@@ -101,11 +101,12 @@ if (isset($_POST['update'])) {
 
         body {
             background: #e9e9e9;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            align-items: flex-start;
+            padding: 20px;
+            overflow-x: hidden;
         }
 
         .wrapper {
@@ -116,6 +117,7 @@ if (isset($_POST['update'])) {
             border-radius: 30px;
             overflow: hidden;
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+            margin: 20px 0;
         }
 
         .header {
@@ -207,7 +209,6 @@ if (isset($_POST['update'])) {
 
         .input-blue {
             background: #cfd8e7;
-    
         }
 
         .input-yellow {
@@ -250,7 +251,7 @@ if (isset($_POST['update'])) {
             cursor: pointer;
             transition: 0.2s ease;
             display: block;
-            margin: 20px auto 0; /* centers horizontally */
+            margin: 20px auto 0;
         }
 
         .btn:hover {
@@ -268,6 +269,48 @@ if (isset($_POST['update'])) {
 
             .header h1 {
                 font-size: 27px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .wrapper {
+                border-radius: 20px;
+                border-width: 2px;
+            }
+
+            .content {
+                padding: 18px 14px;
+            }
+
+            .header {
+                padding: 18px 14px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .home-btn {
+                width: 34px;
+                height: 34px;
+                left: 10px;
+                font-size: 14px;
+            }
+
+            input,
+            select {
+                height: auto;
+                min-height: 48px;
+                padding: 10px 12px;
+                font-size: 15px !important;
+            }
+
+            .btn {
+                width: 100%;
             }
         }
     </style>
@@ -296,7 +339,6 @@ if (isset($_POST['update'])) {
                     <option value="">Select Admin Account</option>
                     <?php foreach ($users as $u): ?>
                         <option
-                            $fontSize = '18px';
                             value="<?php echo $u['id']; ?>"
                             data-username="<?php echo htmlspecialchars($u['username']); ?>"
                             data-email="<?php echo htmlspecialchars($u['email']); ?>"
@@ -314,7 +356,6 @@ if (isset($_POST['update'])) {
                     type="text"
                     name="username"
                     id="username"
-
                     class="input-blue"
                     value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
                     required
@@ -358,7 +399,6 @@ if (isset($_POST['update'])) {
 </div>
 
 <script>
-
 const select = document.getElementById("user_id");
 const username = document.getElementById("username");
 const email = document.getElementById("email");

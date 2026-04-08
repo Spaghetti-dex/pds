@@ -324,6 +324,11 @@ div[style*="float:right"] > button{
 </div>
 
 <script>
+
+     document.querySelector('.topbar-logo').addEventListener('click', () => {
+          window.location.href = '../dashboard/dashboard.php'
+        })
+
 function menu(){
     let m = document.getElementById("menu");
     m.style.display = m.style.display == "none" ? "block" : "none";

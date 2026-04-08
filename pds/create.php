@@ -1,6 +1,7 @@
 <?php 
 require_once "../includes/auth_check.php";
-include "../includes/header.php"; ?>
+include "../includes/header.php"; 
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -13,20 +14,14 @@ include "../includes/header.php"; ?>
 body{
   font-family: Arial, sans-serif;
   margin:0;
-}
-
-/* HEADER */
-.header{
-  background:#2f402c;
-  color:white;
-  padding:12px 20px;
-  font-size:14px;
+  --site-header-height: 90px;
 }
 
 /* LAYOUT */
 .container{
   display:flex;
-  min-height:calc(100vh - 50px);
+  margin-top:var(--site-header-height);
+  min-height:calc(100vh - var(--site-header-height));
 }
 
 /* SIDEBAR */
@@ -71,17 +66,13 @@ body{
   display:flex;
   align-items:center;
   gap:15px;
-  cursor:pointer;
+  cursor:default;
   padding:10px 15px;
   border-radius:10px;
   transition:0.2s;
   z-index:3;
   position:relative;
   background:transparent;
-}
-
-.nav-item:hover{
-  background:#f4f0d3;
 }
 
 /* SIDEBAR ICON */
@@ -114,6 +105,7 @@ body{
   padding:20px;
   overflow-y:auto;
   box-sizing:border-box;
+  min-width:0;
 }
 
 /* FORM CARD */
@@ -149,7 +141,10 @@ body{
 }
 
 .personal-grid label,
-.personal-row label{
+.personal-row label,
+.field-pair label,
+.citizenship-row label,
+.citizenship-pair label{
   font-size:14px;
   font-weight:600;
   text-align:right;
@@ -159,8 +154,16 @@ body{
 .personal-grid input,
 .personal-grid select,
 .personal-row input,
-.personal-row select{
+.personal-row select,
+.field-pair input,
+.field-pair select,
+.citizenship-row input,
+.citizenship-row select,
+.citizenship-pair input,
+.citizenship-pair select{
   width:100%;
+  min-width:0;
+  max-width:100%;
   height:36px;
   padding:6px 10px;
   border:1px solid #555;
@@ -172,44 +175,33 @@ body{
 
 .personal-row{
   display:grid;
-  grid-template-columns:1fr auto 140px auto 140px auto 140px;
-  justify-content:center;
-  align-items:center;
-  gap:15px 5px;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:16px;
+  align-items:start;
   margin-top:20px;
+  width:100%;
 }
 
-.personal-row.small input,
-.personal-row.small select{
-  width:140px;
+.personal-row.small{
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+}
+
+.field-pair,
+.citizenship-pair{
+  display:grid;
+  grid-template-columns:140px minmax(0, 1fr);
+  gap:10px;
+  align-items:center;
+  min-width:0;
 }
 
 .citizenship-row{
   display:grid;
-  grid-template-columns:160px 285px 240px 1fr;
-  gap:18px 5px;
-  align-items:center;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  align-items:start;
   margin-top:25px;
   width:100%;
-}
-
-.citizenship-row label{
-  font-size:14px;
-  font-weight:600;
-  text-align:right;
-  white-space:nowrap;
-}
-
-.citizenship-row select,
-.citizenship-row input{
-  width:100%;
-  height:36px;
-  padding:6px 10px;
-  border:1px solid #555;
-  border-radius:6px;
-  background:#e9e9ee;
-  font-size:14px;
-  box-sizing:border-box;
 }
 
 /* =========================
@@ -465,15 +457,25 @@ button{
 
 .nav-buttons{
   display:flex;
-  justify-content:flex-end;
+  justify-content:space-between;
+  align-items:center;
   gap:10px;
   margin-top:20px;
+  flex-wrap:wrap;
 }
 
+.nav-left,
+.nav-right{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.prev-btn,
 .next-btn,
 .save-btn,
-.add-btn{
-  background:#2f402c;
+.add-btn,
+.clear-btn{
   color:#fff;
   border:none;
   padding:10px 22px;
@@ -485,10 +487,26 @@ button{
   margin-top:0;
 }
 
+.prev-btn,
+.next-btn,
+.save-btn,
+.add-btn{
+  background:#2f402c;
+}
+
+.prev-btn:hover,
 .next-btn:hover,
 .save-btn:hover,
 .add-btn:hover{
   background:#3b5237;
+}
+
+.clear-btn{
+  background:#8b2c2c;
+}
+
+.clear-btn:hover{
+  background:#a63a3a;
 }
 
 .remove-btn{
@@ -533,118 +551,67 @@ button{
   border-radius:6px;
 }
 
-@media (max-width: 900px){
-  .container{
-    flex-direction:column;
-  }
+.photo-home-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  margin-bottom:20px;
+}
 
-  .sidebar{
-    width:100%;
-    max-height:none;
-    gap:15px;
-  }
+.photo-home-row .title{
+  text-align:center;
+  margin:0;
+}
 
-  .sidebar::before,
-  .progress-line{
-    display:none;
-  }
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  .personal-grid,
-  .citizenship-row,
-  .education-grid,
-  .eligibility-grid,
-  .training-grid{
-    grid-template-columns:1fr;
-  }
+.photo-box{
+  width:120px;
+  aspect-ratio:1 / 1;
+  border:1px solid #555;
+  border-radius:6px;
+  overflow:hidden;
+  cursor:pointer;
+  background:#e9e9ee;
+  box-sizing:border-box;
+  flex-shrink:0;
+  display:block;
+  padding:0;
+}
 
-  .personal-row{
-    grid-template-columns:1fr;
-    align-items:stretch;
-  }
+.photo-box img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
 
-  .contact-section{
-    padding-top:40px;
-  }
-
-  .contact-grid{
-    width:100%;
-    max-width:390px;
-  }
-
-  .contact-row{
-    grid-template-columns:1fr;
-    row-gap:8px;
-  }
-
-  .address-house-row,
-  .address-row{
-    grid-template-columns:1fr;
-    row-gap:8px;
-  }
-
-  .address-two-col{
-    grid-template-columns:1fr;
-    column-gap:0;
-    row-gap:18px;
-  }
-
-  .personal-grid input,
-  .personal-grid select,
-  .personal-row input,
-  .personal-row select,
-  .citizenship-row input,
-  .citizenship-row select,
-  .address-house-row input,
-  .address-row input,
-  .education-grid input,
-  .education-grid select,
-  .eligibility-grid input,
-  .training-grid input,
-  .contact-row input{
-    width:100%;
-  }
-
-  .personal-grid label,
-  .personal-row label,
-  .citizenship-row label,
-  .contact-row label,
-  .address-house-row label,
-  .address-row label{
-    text-align:left;
-  }
-.error-summary{
+.photo-box input{
   display:none;
-  background:#ffe3e3;
-  color:#8b1e1e;
-  border:1px solid #d99;
-  padding:12px 15px;
-  border-radius:8px;
-  margin-bottom:15px;
-  font-size:14px;
-  font-weight:600;
 }
 
-.field-error{
-  border:2px solid #c62828 !important;
-  background:#fff3f3 !important;
+.photo-upload-btn{
+  margin-top:5px;
+  padding:4px 8px;
+  font-size:11px;
+  line-height:1.2;
+  white-space:nowrap;
+  background:#2f402c;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
 }
 
-.field-error-message{
-  color:#c62828;
-  font-size:12px;
-  font-weight:600;
-  margin-top:4px;
+.photo-upload-btn:hover{
+  background:#3b5237;
 }
 
-label.required::after {
-  content: "*";
-  color: #c62828;
-  font-weight: bold;
-}
-
-label.required {
-  color: #c62828;
-}
 .error-summary{
   display:none;
   background:#ffe3e3;
@@ -669,7 +636,7 @@ label.required {
 }
 
 label.required{
-  color:#c62828;
+  color:inherit;
   font-weight:700;
 }
 
@@ -678,50 +645,203 @@ label.required::after{
   color:#c62828;
 }
 
+@media (max-width: 1200px){
+  .card{
+    width:100%;
+    padding:20px 24px 30px;
+    overflow:hidden;
   }
+
+  .form-area{
+    padding:16px;
+  }
+
+  .personal-row,
+  .personal-row.small{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .field-pair,
+  .citizenship-pair{
+    grid-template-columns:minmax(0, 1fr);
+    gap:8px;
+  }
+
+  .field-pair label,
+  .citizenship-pair label{
+    text-align:left;
+    white-space:normal;
+  }
+
+  .citizenship-row{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px){
+  .container{
+    margin-top:var(--site-header-height);
+    min-height:calc(100vh - var(--site-header-height));
+  }
+
+  .photo-home-row{
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  .top-actions{
+    width:100%;
+    display:flex;
+    justify-content:center;
+  }
+
+  .photo-home-row .title{
+    width:100%;
+    order:-1;
+  }
+}
+
+@media (max-width: 900px){
+  .container{
+    flex-direction:column;
+  }
+
+  .form-area{
+    padding:12px;
+  }
+
+  .card{
+    width:100%;
+    padding:20px 16px 30px;
+    overflow:hidden;
+  }
+
+  .sidebar{
+    width:100%;
+    max-height:none;
+    gap:15px;
+  }
+
+  .sidebar::before,
+  .progress-line{
+    display:none;
+  }
+
+  .personal-grid,
+  .citizenship-row,
+  .education-grid,
+  .eligibility-grid,
+  .training-grid,
+  .contact-row,
+  .address-house-row,
+  .address-row,
+  .field-pair,
+  .citizenship-pair{
+    grid-template-columns:minmax(0, 1fr);
+  }
+
+  .personal-row,
+  .personal-row.small{
+    grid-template-columns:minmax(0, 1fr);
+    align-items:stretch;
+    gap:8px;
+  }
+
+  .personal-grid input,
+  .personal-grid select,
+  .personal-row input,
+  .personal-row select,
+  .field-pair input,
+  .field-pair select,
+  .citizenship-row input,
+  .citizenship-row select,
+  .citizenship-pair input,
+  .citizenship-pair select,
+  .address-house-row input,
+  .address-row input,
+  .education-grid input,
+  .education-grid select,
+  .eligibility-grid input,
+  .training-grid input,
+  .contact-row input{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+  }
+
+  .contact-section{
+    padding-top:40px;
+  }
+
+  .contact-grid{
+    width:100%;
+    max-width:390px;
+  }
+
+  .address-two-col{
+    grid-template-columns:1fr;
+    column-gap:0;
+    row-gap:18px;
+  }
+
+  .personal-grid label,
+  .personal-row label,
+  .field-pair label,
+  .citizenship-row label,
+  .citizenship-pair label,
+  .contact-row label,
+  .address-house-row label,
+  .address-row label{
+    text-align:left;
+    white-space:normal;
+  }
+
+  .nav-buttons{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .nav-left,
+  .nav-right{
+    width:100%;
+    justify-content:center;
+  }
+}
 </style>
 </head>
 <body>
-
-<div class="header">
-  REPUBLIC OF THE PHILIPPINES
-  <br>
-  PRESIDENTIAL COMMISSION ON GOOD GOVERNANCE
-  <br>
-  The People's Commission
-</div>
 
 <div class="container">
 
   <div class="sidebar">
     <div class="progress-line" id="progressLine"></div>
 
-    <div class="nav-item active" onclick="goToSection(0)">
+    <div class="nav-item active" data-index="0" tabindex="0">
       <img src="../assets/profile.png" alt="Profile" class="nav-icon">
       <div class="nav-label">PERSONAL INFORMATION</div>
     </div>
 
-    <div class="nav-item" onclick="goToSection(1)">
+    <div class="nav-item" data-index="1" tabindex="0">
       <img src="../assets/address.png" alt="Address" class="nav-icon">
       <div class="nav-label">ADDRESS</div>
     </div>
 
-    <div class="nav-item" onclick="goToSection(2)">
+    <div class="nav-item" data-index="2" tabindex="0">
       <img src="../assets/contact.png" alt="Contact" class="nav-icon">
       <div class="nav-label">CONTACT INFORMATION</div>
     </div>
 
-    <div class="nav-item" onclick="goToSection(3)">
+    <div class="nav-item" data-index="3" tabindex="0">
       <img src="../assets/education.png" alt="Education" class="nav-icon">
       <div class="nav-label">EDUCATIONAL BACKGROUND</div>
     </div>
 
-    <div class="nav-item" onclick="goToSection(4)">
+    <div class="nav-item" data-index="4" tabindex="0">
       <img src="../assets/service.png" alt="Service" class="nav-icon">
       <div class="nav-label">SERVICE ELIGIBILITY</div>
     </div>
 
-    <div class="nav-item" onclick="goToSection(5)">
+    <div class="nav-item" data-index="5" tabindex="0">
       <img src="../assets/learning.png" alt="Training" class="nav-icon">
       <div class="nav-label">LEARNING AND DEVELOPMENT</div>
     </div>
@@ -730,101 +850,126 @@ label.required::after{
   <div class="form-area">
     <div class="card">
 
-      <div class="top-actions">
-        <a href="../dashboard/dashboard.php" class="button">Home</a>
-      </div>
+      <form method="POST" action="save.php" id="pdsForm" novalidate enctype="multipart/form-data">
+        <input type="hidden" name="form_submitted" value="1">
 
-      <form method="POST" action="save.php" id="pdsForm" novalidate>
-
-      <div id="errorSummary" class="error-summary" style="display:none;"></div>
+        <div id="errorSummary" class="error-summary" style="display:none;"></div>
 
         <!-- PERSONAL INFORMATION -->
         <div id="personal" class="section active">
-          <div class="title">PERSONAL INFORMATION</div>
+          <div class="photo-home-row">
+            <div class="top-actions">
+              <a href="../dashboard/dashboard.php" class="button">🏠︎ Home</a>
+            </div>
+
+            <div class="title">PERSONAL INFORMATION</div>
+
+            <div class="preview-container">
+              <div class="photo-box" onclick="document.getElementById('photoInput').click()">
+                <img id="preview" src="../assets/profile.png" alt="Profile">
+                <input type="file" name="photo" id="photoInput" accept="image/*" onchange="loadImage(event)">
+              </div>
+              <button type="button" class="photo-upload-btn" onclick="document.getElementById('photoInput').click();">🔗 Choose File</button>
+            </div>
+          </div>
 
           <div class="personal-grid">
-            <label class="required">Last Name: *</label>
-            <input name="surname">
+            <label>Last Name:</label>
+            <input name="surname" required>
 
             <label>Name Extension:</label>
             <input name="extension">
 
-            <label class="required">First Name: *</label>
-            <input name="firstname">
+            <label>First Name: </label>
+            <input name="firstname" required>
 
-            <label class="required">Date of Birth: *</label>
-            <input type="date" name="dob">
+            <label>Date of Birth: </label>
+            <input type="date" name="dob" required>
 
             <label>Middle Name:</label>
-            <input name="middlename">
+            <input name="middlename" required>
 
-            <label class="required">Place of Birth: *</label>
-            <input name="birth_place"required>
+            <label>Place of Birth: </label>
+            <input name="birth_place" required>
           </div>
 
           <div class="personal-row small">
-            <label>Civil Status:</label>
-            <select name="civil_status">
-              <option value=""></option>
-              <option>Single</option>
-              <option>Married</option>
-              <option>Widowed</option>
-              <option>Separated</option>
-            </select>
+            <div class="field-pair">
+              <label>Civil Status:</label>
+              <select name="civil_status" required>
+                <option value=""></option>
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Widowed">Widowed</option>
+                <option value="Separated">Separated</option>
+              </select>
+            </div>
 
-            <label>Sex:</label>
-            <select name="sex">
-              <option value=""></option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
+            <div class="field-pair">
+              <label>Sex:</label>
+              <select name="sex" required>
+                <option value=""></option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
 
-            <label>Blood Type:</label>
-            <input name="blood_type">
+            <div class="field-pair">
+              <label>Blood Type:</label>
+              <input name="blood_type" required>
+            </div>
           </div>
 
           <div class="personal-row small">
-            <label>Height:</label>
-            <input name="height">
+            <div class="field-pair">
+              <label>Height:</label>
+              <input name="height" required>
+            </div>
 
-            <label>Weight:</label>
-            <input name="weight">
+            <div class="field-pair">
+              <label>Weight:</label>
+              <input name="weight" required>
+            </div>
           </div>
 
           <div class="personal-grid" style="margin-top:25px;">
             <label>UMID ID:</label>
-            <input name="umid">
+            <input name="umid" maxlength="30" required>
 
             <label>PhilSys No.(PSN):</label>
-            <input name="philsys">
+            <input name="philsys" maxlength="30" required>
 
             <label>Pag-IBIG ID No:</label>
-            <input name="pagibig">
+            <input name="pagibig" maxlength="30" required>
 
             <label>TIN No:</label>
-            <input name="tin">
+            <input name="tin" maxlength="20" required>
 
             <label>PhilHealth No:</label>
-            <input name="philhealth">
+            <input name="philhealth" maxlength="30" required>
 
             <label>Agency Employee No:</label>
-            <input name="agency_employee">
+            <input name="agency_employee" maxlength="30" required>
           </div>
 
           <div class="citizenship-row">
-            <label>Citizenship:</label>
-            <select name="citizenship">
-              <option value=""></option>
-              <option>Filipino</option>
-              <option>Dual Citizen</option>
-            </select>
+            <div class="citizenship-pair">
+              <label>Citizenship:</label>
+              <select name="citizenship" required>
+                <option value=""></option>
+                <option value="Filipino">Filipino</option>
+                <option value="Dual Citizen">Dual Citizen</option>
+              </select>
+            </div>
 
-            <label>If Dual Citizen(Indicate Country):</label>
-            <input name="dual_country">
+            <div class="citizenship-pair">
+              <label>If Dual Citizen(Indicate Country):</label>
+              <input name="dual_country">
+            </div>
           </div>
         </div>
 
-        
+        <!-- ADDRESS -->
         <div id="address" class="section">
           <div class="address-section">
 
@@ -832,85 +977,92 @@ label.required::after{
             <div class="address-block">
               <div class="address-house-row">
                 <label>House / Block / Lot No.</label>
-                <input name="r_house">
+                <input name="r_house" required>
               </div>
 
               <div class="address-two-col">
                 <div class="address-col">
                   <div class="address-row">
                     <label>Street:</label>
-                    <input name="r_street">
+                    <input name="r_street" required>
                   </div>
 
                   <div class="address-row">
                     <label>Subdivision / Village:</label>
-                    <input name="r_subdivision">
+                    <input name="r_subdivision" required>
                   </div>
 
                   <div class="address-row">
                     <label>City / Municipality:</label>
-                    <input name="r_city">
+                    <input name="r_city" required>
                   </div>
                 </div>
 
                 <div class="address-col">
                   <div class="address-row">
                     <label>Barangay:</label>
-                    <input name="r_barangay">
+                    <input name="r_barangay" required>
                   </div>
 
                   <div class="address-row">
                     <label>Province:</label>
-                    <input name="r_province">
+                    <input name="r_province" required>
                   </div>
 
                   <div class="address-row">
                     <label>Zip Code:</label>
-                    <input name="r_zip">
+                    <input name="r_zip" required>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div style="margin:10px 0 15px 0; text-align:center;">
+              <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+                <input type="checkbox" id="sameAddress" style="width:auto;">
+                Same as Residential Address
+              </label>
             </div>
 
             <div class="address-title" style="margin-top:18px;">PERMANENT ADDRESS</div>
             <div class="address-block">
               <div class="address-house-row">
                 <label>House / Block / Lot No.</label>
-                <input name="p_house">
+                <input name="p_house" required>
               </div>
 
               <div class="address-two-col">
                 <div class="address-col">
                   <div class="address-row">
                     <label>Street:</label>
-                    <input name="p_street">
+                    <input name="p_street" required>
                   </div>
 
                   <div class="address-row">
                     <label>Subdivision / Village:</label>
-                    <input name="p_subdivision">
+                    <input name="p_subdivision" required>
                   </div>
 
                   <div class="address-row">
                     <label>City / Municipality:</label>
-                    <input name="p_city">
+                    <input name="p_city" required>
                   </div>
                 </div>
 
                 <div class="address-col">
                   <div class="address-row">
                     <label>Barangay:</label>
-                    <input name="p_barangay">
+                    <input name="p_barangay" required>
                   </div>
 
                   <div class="address-row">
                     <label>Province:</label>
-                    <input name="p_province">
+                    <input name="p_province" required>
                   </div>
 
                   <div class="address-row">
                     <label>Zip Code:</label>
-                    <input name="p_zip">
+                    <input name="p_zip" required>
                   </div>
                 </div>
               </div>
@@ -919,7 +1071,7 @@ label.required::after{
           </div>
         </div>
 
-        
+        <!-- CONTACT -->
         <div id="contact" class="section">
           <div class="contact-section">
             <div class="contact-title">CONTACT INFORMATION</div>
@@ -927,23 +1079,23 @@ label.required::after{
             <div class="contact-grid">
               <div class="contact-row">
                 <label>Telephone Number:</label>
-                <input name="telephone">
+                <input name="telephone" required>
               </div>
 
               <div class="contact-row">
                 <label>Mobile Number:</label>
-                <input name="mobile">
+                <input name="mobile" required>
               </div>
 
               <div class="contact-row">
                 <label>E-Mail:</label>
-                <input type="email" name="email">
+                <input type="email" name="email" required>
               </div>
             </div>
           </div>
         </div>
 
-        
+        <!-- EDUCATION -->
         <div id="education" class="section">
           <div class="title">EDUCATIONAL BACKGROUND</div>
 
@@ -952,7 +1104,7 @@ label.required::after{
               <div class="education-grid">
                 <div>
                   <label>Level</label>
-                  <select name="education_level[]">
+                  <select name="education_level[]" required>
                     <option>Elementary</option>
                     <option>Secondary</option>
                     <option>Vocational / Trade Course</option>
@@ -963,32 +1115,32 @@ label.required::after{
 
                 <div>
                   <label>Name of School</label>
-                  <input name="school_name[]" placeholder="School Name">
+                  <input name="school_name[]" placeholder="School Name" required>
                 </div>
 
                 <div>
                   <label>Basic Education /Degree /Course</label>
-                  <input name="course[]" placeholder="Course / Degree">
+                  <input name="course[]" placeholder="Course / Degree" required>
                 </div>
 
                 <div>
                   <label>Highest Level /Units Earned</label>
-                  <input name="units[]" placeholder="Highest Level / Units">
+                  <input name="units[]" placeholder="Highest Level / Units" required>
                 </div>
 
                 <div>
-                  <label class="required">Period of Attendance From *</label>
-                  <input type="date" name="edu_from[]"required>
+                  <label>Period of Attendance From </label>
+                  <input type="date" name="edu_from[]" required>
                 </div>
 
                 <div>
-                  <label class="required">To *</label>
-                  <input type="date" name="edu_to[]"required>
+                  <label>To </label>
+                  <input type="date" name="edu_to[]" required>
                 </div>
 
                 <div>
-                  <label class="required">Year Graduated *</label>
-                  <input name="year_graduated[]" placeholder="Year Graduated"required>
+                  <label>Year Graduated</label>
+                  <input name="year_graduated[]" placeholder="Year Graduated" required>
                 </div>
 
                 <div>
@@ -997,14 +1149,14 @@ label.required::after{
                 </div>
               </div>
 
-              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+              <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">✖ Remove</button>
             </div>
           </div>
 
-          <button type="button" class="add-btn" onclick="addEducation()">Add More</button>
+          <button type="button" class="add-btn" onclick="addEducation()">✚ Add More</button>
         </div>
 
-       
+        <!-- ELIGIBILITY -->
         <div id="eligibility-section" class="section">
           <div class="title">SERVICE ELIGIBILITY</div>
 
@@ -1013,22 +1165,22 @@ label.required::after{
               <div class="eligibility-grid">
                 <div>
                   <label>Career Service /CSC /CES</label>
-                  <input name="career_service[]" placeholder="Career Service / CSC / CES">
+                  <input name="career_service[]" placeholder="Career Service / CSC / CES" required>
                 </div>
 
                 <div>
                   <label>Rating</label>
-                  <input name="rating[]" placeholder="Rating">
+                  <input name="rating[]" placeholder="Rating" required>
                 </div>
 
                 <div>
-                  <label class="required">Exam Date *</label>
-                  <input type="date" name="exam_date[]"required>
+                  <label>Exam Date</label>
+                  <input type="date" name="exam_date[]" required>
                 </div>
 
                 <div>
                   <label>Place of Examination</label>
-                  <input name="exam_place[]" placeholder="Place of Examination">
+                  <input name="exam_place[]" placeholder="Place of Examination" required>
                 </div>
 
                 <div>
@@ -1042,19 +1194,19 @@ label.required::after{
                 </div>
 
                 <div>
-                  <label class="required">Valid Until *</label>
+                  <label>Valid Until </label>
                   <input type="date" name="valid_until[]">
                 </div>
               </div>
 
-              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+              <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">✖ Remove</button>
             </div>
           </div>
 
-          <button type="button" class="add-btn" onclick="addEligibility()">Add More</button>
+          <button type="button" class="add-btn" onclick="addEligibility()">✚ Add More</button>
         </div>
 
-        
+        <!-- TRAINING -->
         <div id="training-section" class="section">
           <div class="title">LEARNING AND DEVELOPMENT</div>
 
@@ -1063,22 +1215,22 @@ label.required::after{
               <div class="training-grid">
                 <div>
                   <label>Training Title</label>
-                  <input name="title[]" placeholder="Training Title">
+                  <input name="title[]" placeholder="Training Title" required>
                 </div>
 
                 <div>
-                  <label class="required">Hours *</label>
-                  <input name="hours[]" placeholder="Hours"required>
+                  <label>Hours</label>
+                  <input name="hours[]" placeholder="Hours" required>
                 </div>
 
                 <div>
-                  <label class="required">From *</label>
-                  <input type="date" name="training_from[]"required>
+                  <label>From </label>
+                  <input type="date" name="training_from[]" required>
                 </div>
 
                 <div>
-                  <label class="required">To *</label>
-                  <input type="date" name="training_to[]"required>
+                  <label>To </label>
+                  <input type="date" name="training_to[]" required>
                 </div>
 
                 <div>
@@ -1092,16 +1244,23 @@ label.required::after{
                 </div>
               </div>
 
-              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+              <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">✖ Remove</button>
             </div>
           </div>
 
-          <button type="button" class="add-btn" onclick="addTraining()">Add More</button>
+          <button type="button" class="add-btn" onclick="addTraining()">✚ Add More</button>
         </div>
 
         <div class="nav-buttons">
-          <button type="button" class="next-btn" id="nextBtn" onclick="nextSection()">Next</button>
-          <button type="submit" class="save-btn" id="saveBtn" style="display:none;">Save</button>
+          <div class="nav-left">
+            <button type="button" class="prev-btn" id="prevBtn" onclick="prevSection()" style="display:none;">⬅ Previous</button>
+            <button type="button" class="clear-btn" onclick="clearAllForm()">⟳ Clear All</button>
+          </div>
+
+          <div class="nav-right">
+            <button type="button" class="next-btn" id="nextBtn" onclick="nextSection()">Next ➡</button>
+            <button type="submit" class="save-btn" id="saveBtn" style="display:none;">✔ Save</button>
+          </div>
         </div>
       </form>
 
@@ -1110,519 +1269,1064 @@ label.required::after{
 </div>
 
 <script>
-        let currentSection = 0;
-        const sections = document.querySelectorAll(".section");
-        const navItems = document.querySelectorAll(".nav-item");
-        const form = document.getElementById("createRecordForm");
-        const errorSummary = document.getElementById("errorSummary");
+(function(){
+  function updateHeaderOffset(){
+    const candidates = Array.from(document.querySelectorAll('header, .header, .main-header, .navbar, .topbar'));
+    let headerEl = null;
 
-        function updateProgress(index){
-          sections.forEach((sec, i) => {
-            sec.classList.toggle("active", i === index);
-          });
+    for (const el of candidates){
+      if (el.closest('.container')) continue;
+      const rect = el.getBoundingClientRect();
+      if (rect.height > 0 && rect.top <= 5){
+        headerEl = el;
+        break;
+      }
+    }
 
-          navItems.forEach((nav, i) => {
-            nav.classList.remove("active", "completed");
-            if(i < index){
-              nav.classList.add("completed");
-            }
-          });
+    const headerHeight = headerEl ? Math.ceil(headerEl.getBoundingClientRect().height) : 90;
+    document.body.style.setProperty('--site-header-height', (headerHeight + 12) + 'px');
+  }
 
-          if (navItems[index]) {
-            navItems[index].classList.add("active");
-          }
+  window.addEventListener('load', updateHeaderOffset);
+  window.addEventListener('resize', updateHeaderOffset);
+  document.addEventListener('DOMContentLoaded', updateHeaderOffset);
+})();
+</script>
 
-          const stepHeight = navItems[0].offsetHeight + 35;
-          document.getElementById("progressLine").style.height = (index * stepHeight) + "px";
+<script>
+let currentSection = 0;
+const sections = document.querySelectorAll(".section");
+const navItems = document.querySelectorAll(".nav-item");
+const form = document.getElementById("pdsForm");
+const errorSummary = document.getElementById("errorSummary");
 
-          currentSection = index;
+function loadImage(event){
+  const preview = document.getElementById("preview");
+  if(event.target.files && event.target.files[0]){
+    preview.src = URL.createObjectURL(event.target.files[0]);
+  }
+}
 
-          const nextBtn = document.getElementById("nextBtn");
-          const saveBtn = document.getElementById("saveBtn");
+function updateProgress(index){
+  sections.forEach((sec, i) => {
+    sec.classList.toggle("active", i === index);
+  });
 
-          if(index === sections.length - 1){
-            nextBtn.style.display = "none";
-            saveBtn.style.display = "inline-block";
-          } else {
-            nextBtn.style.display = "inline-block";
-            saveBtn.style.display = "none";
-          }
+  navItems.forEach((nav, i) => {
+    nav.classList.remove("active", "completed");
+    if(i < index){
+      nav.classList.add("completed");
+    }
+  });
+
+  if (navItems[index]) {
+    navItems[index].classList.add("active");
+  }
+
+  const stepHeight = navItems.length ? (navItems[0].offsetHeight + 35) : 0;
+  document.getElementById("progressLine").style.height = (index * stepHeight) + "px";
+
+  currentSection = index;
+
+  const nextBtn = document.getElementById("nextBtn");
+  const prevBtn = document.getElementById("prevBtn");
+  const saveBtn = document.getElementById("saveBtn");
+
+  prevBtn.style.display = index === 0 ? "none" : "inline-block";
+
+  if(index === sections.length - 1){
+    nextBtn.style.display = "none";
+    saveBtn.style.display = "inline-block";
+  } else {
+    nextBtn.style.display = "inline-block";
+    saveBtn.style.display = "none";
+  }
+}
+
+function goToSection(index){
+  updateProgress(index);
+}
+
+function nextSection(){
+  clearFieldErrors();
+  hideSummary();
+
+  const invalidField = validateSection(sections[currentSection]);
+  if(invalidField){
+    showSummary("Please fix the highlighted field(s) in " + getSectionName(sections[currentSection].id) + ".");
+    invalidField.focus();
+    invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+    saveFormDraft();
+    return;
+  }
+
+  if(currentSection < sections.length - 1){
+    updateProgress(currentSection + 1);
+  }
+}
+
+function prevSection(){
+  hideSummary();
+  if(currentSection > 0){
+    updateProgress(currentSection - 1);
+  }
+}
+
+function copyResidentialToPermanent(isChecked){
+  const fieldPairs = [
+    ["r_house", "p_house"],
+    ["r_street", "p_street"],
+    ["r_subdivision", "p_subdivision"],
+    ["r_city", "p_city"],
+    ["r_barangay", "p_barangay"],
+    ["r_province", "p_province"],
+    ["r_zip", "p_zip"]
+  ];
+
+  fieldPairs.forEach(([r, p]) => {
+    const rField = document.querySelector(`[name="${r}"]`);
+    const pField = document.querySelector(`[name="${p}"]`);
+
+    if (!rField || !pField) return;
+
+    if (isChecked) {
+      pField.value = rField.value;
+    } else {
+      pField.value = "";
+    }
+  });
+}
+
+navItems.forEach((item) => {
+  item.addEventListener("click", function(e){
+    e.preventDefault();
+  });
+
+  item.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      const index = parseInt(this.dataset.index, 10);
+      if(!Number.isNaN(index)){
+        goToSection(index);
+      }
+    }
+  });
+});
+
+const sameAddressCheckbox = document.getElementById("sameAddress");
+
+if (sameAddressCheckbox) {
+  sameAddressCheckbox.addEventListener("change", function(){
+    copyResidentialToPermanent(this.checked);
+    saveFormDraft();
+  });
+
+  const residentialFields = [
+    "r_house", "r_street", "r_subdivision",
+    "r_city", "r_barangay", "r_province", "r_zip"
+  ];
+
+  residentialFields.forEach(name => {
+    const field = document.querySelector(`[name="${name}"]`);
+    if (field) {
+      field.addEventListener("input", function(){
+        if (sameAddressCheckbox.checked) {
+          copyResidentialToPermanent(true);
         }
+      });
+    }
+  });
+}
 
-        function goToSection(index){
-          updateProgress(index);
+function showSummary(message){
+  errorSummary.style.display = "block";
+  errorSummary.textContent = message;
+}
+
+function hideSummary(){
+  errorSummary.style.display = "none";
+  errorSummary.textContent = "";
+}
+
+function addFieldError(input, message){
+  input.classList.add("field-error");
+
+  const wrapper = input.parentElement;
+  if (!wrapper) return;
+
+  const old = wrapper.querySelector(".field-error-message");
+  if (old) old.remove();
+
+  const msg = document.createElement("div");
+  msg.className = "field-error-message";
+  msg.textContent = message;
+  wrapper.appendChild(msg);
+}
+
+function clearFieldErrorState(input) {
+  if (!input) return;
+  input.classList.remove("field-error");
+  const wrapper = input.parentElement;
+  if (wrapper) {
+    const old = wrapper.querySelector(".field-error-message");
+    if (old) old.remove();
+  }
+}
+
+function clearFieldErrors(){
+  document.querySelectorAll(".field-error").forEach(el => el.classList.remove("field-error"));
+  document.querySelectorAll(".field-error-message").forEach(el => el.remove());
+}
+
+function getSectionName(sectionId){
+  const names = {
+    personal: "Personal Information",
+    address: "Address",
+    contact: "Contact Information",
+    education: "Educational Background",
+    "eligibility-section": "Service Eligibility",
+    "training-section": "Learning and Development"
+  };
+  return names[sectionId] || "this section";
+}
+
+function sanitizeIdNumber(value) {
+  return value.replace(/[^\d\- ]/g, '');
+}
+
+function isLettersOnly(value) {
+  return /^[A-Za-zÑñ\s.'-]+$/.test(value);
+}
+
+function isAlphaNumericBasic(value) {
+  return /^[A-Za-z0-9Ññ\s./#,-]+$/.test(value);
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidMobile(value) {
+  return /^(09\d{9}|\+639\d{9})$/.test(value);
+}
+
+function isValidTelephone(value) {
+  return /^[0-9()\-\s]{7,15}$/.test(value);
+}
+
+function isValidZip(value) {
+  return /^\d{4}$/.test(value);
+}
+
+function isValidYear(value) {
+  return /^(19|20)\d{2}$/.test(value);
+}
+
+function isPositiveNumber(value) {
+  return /^\d+(\.\d+)?$/.test(value) && parseFloat(value) > 0;
+}
+
+function isValidBloodType(value) {
+  return /^(A|B|AB|O)[+-]$/i.test(value.trim());
+}
+
+function isValidTin(value) {
+  return /^(\d{3}-\d{3}-\d{3}|\d{9}|\d{12}|\d{3}-\d{3}-\d{3}-\d{3})$/.test(value);
+}
+
+function isValidDateOrder(fromValue, toValue) {
+  if (!fromValue || !toValue) return true;
+  return new Date(fromValue) <= new Date(toValue);
+}
+
+function isPastOrToday(value) {
+  if (!value) return true;
+  const inputDate = new Date(value);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return inputDate <= today;
+}
+
+function validateSingleField(input) {
+  if (!input || !input.name) return true;
+
+  const name = input.name;
+  const value = (input.value || "").trim();
+  const isRequired = input.hasAttribute("required");
+
+  clearFieldErrorState(input);
+
+  const markInvalid = (message) => {
+    addFieldError(input, message);
+    return false;
+  };
+
+  if (isRequired && value === "") {
+    return markInvalid("This field is required.");
+  }
+
+  if (value === "") return true;
+
+  switch (name) {
+    case "surname":
+    case "firstname":
+    case "middlename":
+      if (!isLettersOnly(value)) return markInvalid("Letters only.");
+      return true;
+
+    case "extension":
+      if (value !== "" && !/^[A-Za-z0-9.\s-]{1,10}$/.test(value)) {
+        return markInvalid("Invalid name extension.");
+      }
+      return true;
+
+    case "birth_place":
+    case "r_house":
+    case "r_street":
+    case "r_subdivision":
+    case "r_city":
+    case "r_barangay":
+    case "r_province":
+    case "p_house":
+    case "p_street":
+    case "p_subdivision":
+    case "p_city":
+    case "p_barangay":
+    case "p_province":
+      if (!isAlphaNumericBasic(value)) return markInvalid("Invalid characters.");
+      return true;
+
+    case "dob":
+      if (!isPastOrToday(value)) return markInvalid("Date of birth cannot be in the future.");
+      return true;
+
+    case "civil_status":
+      if (!["Single", "Married", "Widowed", "Separated"].includes(value)) {
+        return markInvalid("Invalid civil status.");
+      }
+      return true;
+
+    case "sex":
+      if (!["Male", "Female"].includes(value)) {
+        return markInvalid("Please select a valid sex.");
+      }
+      return true;
+
+    case "blood_type":
+      if (!isValidBloodType(value)) {
+        return markInvalid("Use A+, A-, B+, B-, AB+, AB-, O+, or O-.");
+      }
+      return true;
+
+    case "height":
+    case "weight":
+      if (!isPositiveNumber(value)) {
+        return markInvalid("Must be a positive number.");
+      }
+      return true;
+
+    case "umid":
+    case "philsys":
+    case "pagibig":
+    case "philhealth":
+    case "agency_employee":
+      if (!/^[0-9][0-9\- ]{3,29}$/.test(value)) {
+        return markInvalid("Numbers only. Hyphen and spaces are allowed.");
+      }
+      return true;
+
+    case "tin":
+      if (!isValidTin(value)) {
+        return markInvalid("Invalid TIN format.");
+      }
+      return true;
+
+    case "citizenship":
+      if (!["Filipino", "Dual Citizen"].includes(value)) {
+        return markInvalid("Invalid citizenship.");
+      }
+      return true;
+
+    case "dual_country":
+      const citizenship = form.querySelector('[name="citizenship"]')?.value || "";
+      if (citizenship === "Dual Citizen" && value === "") {
+        return markInvalid("Country is required for dual citizenship.");
+      }
+      return true;
+
+    case "r_zip":
+    case "p_zip":
+      if (!isValidZip(value)) {
+        return markInvalid("Zip code must be 4 digits.");
+      }
+      return true;
+
+    case "telephone":
+      if (!isValidTelephone(value)) {
+        return markInvalid("Invalid telephone number.");
+      }
+      return true;
+
+    case "mobile":
+      if (!isValidMobile(value)) {
+        return markInvalid("Use 09XXXXXXXXX or +639XXXXXXXXX.");
+      }
+      return true;
+
+    case "email":
+      if (!isValidEmail(value)) {
+        return markInvalid("Invalid email address.");
+      }
+      return true;
+  }
+
+  return true;
+}
+
+function validateSection(section){
+  let firstInvalid = null;
+  const fields = section.querySelectorAll("input, select, textarea");
+
+  const markInvalid = (input, message) => {
+    addFieldError(input, message);
+    if (!firstInvalid) firstInvalid = input;
+  };
+
+  fields.forEach(input => {
+    const name = input.name || "";
+    const value = (input.value || "").trim();
+    const isRequired = input.hasAttribute("required");
+
+    clearFieldErrorState(input);
+
+    if (isRequired && value === "") {
+      markInvalid(input, "This field is required.");
+      return;
+    }
+
+    if (value === "") return;
+
+    switch (name) {
+      case "surname":
+      case "firstname":
+      case "middlename":
+        if (!isLettersOnly(value)) markInvalid(input, "Letters only.");
+        break;
+
+      case "extension":
+        if (value !== "" && !/^[A-Za-z0-9.\s-]{1,10}$/.test(value)) {
+          markInvalid(input, "Invalid name extension.");
         }
+        break;
 
-        function showSummary(message){
-          errorSummary.style.display = "block";
-          errorSummary.textContent = message;
+      case "birth_place":
+      case "r_house":
+      case "r_street":
+      case "r_subdivision":
+      case "r_city":
+      case "r_barangay":
+      case "r_province":
+      case "p_house":
+      case "p_street":
+      case "p_subdivision":
+      case "p_city":
+      case "p_barangay":
+      case "p_province":
+        if (!isAlphaNumericBasic(value)) {
+          markInvalid(input, "Invalid characters.");
         }
+        break;
 
-        function hideSummary(){
-          errorSummary.style.display = "none";
-          errorSummary.textContent = "";
+      case "dob":
+        if (!isPastOrToday(value)) {
+          markInvalid(input, "Date of birth cannot be in the future.");
         }
+        break;
 
-        function clearFieldErrors(){
-          document.querySelectorAll(".field-error").forEach(el => {
-            el.classList.remove("field-error");
-          });
-
-          document.querySelectorAll(".field-error-message").forEach(el => {
-            el.remove();
-          });
+      case "civil_status":
+        if (!["Single", "Married", "Widowed", "Separated"].includes(value)) {
+          markInvalid(input, "Invalid civil status.");
         }
+        break;
 
-        function addFieldError(input, message){
-          input.classList.add("field-error");
-
-          const wrapper = input.parentElement;
-          if (!wrapper) return;
-
-          const old = wrapper.querySelector(".field-error-message");
-          if (old) old.remove();
-
-          const msg = document.createElement("div");
-          msg.className = "field-error-message";
-          msg.textContent = message;
-          wrapper.appendChild(msg);
+      case "sex":
+        if (!["Male", "Female"].includes(value)) {
+          markInvalid(input, "Please select a valid sex.");
         }
+        break;
 
-        function getSectionName(sectionId){
-          const names = {
-            personal: "Personal Information",
-            address: "Address",
-            contact: "Contact Information",
-            education: "Educational Background",
-            "eligibility-section": "Service Eligibility",
-            "training-section": "Learning and Development"
-          };
-          return names[sectionId] || "this section";
+      case "blood_type":
+        if (!isValidBloodType(value)) {
+          markInvalid(input, "Use A+, A-, B+, B-, AB+, AB-, O+, or O-.");
         }
+        break;
 
-        function validateSection(section){
-          let firstInvalid = null;
-          const requiredFields = section.querySelectorAll("[required]");
-
-          requiredFields.forEach(input => {
-            const value = (input.value || "").trim();
-            if(value === ""){
-              addFieldError(input, "This field is required.");
-              if(!firstInvalid){
-                firstInvalid = input;
-              }
-            }
-          });
-
-          return firstInvalid;
+      case "height":
+      case "weight":
+        if (!isPositiveNumber(value)) {
+          markInvalid(input, "Must be a positive number.");
         }
+        break;
 
-        function validateAllSections(){
-          clearFieldErrors();
-          hideSummary();
-
-          for(let i = 0; i < sections.length; i++){
-            const invalidField = validateSection(sections[i]);
-
-            if(invalidField){
-              updateProgress(i);
-              showSummary("Please complete the required field(s) in " + getSectionName(sections[i].id) + ".");
-              setTimeout(() => {
-                invalidField.focus();
-                invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
-              }, 100);
-              return false;
-            }
-          }
-
-          return true;
+      case "umid":
+      case "philsys":
+      case "pagibig":
+      case "philhealth":
+      case "agency_employee":
+        if (!/^[0-9][0-9\- ]{3,29}$/.test(value)) {
+          markInvalid(input, "Numbers only. Hyphen and spaces are allowed.");
         }
+        break;
 
-        function nextSection(){
-          clearFieldErrors();
-          hideSummary();
-
-          const invalidField = validateSection(sections[currentSection]);
-          if(invalidField){
-            showSummary("You forgot a required field in " + getSectionName(sections[currentSection].id) + ".");
-            invalidField.focus();
-            invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
-            saveFormDraft();
-            return;
-          }
-
-          if(currentSection < sections.length - 1){
-            updateProgress(currentSection + 1);
-          }
+      case "tin":
+        if (!isValidTin(value)) {
+          markInvalid(input, "Invalid TIN format.");
         }
+        break;
 
-        /* -------------------------
-          DRAFT SAVE / RESTORE
-        ------------------------- */
-        function getDraftKey() {
-          return "personal_record_create_draft";
+      case "citizenship":
+        if (!["Filipino", "Dual Citizen"].includes(value)) {
+          markInvalid(input, "Invalid citizenship.");
         }
+        break;
 
-        function collectRepeatedEntries(selector, fieldNames) {
-          const entries = [];
-          document.querySelectorAll(selector).forEach(entry => {
-            const row = {};
-            fieldNames.forEach(name => {
-              const el = entry.querySelector(`[name="${name}[]"]`);
-              row[name] = el ? el.value : '';
-            });
-
-            const hasValue = Object.values(row).some(v => String(v).trim() !== '');
-            if (hasValue) {
-              entries.push(row);
-            }
-          });
-          return entries;
+      case "dual_country":
+        const citizenship = form.querySelector('[name="citizenship"]')?.value || "";
+        if (citizenship === "Dual Citizen" && value === "") {
+          markInvalid(input, "Country is required for dual citizenship.");
         }
+        break;
 
-        function saveFormDraft() {
-          if (!form) return;
-
-          const data = {
-            simple: {},
-            education: collectRepeatedEntries('.education-entry', [
-              'education_level', 'school_name', 'course', 'units',
-              'edu_from', 'edu_to', 'year_graduated', 'honors'
-            ]),
-            eligibility: collectRepeatedEntries('.eligibility-entry', [
-              'career_service', 'rating', 'exam_date', 'exam_place',
-              'license', 'license_number', 'valid_until'
-            ]),
-            training: collectRepeatedEntries('.training-entry', [
-              'title', 'hours', 'training_from', 'training_to', 'type', 'sponsor'
-            ])
-          };
-
-          const fields = form.querySelectorAll('input:not([type="hidden"]):not([name$="[]"]), select:not([name$="[]"]), textarea:not([name$="[]"])');
-          fields.forEach(field => {
-            if (!field.name) return;
-
-            if (field.type === 'checkbox' || field.type === 'radio') {
-              if (field.checked) {
-                data.simple[field.name] = field.value;
-              }
-            } else {
-              data.simple[field.name] = field.value;
-            }
-          });
-
-          data.currentSection = currentSection;
-
-          localStorage.setItem(getDraftKey(), JSON.stringify(data));
+      case "r_zip":
+      case "p_zip":
+        if (!isValidZip(value)) {
+          markInvalid(input, "Zip code must be 4 digits.");
         }
+        break;
 
-        function restoreSimpleFields(data) {
-          if (!data || !data.simple) return;
-
-          Object.keys(data.simple).forEach(name => {
-            const field = form.querySelector(`[name="${name}"]`);
-            if (field) {
-              field.value = data.simple[name];
-            }
-          });
+      case "telephone":
+        if (!isValidTelephone(value)) {
+          markInvalid(input, "Invalid telephone number.");
         }
+        break;
 
-        function clearContainer(selector) {
-          const container = document.querySelector(selector);
-          if (container) {
-            container.innerHTML = '';
-          }
+      case "mobile":
+        if (!isValidMobile(value)) {
+          markInvalid(input, "Use 09XXXXXXXXX or +639XXXXXXXXX.");
         }
+        break;
 
-        function restoreDraft() {
-          if (!form) return;
-
-          const raw = localStorage.getItem(getDraftKey());
-          if (!raw) return;
-
-          let data = null;
-          try {
-            data = JSON.parse(raw);
-          } catch (e) {
-            return;
-          }
-
-          restoreSimpleFields(data);
-
-          if (document.getElementById('education-container') && Array.isArray(data.education)) {
-            clearContainer('#education-container');
-            if (data.education.length > 0) {
-              data.education.forEach(row => addEducation(row));
-            } else {
-              addEducation();
-            }
-          }
-
-          if (document.getElementById('eligibility') && Array.isArray(data.eligibility)) {
-            clearContainer('#eligibility');
-            if (data.eligibility.length > 0) {
-              data.eligibility.forEach(row => addEligibility(row));
-            } else {
-              addEligibility();
-            }
-          }
-
-          if (document.getElementById('training') && Array.isArray(data.training)) {
-            clearContainer('#training');
-            if (data.training.length > 0) {
-              data.training.forEach(row => addTraining(row));
-            } else {
-              addTraining();
-            }
-          }
-
-          if (typeof data.currentSection === 'number') {
-            updateProgress(data.currentSection);
-          }
+      case "email":
+        if (!isValidEmail(value)) {
+          markInvalid(input, "Invalid email address.");
         }
+        break;
+    }
+  });
 
-        function clearDraft() {
-          localStorage.removeItem(getDraftKey());
+  if (section.id === "education") {
+    document.querySelectorAll(".education-entry").forEach(entry => {
+      const from = entry.querySelector('[name="edu_from[]"]');
+      const to = entry.querySelector('[name="edu_to[]"]');
+      const yearGraduated = entry.querySelector('[name="year_graduated[]"]');
+
+      if (from && to && !isValidDateOrder(from.value, to.value)) {
+        markInvalid(to, '"To" date must not be earlier than "From" date.');
+      }
+
+      if (yearGraduated && yearGraduated.value.trim() !== "" && !isValidYear(yearGraduated.value.trim())) {
+        markInvalid(yearGraduated, "Enter a valid 4-digit year.");
+      }
+    });
+  }
+
+  if (section.id === "eligibility-section") {
+    document.querySelectorAll(".eligibility-entry").forEach(entry => {
+      const examDate = entry.querySelector('[name="exam_date[]"]');
+      const validUntil = entry.querySelector('[name="valid_until[]"]');
+      const rating = entry.querySelector('[name="rating[]"]');
+      const licenseNumber = entry.querySelector('[name="license_number[]"]');
+
+      if (examDate && examDate.value && !isPastOrToday(examDate.value)) {
+        markInvalid(examDate, "Exam date cannot be in the future.");
+      }
+
+      if (rating && rating.value.trim() !== "" && !/^\d+(\.\d+)?$/.test(rating.value.trim())) {
+        markInvalid(rating, "Rating must be numeric.");
+      }
+
+      if (licenseNumber && licenseNumber.value.trim() !== "" && !/^[A-Za-z0-9\- ]{3,30}$/.test(licenseNumber.value.trim())) {
+        markInvalid(licenseNumber, "Invalid license number.");
+      }
+
+      if (examDate && validUntil && examDate.value && validUntil.value) {
+        if (new Date(validUntil.value) < new Date(examDate.value)) {
+          markInvalid(validUntil, "Valid until must be after exam date.");
         }
+      }
+    });
+  }
 
-        /* -------------------------
-          DYNAMIC SECTIONS
-        ------------------------- */
-        function addEducation(data = {}) {
-          const container = document.getElementById("education-container");
-          const div = document.createElement("div");
-          div.classList.add("education-entry", "education-box");
-          div.innerHTML = `
-            <div class="education-grid">
-              <div>
-                <label>Level</label>
-                <select name="education_level[]">
-                  <option>Elementary</option>
-                  <option>Secondary</option>
-                  <option>Vocational / Trade Course</option>
-                  <option>College</option>
-                  <option>Graduate Studies</option>
-                </select>
-              </div>
+  if (section.id === "training-section") {
+    document.querySelectorAll(".training-entry").forEach(entry => {
+      const from = entry.querySelector('[name="training_from[]"]');
+      const to = entry.querySelector('[name="training_to[]"]');
+      const hours = entry.querySelector('[name="hours[]"]');
 
-              <div>
-                <label>Name of School</label>
-                <input name="school_name[]" placeholder="School Name">
-              </div>
+      if (hours && hours.value.trim() !== "" && !isPositiveNumber(hours.value.trim())) {
+        markInvalid(hours, "Hours must be a positive number.");
+      }
 
-              <div>
-                <label>Basic Education / Degree / Course</label>
-                <input name="course[]" placeholder="Course / Degree">
-              </div>
+      if (from && to && !isValidDateOrder(from.value, to.value)) {
+        markInvalid(to, '"To" date must not be earlier than "From" date.');
+      }
+    });
+  }
 
-              <div>
-                <label>Highest Level / Units Earned</label>
-                <input name="units[]" placeholder="Highest Level / Units">
-              </div>
+  return firstInvalid;
+}
 
-              <div>
-                <label class="required">Period of Attendance From</label>
-                <input type="date" name="edu_from[]" required>
-              </div>
+function validateAllSections(){
+  clearFieldErrors();
+  hideSummary();
 
-              <div>
-                <label class="required">To</label>
-                <input type="date" name="edu_to[]" required>
-              </div>
+  for(let i = 0; i < sections.length; i++){
+    const invalidField = validateSection(sections[i]);
 
-              <div>
-                <label class="required">Year Graduated</label>
-                <input name="year_graduated[]" placeholder="Year Graduated" required>
-              </div>
+    if(invalidField){
+      updateProgress(i);
+      showSummary("Please fix the highlighted field(s) in " + getSectionName(sections[i].id) + ".");
+      setTimeout(() => {
+        invalidField.focus();
+        invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      return false;
+    }
+  }
 
-              <div>
-                <label>Scholarship / Academic Honors</label>
-                <input name="honors[]" placeholder="Scholarship / Honors">
-              </div>
-            </div>
-            <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
-          `;
-          container.appendChild(div);
+  return true;
+}
 
-          div.querySelector('[name="education_level[]"]').value = data.education_level || 'Elementary';
-          div.querySelector('[name="school_name[]"]').value = data.school_name || '';
-          div.querySelector('[name="course[]"]').value = data.course || '';
-          div.querySelector('[name="units[]"]').value = data.units || '';
-          div.querySelector('[name="edu_from[]"]').value = data.edu_from || '';
-          div.querySelector('[name="edu_to[]"]').value = data.edu_to || '';
-          div.querySelector('[name="year_graduated[]"]').value = data.year_graduated || '';
-          div.querySelector('[name="honors[]"]').value = data.honors || '';
+function getDraftKey() {
+  return "personal_record_create_draft";
+}
 
-          saveFormDraft();
-        }
+function collectRepeatedEntries(selector, fieldNames) {
+  const entries = [];
+  document.querySelectorAll(selector).forEach(entry => {
+    const row = {};
+    fieldNames.forEach(name => {
+      const el = entry.querySelector(`[name="${name}[]"]`);
+      row[name] = el ? el.value : '';
+    });
 
-        function addEligibility(data = {}) {
-          const container = document.getElementById("eligibility");
-          const div = document.createElement("div");
-          div.classList.add("eligibility-entry", "eligibility-box");
-          div.innerHTML = `
-            <div class="eligibility-grid">
-              <div>
-                <label>Career Service / CSC / CES</label>
-                <input name="career_service[]" placeholder="Career Service / CSC / CES">
-              </div>
+    const hasValue = Object.values(row).some(v => String(v).trim() !== '');
+    if (hasValue) {
+      entries.push(row);
+    }
+  });
+  return entries;
+}
 
-              <div>
-                <label>Rating</label>
-                <input name="rating[]" placeholder="Rating">
-              </div>
+function saveFormDraft() {
+  if (!form) return;
 
-              <div>
-                <label class="required">Exam Date</label>
-                <input type="date" name="exam_date[]" required>
-              </div>
+  const data = {
+    simple: {},
+    education: collectRepeatedEntries('.education-entry', [
+      'education_level', 'school_name', 'course', 'units',
+      'edu_from', 'edu_to', 'year_graduated', 'honors'
+    ]),
+    eligibility: collectRepeatedEntries('.eligibility-entry', [
+      'career_service', 'rating', 'exam_date', 'exam_place',
+      'license', 'license_number', 'valid_until'
+    ]),
+    training: collectRepeatedEntries('.training-entry', [
+      'title', 'hours', 'training_from', 'training_to', 'type', 'sponsor'
+    ])
+  };
 
-              <div>
-                <label>Place of Examination</label>
-                <input name="exam_place[]" placeholder="Place of Examination">
-              </div>
+  const fields = form.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([name$="[]"]), select:not([name$="[]"]), textarea:not([name$="[]"])');
+  fields.forEach(field => {
+    if (!field.name) return;
 
-              <div>
-                <label>License</label>
-                <input name="license[]" placeholder="License">
-              </div>
+    if (field.type === 'checkbox' || field.type === 'radio') {
+      if (field.checked) {
+        data.simple[field.name] = field.value;
+      } else if (field.type === 'checkbox') {
+        data.simple[field.name] = '';
+      }
+    } else {
+      data.simple[field.name] = field.value;
+    }
+  });
 
-              <div>
-                <label>License Number</label>
-                <input name="license_number[]" placeholder="License Number">
-              </div>
+  if (sameAddressCheckbox) {
+    data.sameAddress = sameAddressCheckbox.checked;
+  }
 
-              <div>
-                <label>Valid Until</label>
-                <input type="date" name="valid_until[]">
-              </div>
-            </div>
-            <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
-          `;
-          container.appendChild(div);
+  data.currentSection = currentSection;
 
-          div.querySelector('[name="career_service[]"]').value = data.career_service || '';
-          div.querySelector('[name="rating[]"]').value = data.rating || '';
-          div.querySelector('[name="exam_date[]"]').value = data.exam_date || '';
-          div.querySelector('[name="exam_place[]"]').value = data.exam_place || '';
-          div.querySelector('[name="license[]"]').value = data.license || '';
-          div.querySelector('[name="license_number[]"]').value = data.license_number || '';
-          div.querySelector('[name="valid_until[]"]').value = data.valid_until || '';
+  localStorage.setItem(getDraftKey(), JSON.stringify(data));
+}
 
-          saveFormDraft();
-        }
+function restoreSimpleFields(data) {
+  if (!data || !data.simple) return;
 
-        function addTraining(data = {}) {
-          const container = document.getElementById("training");
-          const div = document.createElement("div");
-          div.classList.add("training-entry", "training-box");
-          div.innerHTML = `
-            <div class="training-grid">
-              <div>
-                <label>Training Title</label>
-                <input name="title[]" placeholder="Training Title">
-              </div>
+  Object.keys(data.simple).forEach(name => {
+    const field = form.querySelector(`[name="${name}"]`);
+    if (field) {
+      if (field.type === 'checkbox') {
+        field.checked = !!data.simple[name];
+      } else {
+        field.value = data.simple[name];
+      }
+    }
+  });
+}
 
-              <div>
-                <label class="required">Hours</label>
-                <input name="hours[]" placeholder="Hours" required>
-              </div>
+function clearContainer(selector) {
+  const container = document.querySelector(selector);
+  if (container) {
+    container.innerHTML = '';
+  }
+}
 
-              <div>
-                <label class="required">From</label>
-                <input type="date" name="training_from[]" required>
-              </div>
+function restoreDraft() {
+  if (!form) return;
 
-              <div>
-                <label class="required">To</label>
-                <input type="date" name="training_to[]" required>
-              </div>
+  const raw = localStorage.getItem(getDraftKey());
+  if (!raw) return;
 
-              <div>
-                <label>Type</label>
-                <input name="type[]" placeholder="Managerial / Technical">
-              </div>
+  let data = null;
+  try {
+    data = JSON.parse(raw);
+  } catch (e) {
+    return;
+  }
 
-              <div>
-                <label>Sponsor</label>
-                <input name="sponsor[]" placeholder="Sponsor">
-              </div>
-            </div>
-            <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
-          `;
-          container.appendChild(div);
+  restoreSimpleFields(data);
 
-          div.querySelector('[name="title[]"]').value = data.title || '';
-          div.querySelector('[name="hours[]"]').value = data.hours || '';
-          div.querySelector('[name="training_from[]"]').value = data.training_from || '';
-          div.querySelector('[name="training_to[]"]').value = data.training_to || '';
-          div.querySelector('[name="type[]"]').value = data.type || '';
-          div.querySelector('[name="sponsor[]"]').value = data.sponsor || '';
+  if (document.getElementById('education-container') && Array.isArray(data.education)) {
+    clearContainer('#education-container');
+    if (data.education.length > 0) {
+      data.education.forEach(row => addEducation(row));
+    } else {
+      addEducation();
+    }
+  }
 
-          saveFormDraft();
-        }
+  if (document.getElementById('eligibility') && Array.isArray(data.eligibility)) {
+    clearContainer('#eligibility');
+    if (data.eligibility.length > 0) {
+      data.eligibility.forEach(row => addEligibility(row));
+    } else {
+      addEligibility();
+    }
+  }
 
-        function removeEntry(button, selector) {
-          const item = button.closest(selector);
-          if (item) {
-            item.remove();
-            saveFormDraft();
-          }
-        }
+  if (document.getElementById('training') && Array.isArray(data.training)) {
+    clearContainer('#training');
+    if (data.training.length > 0) {
+      data.training.forEach(row => addTraining(row));
+    } else {
+      addTraining();
+    }
+  }
 
-        /* -------------------------
-          AUTO MARK REQUIRED LABELS
-        ------------------------- */
-        function markRequiredLabels() {
-          document.querySelectorAll("[required]").forEach(input => {
-            const wrapper = input.parentElement;
-            if (!wrapper) return;
-            const label = wrapper.querySelector("label");
-            if (label) {
-              label.classList.add("required");
-            }
-          });
-        }
+  if (sameAddressCheckbox && typeof data.sameAddress !== "undefined") {
+    sameAddressCheckbox.checked = !!data.sameAddress;
+    if (sameAddressCheckbox.checked) {
+      copyResidentialToPermanent(true);
+    }
+  }
 
-        /* -------------------------
-          EVENTS
-        ------------------------- */
-        document.addEventListener("input", function(e){
-          if(e.target.matches("input, select, textarea")){
-            if((e.target.value || "").trim() !== ""){
-              e.target.classList.remove("field-error");
-              const wrapper = e.target.parentElement;
-              if (wrapper) {
-                const msg = wrapper.querySelector(".field-error-message");
-                if(msg) msg.remove();
-              }
-            }
-            saveFormDraft();
-          }
-        });
+  if (typeof data.currentSection === 'number' && data.currentSection >= 0 && data.currentSection < sections.length) {
+    updateProgress(data.currentSection);
+  } else {
+    updateProgress(0);
+  }
+}
 
-        document.addEventListener("change", function(e){
-          if(e.target.matches("input, select, textarea")){
-            saveFormDraft();
-          }
-        });
+function clearDraft() {
+  localStorage.removeItem(getDraftKey());
+}
 
-        form.addEventListener("submit", function(e){
-          saveFormDraft();
+function resetToSingleEntry(containerSelector, addFn) {
+  clearContainer(containerSelector);
+  addFn();
+}
 
-          if(!validateAllSections()){
-            e.preventDefault();
-            return false;
-          }
+function clearAllForm() {
+  const confirmed = window.confirm("Clear all fields in this form?");
+  if (!confirmed) return;
 
-          clearDraft();
-        });
+  form.reset();
+  hideSummary();
+  clearFieldErrors();
+  clearDraft();
 
-        document.addEventListener("DOMContentLoaded", function () {
-          restoreDraft();
+  const preview = document.getElementById("preview");
+  if (preview) {
+    preview.src = "../assets/profile.png";
+  }
 
-          
-        });
+  resetToSingleEntry('#education-container', addEducation);
+  resetToSingleEntry('#eligibility', addEligibility);
+  resetToSingleEntry('#training', addTraining);
+
+  if (sameAddressCheckbox) {
+    sameAddressCheckbox.checked = false;
+  }
+
+  updateProgress(0);
+}
+
+function addEducation(data = {}) {
+  const container = document.getElementById("education-container");
+  const div = document.createElement("div");
+  div.classList.add("education-entry", "education-box");
+  div.innerHTML = `
+    <div class="education-grid">
+      <div>
+        <label>Level</label>
+        <select name="education_level[]" required>
+          <option>Elementary</option>
+          <option>Secondary</option>
+          <option>Vocational / Trade Course</option>
+          <option>College</option>
+          <option>Graduate Studies</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Name of School</label>
+        <input name="school_name[]" placeholder="School Name" required>
+      </div>
+
+      <div>
+        <label>Basic Education / Degree / Course</label>
+        <input name="course[]" placeholder="Course / Degree" required>
+      </div>
+
+      <div>
+        <label>Highest Level / Units Earned</label>
+        <input name="units[]" placeholder="Highest Level / Units" required>
+      </div>
+
+      <div>
+        <label>Period of Attendance From</label>
+        <input type="date" name="edu_from[]" required>
+      </div>
+
+      <div>
+        <label>To</label>
+        <input type="date" name="edu_to[]" required>
+      </div>
+
+      <div>
+        <label>Year Graduated</label>
+        <input name="year_graduated[]" placeholder="Year Graduated" required>
+      </div>
+
+      <div>
+        <label>Scholarship / Academic Honors</label>
+        <input name="honors[]" placeholder="Scholarship / Honors">
+      </div>
+    </div>
+    <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">✖ Remove</button>
+  `;
+  container.appendChild(div);
+
+  div.querySelector('[name="education_level[]"]').value = data.education_level || 'Elementary';
+  div.querySelector('[name="school_name[]"]').value = data.school_name || '';
+  div.querySelector('[name="course[]"]').value = data.course || '';
+  div.querySelector('[name="units[]"]').value = data.units || '';
+  div.querySelector('[name="edu_from[]"]').value = data.edu_from || '';
+  div.querySelector('[name="edu_to[]"]').value = data.edu_to || '';
+  div.querySelector('[name="year_graduated[]"]').value = data.year_graduated || '';
+  div.querySelector('[name="honors[]"]').value = data.honors || '';
+}
+
+function addEligibility(data = {}) {
+  const container = document.getElementById("eligibility");
+  const div = document.createElement("div");
+  div.classList.add("eligibility-entry", "eligibility-box");
+  div.innerHTML = `
+    <div class="eligibility-grid">
+      <div>
+        <label>Career Service / CSC / CES</label>
+        <input name="career_service[]" placeholder="Career Service / CSC / CES" required>
+      </div>
+
+      <div>
+        <label>Rating</label>
+        <input name="rating[]" placeholder="Rating" required>
+      </div>
+
+      <div>
+        <label>Exam Date</label>
+        <input type="date" name="exam_date[]" required>
+      </div>
+
+      <div>
+        <label>Place of Examination</label>
+        <input name="exam_place[]" placeholder="Place of Examination" required>
+      </div>
+
+      <div>
+        <label>License</label>
+        <input name="license[]" placeholder="License">
+      </div>
+
+      <div>
+        <label>License Number</label>
+        <input name="license_number[]" placeholder="License Number">
+      </div>
+
+      <div>
+        <label>Valid Until</label>
+        <input type="date" name="valid_until[]">
+      </div>
+    </div>
+    <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+  `;
+  container.appendChild(div);
+
+  div.querySelector('[name="career_service[]"]').value = data.career_service || '';
+  div.querySelector('[name="rating[]"]').value = data.rating || '';
+  div.querySelector('[name="exam_date[]"]').value = data.exam_date || '';
+  div.querySelector('[name="exam_place[]"]').value = data.exam_place || '';
+  div.querySelector('[name="license[]"]').value = data.license || '';
+  div.querySelector('[name="license_number[]"]').value = data.license_number || '';
+  div.querySelector('[name="valid_until[]"]').value = data.valid_until || '';
+}
+
+function addTraining(data = {}) {
+  const container = document.getElementById("training");
+  const div = document.createElement("div");
+  div.classList.add("training-entry", "training-box");
+  div.innerHTML = `
+    <div class="training-grid">
+      <div>
+        <label>Training Title</label>
+        <input name="title[]" placeholder="Training Title" required>
+      </div>
+
+      <div>
+        <label>Hours</label>
+        <input name="hours[]" placeholder="Hours" required>
+      </div>
+
+      <div>
+        <label>From</label>
+        <input type="date" name="training_from[]" required>
+      </div>
+
+      <div>
+        <label>To</label>
+        <input type="date" name="training_to[]" required>
+      </div>
+
+      <div>
+        <label>Type</label>
+        <input name="type[]" placeholder="Managerial / Technical">
+      </div>
+
+      <div>
+        <label>Sponsor</label>
+        <input name="sponsor[]" placeholder="Sponsor">
+      </div>
+    </div>
+    <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+  `;
+  container.appendChild(div);
+
+  div.querySelector('[name="title[]"]').value = data.title || '';
+  div.querySelector('[name="hours[]"]').value = data.hours || '';
+  div.querySelector('[name="training_from[]"]').value = data.training_from || '';
+  div.querySelector('[name="training_to[]"]').value = data.training_to || '';
+  div.querySelector('[name="type[]"]').value = data.type || '';
+  div.querySelector('[name="sponsor[]"]').value = data.sponsor || '';
+}
+
+function removeEntry(button, selector) {
+  const items = document.querySelectorAll(selector);
+  if (items.length <= 1) {
+    return;
+  }
+
+  const item = button.closest(selector);
+  if (item) {
+    item.remove();
+    saveFormDraft();
+  }
+}
+
+function markRequiredLabels() {
+  document.querySelectorAll("[required]").forEach(input => {
+    const wrapper = input.parentElement;
+    if (!wrapper) return;
+    const label = wrapper.querySelector("label");
+    if (label) {
+      label.classList.add("required");
+    }
+  });
+}
+
+document.addEventListener("input", function(e){
+  if(!e.target.matches("input, select, textarea")) return;
+
+  const field = e.target;
+
+  if (["umid", "philsys", "pagibig", "tin", "philhealth", "agency_employee"].includes(field.name)) {
+    const cleaned = sanitizeIdNumber(field.value);
+    if (field.value !== cleaned) {
+      field.value = cleaned;
+    }
+  }
+
+  validateSingleField(field);
+
+  if (field.name === "citizenship") {
+    const dualCountryField = form.querySelector('[name="dual_country"]');
+    if (dualCountryField) validateSingleField(dualCountryField);
+  }
+
+  saveFormDraft();
+});
+
+document.addEventListener("change", function(e){
+  if(!e.target.matches("input, select, textarea")) return;
+
+  validateSingleField(e.target);
+
+  if (e.target.name === "citizenship") {
+    const dualCountryField = form.querySelector('[name="dual_country"]');
+    if (dualCountryField) validateSingleField(dualCountryField);
+  }
+
+  saveFormDraft();
+});
+
+form.addEventListener("submit", function(e){
+  saveFormDraft();
+
+  if(!validateAllSections()){
+    e.preventDefault();
+    return false;
+  }
+
+  clearDraft();
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  restoreDraft();
+  markRequiredLabels();
+  if (typeof currentSection !== "number" || Number.isNaN(currentSection)) {
+    currentSection = 0;
+  }
+  updateProgress(currentSection);
+});
 </script>
 
 </body>

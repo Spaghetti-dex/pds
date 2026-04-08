@@ -116,22 +116,24 @@ if (isset($_POST['update'])) {
 body{
     background:#efefef url("../assets/bg-wave.png") no-repeat center center fixed;
     background-size:cover;
-    height:100vh;
+    min-height:100vh;
     display:flex;
     justify-content:center;
-    align-items:center;
-    overflow:hidden;
+    align-items:flex-start;
+    padding:20px;
+    overflow-x:hidden;
 }
 
 .container{
     width:500px;
     max-width:95vw;
-    max-height:95vh;
+    max-height:none;
     background:#f8f8f8;
     border:3px solid #22361e;
     border-radius:25px;
     overflow:hidden;
     box-shadow:0 8px 20px rgba(0,0,0,0.20);
+    margin:20px 0;
 }
 
 .header{
@@ -202,6 +204,7 @@ input:focus, select:focus{
 .info-row{
     font-size:13px;
     margin-bottom:6px;
+    word-break:break-word;
 }
 
 .info-row:last-child{
@@ -245,7 +248,7 @@ input:focus, select:focus{
 }
 
 button{
-    width: 45%;
+    width:45%;
     padding:11px;
     border:none;
     border-radius:20px;
@@ -253,8 +256,8 @@ button{
     font-weight:bold;
     cursor:pointer;
     transition:0.3s;
-    display: block;
-    margin: 20px auto 0; /* centers horizontally */
+    display:block;
+    margin:20px auto 0;
 }
 
 button:hover{
@@ -265,6 +268,7 @@ button:hover{
     margin-bottom:12px;
     font-weight:bold;
     color:#b00020;
+    word-break:break-word;
 }
 
 .success{
@@ -276,6 +280,52 @@ button:hover{
     margin-top:-4px;
     margin-bottom:12px;
     color:#444;
+}
+
+@media (max-width: 520px){
+    body{
+        padding:10px;
+    }
+
+    .container{
+        width:100%;
+        max-width:100%;
+        border-width:2px;
+        border-radius:20px;
+        margin:10px 0;
+    }
+
+    .header{
+        padding:18px 14px;
+        font-size:22px;
+    }
+
+    .home-btn{
+        left:10px;
+        width:34px;
+        height:34px;
+    }
+
+    .form-area{
+        padding:16px 12px;
+    }
+
+    input, select{
+        font-size:15px;
+        padding:10px 12px;
+    }
+
+    .password-wrap input{
+        height:auto;
+        min-height:48px;
+        padding:10px 44px 10px 12px;
+        border-radius:14px;
+        font-size:15px;
+    }
+
+    button{
+        width:100%;
+    }
 }
 </style>
 </head>

@@ -1,14 +1,95 @@
 <?php
+ob_start();
 require_once "../includes/auth_check.php";
 require_once "./../includes/audit_log.php";
 include "../config/database.php";
-
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset("utf8mb4");
 
 function e($value) {
     return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
+}
+function clean_value($value): string {
+    if (is_array($value)) return '';
+    return trim((string)$value);
+}
+
+function clean_array_values($values): array {
+    if (!is_array($values)) return [];
+    return array_map(function ($v) {
+        return trim((string)$v);
+    }, $values);
+}
+
+function normalize_date_value($value): ?string {
+    $value = trim((string)$value);
+    return $value === '' ? null : $value;
+}
+
+function row_has_any_value(array $row): bool {
+    foreach ($row as $value) {
+        if ($value !== null && trim((string)$value) !== '') {
+            return true;
+        }
+    }
+    return false;
+}
+
+function require_field(array &$errors, string $label, $value): void {
+    if ($value === null || trim((string)$value) === '') {
+        $errors[] = "$label is required.";
+    }
+}
+
+function validate_regex_field(array &$errors, string $label, string $value, string $pattern, string $message = 'is invalid.'): void {
+    if ($value !== '' && !preg_match($pattern, $value)) {
+        $errors[] = "$label $message";
+    }
+}
+
+function validate_date_field(array &$errors, string $label, ?string $value, bool $allowFuture = true): void {
+    if ($value === null || $value === '') return;
+
+    $dt = DateTime::createFromFormat('Y-m-d', $value);
+    if (!$dt || $dt->format('Y-m-d') !== $value) {
+        $errors[] = "$label is invalid.";
+        return;
+    }
+
+    if (!$allowFuture) {
+        $today = new DateTime('today');
+        if ($dt > $today) {
+            $errors[] = "$label cannot be in the future.";
+        }
+    }
+}
+
+function validate_date_range(array &$errors, string $fromLabel, ?string $from, string $toLabel, ?string $to): void {
+    if (!$from || !$to) return;
+
+    $fromDate = DateTime::createFromFormat('Y-m-d', $from);
+    $toDate   = DateTime::createFromFormat('Y-m-d', $to);
+
+    if ($fromDate && $toDate && $fromDate > $toDate) {
+        $errors[] = "$toLabel cannot be earlier than $fromLabel.";
+    }
+}
+
+function validate_positive_number_field(array &$errors, string $label, string $value): void {
+    if ($value !== '' && (!preg_match('/^\d+(\.\d+)?$/', $value) || (float)$value <= 0)) {
+        $errors[] = "$label must be a positive number.";
+    }
+}
+
+function validate_year_field(array &$errors, string $label, string $value): void {
+    if ($value !== '' && !preg_match('/^(19|20)\d{2}$/', $value)) {
+        $errors[] = "$label must be a valid 4-digit year.";
+    }
+}
+
+function make_row_label(string $type, int $index, string $field): string {
+    return $type . ' row ' . ($index + 1) . ' - ' . $field;
 }
 
 function table_exists(mysqli $conn, string $table): bool {
@@ -80,6 +161,13 @@ function get_address_house_column(array $columns): string {
     return 'house1';
 }
 
+function make_photo_src(?string $photo, ?string $photoType): string {
+    if (!empty($photo) && !empty($photoType)) {
+        return 'data:' . $photoType . ';base64,' . base64_encode($photo);
+    }
+    return '../assets/profile.png';
+}
+
 $search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : "";
 $selected_id = isset($_REQUEST['id']) ? (int)$_REQUEST['id'] : 0;
 $sort = isset($_REQUEST['sort']) ? strtolower(trim($_REQUEST['sort'])) : 'asc';
@@ -88,6 +176,12 @@ $order = ($sort === 'desc') ? 'DESC' : 'ASC';
 
 $message = "";
 $error = "";
+
+if (isset($_SESSION['success_message'])) {
+    $message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+
 $results = [];
 $person = null;
 
@@ -136,6 +230,10 @@ $training_columns    = $training_table ? get_columns($conn, $training_table) : [
 $address_columns     = get_columns($conn, 'addresses');
 $address_house_col   = get_address_house_column($address_columns);
 
+$personal_info_columns = get_columns($conn, 'personal_info');
+$has_photo_column = in_array('photo', $personal_info_columns, true);
+$has_photo_type_column = in_array('photo_type', $personal_info_columns, true);
+
 /*
 |--------------------------------------------------------------------------
 | DELETE
@@ -181,12 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
         $stmt->close();
 
         $conn->commit();
-        write_audit_log(
-            $conn,
-            $delete_id,
-            'DELETE',
-            "Deleted PDS record with ID " . $delete_id
-        );
+        write_audit_log($conn, $delete_id, 'DELETE', "Deleted PDS record with ID " . $delete_id);
         $message = "Record deleted successfully.";
     } catch (Exception $ex) {
         $conn->rollback();
@@ -199,133 +292,470 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
 | UPDATE
 |--------------------------------------------------------------------------
 */
+/*
+|--------------------------------------------------------------------------
+| UPDATE
+|--------------------------------------------------------------------------
+*/
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $id = (int)($_POST['id'] ?? 0);
     $selected_id = $id;
 
-    $surname         = trim($_POST['surname'] ?? '');
-    $firstname       = trim($_POST['firstname'] ?? '');
-    $middlename      = trim($_POST['middlename'] ?? '');
-    $extension       = trim($_POST['extension'] ?? '');
-    $dob             = $_POST['dob'] ?? '';
-    $birth_place     = trim($_POST['birth_place'] ?? '');
-    $sex             = trim($_POST['sex'] ?? '');
-    $civil_status    = trim($_POST['civil_status'] ?? '');
-    $height          = trim($_POST['height'] ?? '');
-    $weight          = trim($_POST['weight'] ?? '');
-    $blood_type      = trim($_POST['blood_type'] ?? '');
-    $umid            = trim($_POST['umid'] ?? '');
-    $pagibig         = trim($_POST['pagibig'] ?? '');
-    $philhealth      = trim($_POST['philhealth'] ?? '');
-    $philsys         = trim($_POST['philsys'] ?? '');
-    $tin             = trim($_POST['tin'] ?? '');
-    $agency_employee = trim($_POST['agency_employee'] ?? '');
-    $citizenship     = trim($_POST['citizenship'] ?? '');
-    $dual_country    = trim($_POST['dual_country'] ?? '');
-    $telephone       = trim($_POST['telephone'] ?? '');
-    $mobile          = trim($_POST['mobile'] ?? '');
-    $email           = trim($_POST['email'] ?? '');
+    $surname         = clean_value($_POST['surname'] ?? '');
+    $firstname       = clean_value($_POST['firstname'] ?? '');
+    $middlename      = clean_value($_POST['middlename'] ?? '');
+    $extension       = clean_value($_POST['extension'] ?? '');
+    $dob             = normalize_date_value($_POST['dob'] ?? '');
+    $birth_place     = clean_value($_POST['birth_place'] ?? '');
+    $sex             = clean_value($_POST['sex'] ?? '');
+    $civil_status    = clean_value($_POST['civil_status'] ?? '');
+    $height          = clean_value($_POST['height'] ?? '');
+    $weight          = clean_value($_POST['weight'] ?? '');
+    $blood_type      = clean_value($_POST['blood_type'] ?? '');
+    $umid            = clean_value($_POST['umid'] ?? '');
+    $pagibig         = clean_value($_POST['pagibig'] ?? '');
+    $philhealth      = clean_value($_POST['philhealth'] ?? '');
+    $philsys         = clean_value($_POST['philsys'] ?? '');
+    $tin             = clean_value($_POST['tin'] ?? '');
+    $agency_employee = clean_value($_POST['agency_employee'] ?? '');
+    $citizenship     = clean_value($_POST['citizenship'] ?? '');
+    $dual_country    = clean_value($_POST['dual_country'] ?? '');
+    $telephone       = clean_value($_POST['telephone'] ?? '');
+    $mobile          = clean_value($_POST['mobile'] ?? '');
+    $email           = clean_value($_POST['email'] ?? '');
 
-    $r_house1      = trim($_POST['r_house1'] ?? '');
-    $r_street      = trim($_POST['r_street'] ?? '');
-    $r_subdivision = trim($_POST['r_subdivision'] ?? '');
-    $r_barangay    = trim($_POST['r_barangay'] ?? '');
-    $r_city        = trim($_POST['r_city'] ?? '');
-    $r_province    = trim($_POST['r_province'] ?? '');
-    $r_zip         = trim($_POST['r_zip'] ?? '');
+    $newPhotoData = null;
+    $newPhotoType = null;
+    $hasNewPhotoUpload = isset($_FILES['photo']) && ($_FILES['photo']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK;
 
-    $p_house1      = trim($_POST['p_house1'] ?? '');
-    $p_street      = trim($_POST['p_street'] ?? '');
-    $p_subdivision = trim($_POST['p_subdivision'] ?? '');
-    $p_barangay    = trim($_POST['p_barangay'] ?? '');
-    $p_city        = trim($_POST['p_city'] ?? '');
-    $p_province    = trim($_POST['p_province'] ?? '');
-    $p_zip         = trim($_POST['p_zip'] ?? '');
+    $r_house1      = clean_value($_POST['r_house1'] ?? '');
+    $r_street      = clean_value($_POST['r_street'] ?? '');
+    $r_subdivision = clean_value($_POST['r_subdivision'] ?? '');
+    $r_barangay    = clean_value($_POST['r_barangay'] ?? '');
+    $r_city        = clean_value($_POST['r_city'] ?? '');
+    $r_province    = clean_value($_POST['r_province'] ?? '');
+    $r_zip         = clean_value($_POST['r_zip'] ?? '');
 
-    $education_level = $_POST['education_level'] ?? [];
-    $school_name     = $_POST['school_name'] ?? [];
-    $course          = $_POST['course'] ?? [];
-    $units           = $_POST['units'] ?? [];
+    $p_house1      = clean_value($_POST['p_house1'] ?? '');
+    $p_street      = clean_value($_POST['p_street'] ?? '');
+    $p_subdivision = clean_value($_POST['p_subdivision'] ?? '');
+    $p_barangay    = clean_value($_POST['p_barangay'] ?? '');
+    $p_city        = clean_value($_POST['p_city'] ?? '');
+    $p_province    = clean_value($_POST['p_province'] ?? '');
+    $p_zip         = clean_value($_POST['p_zip'] ?? '');
+
+    $education_level = clean_array_values($_POST['education_level'] ?? []);
+    $school_name     = clean_array_values($_POST['school_name'] ?? []);
+    $course          = clean_array_values($_POST['course'] ?? []);
+    $units           = clean_array_values($_POST['units'] ?? []);
     $edu_from        = $_POST['edu_from'] ?? [];
     $edu_to          = $_POST['edu_to'] ?? [];
-    $year_graduated  = $_POST['year_graduated'] ?? [];
-    $honors          = $_POST['honors'] ?? [];
+    $year_graduated  = clean_array_values($_POST['year_graduated'] ?? []);
+    $honors          = clean_array_values($_POST['honors'] ?? []);
 
-    $career_service  = $_POST['career_service'] ?? [];
-    $rating          = $_POST['rating'] ?? [];
+    $career_service  = clean_array_values($_POST['career_service'] ?? []);
+    $rating          = clean_array_values($_POST['rating'] ?? []);
     $exam_date       = $_POST['exam_date'] ?? [];
-    $exam_place      = $_POST['exam_place'] ?? [];
-    $license         = $_POST['license'] ?? [];
-    $license_number  = $_POST['license_number'] ?? [];
+    $exam_place      = clean_array_values($_POST['exam_place'] ?? []);
+    $license         = clean_array_values($_POST['license'] ?? []);
+    $license_number  = clean_array_values($_POST['license_number'] ?? []);
     $valid_until     = $_POST['valid_until'] ?? [];
 
-    $training_title  = $_POST['title'] ?? [];
-    $hours           = $_POST['hours'] ?? [];
+    $training_title  = clean_array_values($_POST['title'] ?? []);
+    $hours           = clean_array_values($_POST['hours'] ?? []);
     $training_from   = $_POST['training_from'] ?? [];
     $training_to     = $_POST['training_to'] ?? [];
-    $training_type   = $_POST['type'] ?? [];
-    $sponsor         = $_POST['sponsor'] ?? [];
+    $training_type   = clean_array_values($_POST['type'] ?? []);
+    $sponsor         = clean_array_values($_POST['sponsor'] ?? []);
+
+    $errors = [];
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION - MAIN RECORD
+    |--------------------------------------------------------------------------
+    */
+    require_field($errors, 'Surname', $surname);
+    require_field($errors, 'First name', $firstname);
+    require_field($errors, 'Middle name', $middlename);
+    require_field($errors, 'Date of birth', $dob);
+    require_field($errors, 'Birth place', $birth_place);
+    require_field($errors, 'Sex', $sex);
+    require_field($errors, 'Civil status', $civil_status);
+    require_field($errors, 'Blood type', $blood_type);
+    require_field($errors, 'Height', $height);
+    require_field($errors, 'Weight', $weight);
+    require_field($errors, 'UMID', $umid);
+    require_field($errors, 'Pag-IBIG', $pagibig);
+    require_field($errors, 'PhilHealth', $philhealth);
+    require_field($errors, 'PhilSys', $philsys);
+    require_field($errors, 'TIN', $tin);
+    require_field($errors, 'Agency Employee No.', $agency_employee);
+    require_field($errors, 'Citizenship', $citizenship);
+
+    require_field($errors, 'Residential house', $r_house1);
+    require_field($errors, 'Residential street', $r_street);
+    require_field($errors, 'Residential subdivision', $r_subdivision);
+    require_field($errors, 'Residential barangay', $r_barangay);
+    require_field($errors, 'Residential city', $r_city);
+    require_field($errors, 'Residential province', $r_province);
+    require_field($errors, 'Residential zip', $r_zip);
+
+    require_field($errors, 'Permanent house', $p_house1);
+    require_field($errors, 'Permanent street', $p_street);
+    require_field($errors, 'Permanent subdivision', $p_subdivision);
+    require_field($errors, 'Permanent barangay', $p_barangay);
+    require_field($errors, 'Permanent city', $p_city);
+    require_field($errors, 'Permanent province', $p_province);
+    require_field($errors, 'Permanent zip', $p_zip);
+
+    require_field($errors, 'Telephone', $telephone);
+    require_field($errors, 'Mobile', $mobile);
+    require_field($errors, 'Email', $email);
+
+    if ($citizenship === 'Dual Citizen' && $dual_country === '') {
+        $errors[] = 'Dual citizenship country is required.';
+    }
+
+    validate_regex_field($errors, 'Surname', $surname, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+    validate_regex_field($errors, 'First name', $firstname, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+    validate_regex_field($errors, 'Middle name', $middlename, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+
+    if ($extension !== '') {
+        validate_regex_field($errors, 'Name extension', $extension, "/^[A-Za-z0-9.\s-]{1,10}$/", 'is invalid.');
+    }
+
+    validate_date_field($errors, 'Date of birth', $dob, false);
+
+    validate_regex_field($errors, 'Sex', $sex, "/^(Male|Female)$/", 'must be Male or Female.');
+    validate_regex_field($errors, 'Civil status', $civil_status, "/^(Single|Married|Widowed|Separated)$/", 'is invalid.');
+    validate_regex_field($errors, 'Blood type', $blood_type, "/^(A|B|AB|O)[+-]$/i", 'must be A+, A-, B+, B-, AB+, AB-, O+, or O-.');
+
+    validate_positive_number_field($errors, 'Height', $height);
+    validate_positive_number_field($errors, 'Weight', $weight);
+
+    validate_regex_field($errors, 'UMID', $umid, "/^[0-9][0-9\- ]{3,29}$/", 'must contain numbers only. Hyphen and spaces are allowed.');
+    validate_regex_field($errors, 'PhilSys', $philsys, "/^[0-9][0-9\- ]{3,29}$/", 'must contain numbers only. Hyphen and spaces are allowed.');
+    validate_regex_field($errors, 'Pag-IBIG', $pagibig, "/^[0-9][0-9\- ]{3,29}$/", 'must contain numbers only. Hyphen and spaces are allowed.');
+    validate_regex_field($errors, 'PhilHealth', $philhealth, "/^[0-9][0-9\- ]{3,29}$/", 'must contain numbers only. Hyphen and spaces are allowed.');
+    validate_regex_field($errors, 'Agency Employee No.', $agency_employee, "/^[0-9][0-9\- ]{3,29}$/", 'must contain numbers only. Hyphen and spaces are allowed.');
+    validate_regex_field($errors, 'TIN', $tin, "/^(\d{3}-\d{3}-\d{3}|\d{9}|\d{12}|\d{3}-\d{3}-\d{3}-\d{3})$/", 'is invalid.');
+
+    validate_regex_field($errors, 'Citizenship', $citizenship, "/^(Filipino|Dual Citizen)$/", 'is invalid.');
+
+    if ($dual_country !== '') {
+        validate_regex_field($errors, 'Dual citizenship country', $dual_country, "/^[A-Za-zÑñ\s.'-]+$/", 'is invalid.');
+    }
+
+    validate_regex_field($errors, 'Residential zip', $r_zip, "/^\d{4}$/", 'must be 4 digits.');
+    validate_regex_field($errors, 'Permanent zip', $p_zip, "/^\d{4}$/", 'must be 4 digits.');
+
+    validate_regex_field($errors, 'Telephone', $telephone, "/^[0-9()\-\s]{7,15}$/", 'is invalid.');
+    validate_regex_field($errors, 'Mobile', $mobile, "/^(09\d{9}|\+639\d{9})$/", 'must be 09XXXXXXXXX or +639XXXXXXXXX.');
+
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Email is invalid.';
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PHOTO VALIDATION
+    |--------------------------------------------------------------------------
+    */
+    if ($hasNewPhotoUpload) {
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $detectedType = finfo_file($finfo, $_FILES['photo']['tmp_name']);
+        finfo_close($finfo);
+
+        if (!in_array($detectedType, $allowedTypes, true)) {
+            throw new Exception("Only JPG, PNG, GIF, and WEBP images are allowed.");
+        }
+
+        if ($_FILES['photo']['size'] > 5 * 1024 * 1024) {
+            throw new Exception("Photo must not be larger than 5MB.");
+        }
+
+        $newPhotoData = file_get_contents($_FILES['photo']['tmp_name']);
+        $newPhotoType = $detectedType;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION - EDUCATION
+    |--------------------------------------------------------------------------
+    */
+    $educationRows = [];
+    $educationCount = max(
+        count($education_level),
+        count($school_name),
+        count($course),
+        count($units),
+        count($edu_from),
+        count($edu_to),
+        count($year_graduated),
+        count($honors)
+    );
+
+    for ($i = 0; $i < $educationCount; $i++) {
+        $row = [
+            'education_level' => $education_level[$i] ?? '',
+            'school_name' => $school_name[$i] ?? '',
+            'course' => $course[$i] ?? '',
+            'units' => $units[$i] ?? '',
+            'edu_from' => normalize_date_value($edu_from[$i] ?? ''),
+            'edu_to' => normalize_date_value($edu_to[$i] ?? ''),
+            'year_graduated' => $year_graduated[$i] ?? '',
+            'honors' => $honors[$i] ?? ''
+        ];
+
+        if (!row_has_any_value($row)) {
+            continue;
+        }
+
+        require_field($errors, make_row_label('Education', $i, 'Level'), $row['education_level']);
+        require_field($errors, make_row_label('Education', $i, 'School name'), $row['school_name']);
+        require_field($errors, make_row_label('Education', $i, 'Course'), $row['course']);
+        require_field($errors, make_row_label('Education', $i, 'Units'), $row['units']);
+        require_field($errors, make_row_label('Education', $i, 'From date'), $row['edu_from']);
+        require_field($errors, make_row_label('Education', $i, 'To date'), $row['edu_to']);
+        require_field($errors, make_row_label('Education', $i, 'Year graduated'), $row['year_graduated']);
+
+        validate_date_field($errors, make_row_label('Education', $i, 'From date'), $row['edu_from'], true);
+        validate_date_field($errors, make_row_label('Education', $i, 'To date'), $row['edu_to'], true);
+        validate_date_range($errors, make_row_label('Education', $i, 'From date'), $row['edu_from'], make_row_label('Education', $i, 'To date'), $row['edu_to']);
+        validate_year_field($errors, make_row_label('Education', $i, 'Year graduated'), $row['year_graduated']);
+
+        $educationRows[] = $row;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION - ELIGIBILITY
+    |--------------------------------------------------------------------------
+    */
+    $eligibilityRows = [];
+    $eligibilityCount = max(
+        count($career_service),
+        count($rating),
+        count($exam_date),
+        count($exam_place),
+        count($license),
+        count($license_number),
+        count($valid_until)
+    );
+
+    for ($i = 0; $i < $eligibilityCount; $i++) {
+        $row = [
+            'career_service' => $career_service[$i] ?? '',
+            'rating' => $rating[$i] ?? '',
+            'exam_date' => normalize_date_value($exam_date[$i] ?? ''),
+            'exam_place' => $exam_place[$i] ?? '',
+            'license' => $license[$i] ?? '',
+            'license_number' => $license_number[$i] ?? '',
+            'valid_until' => normalize_date_value($valid_until[$i] ?? '')
+        ];
+
+        if (!row_has_any_value($row)) {
+            continue;
+        }
+
+        require_field($errors, make_row_label('Eligibility', $i, 'Career service'), $row['career_service']);
+        require_field($errors, make_row_label('Eligibility', $i, 'Rating'), $row['rating']);
+        require_field($errors, make_row_label('Eligibility', $i, 'Exam date'), $row['exam_date']);
+        require_field($errors, make_row_label('Eligibility', $i, 'Exam place'), $row['exam_place']);
+
+        if ($row['rating'] !== '') {
+            validate_regex_field($errors, make_row_label('Eligibility', $i, 'Rating'), $row['rating'], "/^\d+(\.\d+)?$/", 'must be numeric.');
+        }
+
+        validate_date_field($errors, make_row_label('Eligibility', $i, 'Exam date'), $row['exam_date'], false);
+
+        if ($row['valid_until'] !== null) {
+            validate_date_field($errors, make_row_label('Eligibility', $i, 'Valid until'), $row['valid_until'], true);
+            validate_date_range($errors, make_row_label('Eligibility', $i, 'Exam date'), $row['exam_date'], make_row_label('Eligibility', $i, 'Valid until'), $row['valid_until']);
+        }
+
+        if ($row['license_number'] !== '') {
+            validate_regex_field($errors, make_row_label('Eligibility', $i, 'License number'), $row['license_number'], "/^[A-Za-z0-9\- ]{3,30}$/", 'is invalid.');
+        }
+
+        $eligibilityRows[] = $row;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION - TRAINING
+    |--------------------------------------------------------------------------
+    */
+    $trainingRows = [];
+    $trainingCount = max(
+        count($training_title),
+        count($hours),
+        count($training_from),
+        count($training_to),
+        count($training_type),
+        count($sponsor)
+    );
+
+    for ($i = 0; $i < $trainingCount; $i++) {
+        $row = [
+            'title' => $training_title[$i] ?? '',
+            'hours' => $hours[$i] ?? '',
+            'training_from' => normalize_date_value($training_from[$i] ?? ''),
+            'training_to' => normalize_date_value($training_to[$i] ?? ''),
+            'type' => $training_type[$i] ?? '',
+            'sponsor' => $sponsor[$i] ?? ''
+        ];
+
+        if (!row_has_any_value($row)) {
+            continue;
+        }
+
+        require_field($errors, make_row_label('Training', $i, 'Title'), $row['title']);
+        require_field($errors, make_row_label('Training', $i, 'Hours'), $row['hours']);
+        require_field($errors, make_row_label('Training', $i, 'From date'), $row['training_from']);
+        require_field($errors, make_row_label('Training', $i, 'To date'), $row['training_to']);
+
+        validate_positive_number_field($errors, make_row_label('Training', $i, 'Hours'), $row['hours']);
+        validate_date_field($errors, make_row_label('Training', $i, 'From date'), $row['training_from'], true);
+        validate_date_field($errors, make_row_label('Training', $i, 'To date'), $row['training_to'], true);
+        validate_date_range($errors, make_row_label('Training', $i, 'From date'), $row['training_from'], make_row_label('Training', $i, 'To date'), $row['training_to']);
+
+        $trainingRows[] = $row;
+    }
 
     try {
+        if (!empty($errors)) {
+            throw new Exception(implode(" ", $errors));
+        }
+
         $conn->begin_transaction();
 
-        $stmt = $conn->prepare("
-            UPDATE personal_info SET
-                surname = ?,
-                firstname = ?,
-                middlename = ?,
-                extension = ?,
-                dob = ?,
-                birth_place = ?,
-                sex = ?,
-                civil_status = ?,
-                height = ?,
-                weight = ?,
-                blood_type = ?,
-                umid = ?,
-                pagibig = ?,
-                philhealth = ?,
-                philsys = ?,
-                tin = ?,
-                agency_employee = ?,
-                citizenship = ?,
-                dual_country = ?,
-                telephone = ?,
-                mobile = ?,
-                email = ?
-            WHERE id = ?
-        ");
-        $stmt->bind_param(
-            "ssssssssssssssssssssssi",
-            $surname,
-            $firstname,
-            $middlename,
-            $extension,
-            $dob,
-            $birth_place,
-            $sex,
-            $civil_status,
-            $height,
-            $weight,
-            $blood_type,
-            $umid,
-            $pagibig,
-            $philhealth,
-            $philsys,
-            $tin,
-            $agency_employee,
-            $citizenship,
-            $dual_country,
-            $telephone,
-            $mobile,
-            $email,
-            $id
-        );
-        $stmt->execute();
-        $stmt->close();
+        if ($has_photo_column && $has_photo_type_column && $hasNewPhotoUpload) {
+            $stmt = $conn->prepare("
+                UPDATE personal_info SET
+                    surname = ?,
+                    firstname = ?,
+                    middlename = ?,
+                    extension = ?,
+                    dob = ?,
+                    birth_place = ?,
+                    sex = ?,
+                    civil_status = ?,
+                    height = ?,
+                    weight = ?,
+                    blood_type = ?,
+                    umid = ?,
+                    pagibig = ?,
+                    philhealth = ?,
+                    philsys = ?,
+                    tin = ?,
+                    agency_employee = ?,
+                    citizenship = ?,
+                    dual_country = ?,
+                    telephone = ?,
+                    mobile = ?,
+                    email = ?,
+                    photo_type = ?,
+                    photo = ?
+                WHERE id = ?
+            ");
+
+            $emptyBlob = null;
+
+            $stmt->bind_param(
+                "sssssssssssssssssssssssbi",
+                $surname,
+                $firstname,
+                $middlename,
+                $extension,
+                $dob,
+                $birth_place,
+                $sex,
+                $civil_status,
+                $height,
+                $weight,
+                $blood_type,
+                $umid,
+                $pagibig,
+                $philhealth,
+                $philsys,
+                $tin,
+                $agency_employee,
+                $citizenship,
+                $dual_country,
+                $telephone,
+                $mobile,
+                $email,
+                $newPhotoType,
+                $emptyBlob,
+                $id
+            );
+
+            $stmt->send_long_data(23, $newPhotoData);
+            $stmt->execute();
+            $stmt->close();
+        } else {
+            $stmt = $conn->prepare("
+                UPDATE personal_info SET
+                    surname = ?,
+                    firstname = ?,
+                    middlename = ?,
+                    extension = ?,
+                    dob = ?,
+                    birth_place = ?,
+                    sex = ?,
+                    civil_status = ?,
+                    height = ?,
+                    weight = ?,
+                    blood_type = ?,
+                    umid = ?,
+                    pagibig = ?,
+                    philhealth = ?,
+                    philsys = ?,
+                    tin = ?,
+                    agency_employee = ?,
+                    citizenship = ?,
+                    dual_country = ?,
+                    telephone = ?,
+                    mobile = ?,
+                    email = ?
+                WHERE id = ?
+            ");
+            $stmt->bind_param(
+                "ssssssssssssssssssssssi",
+                $surname,
+                $firstname,
+                $middlename,
+                $extension,
+                $dob,
+                $birth_place,
+                $sex,
+                $civil_status,
+                $height,
+                $weight,
+                $blood_type,
+                $umid,
+                $pagibig,
+                $philhealth,
+                $philsys,
+                $tin,
+                $agency_employee,
+                $citizenship,
+                $dual_country,
+                $telephone,
+                $mobile,
+                $email,
+                $id
+            );
+            $stmt->execute();
+            $stmt->close();
+        }
 
         if (table_exists($conn, 'addresses')) {
-            $resType = "Residential";
+            $resType = "residential";
             $stmt = $conn->prepare("SELECT id FROM addresses WHERE person_id = ? AND type = ? LIMIT 1");
             $stmt->bind_param("is", $id, $resType);
             $stmt->execute();
@@ -381,7 +811,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
                 $stmt->close();
             }
 
-            $permType = "Permanent";
+            $permType = "permanent";
             $stmt = $conn->prepare("SELECT id FROM addresses WHERE person_id = ? AND type = ? LIMIT 1");
             $stmt->bind_param("is", $id, $permType);
             $stmt->execute();
@@ -498,31 +928,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
                 $placeholders = implode(",", array_fill(0, count($eduInsertCols), "?"));
                 $stmt = $conn->prepare("INSERT INTO `{$education_table}` ({$colList}) VALUES ({$placeholders})");
 
-                for ($i = 0; $i < count($education_level); $i++) {
-                    $rowData = [
-                        'person_id' => $id,
-                        'education_level' => trim($education_level[$i] ?? ''),
-                        'school_name' => trim($school_name[$i] ?? ''),
-                        'course' => trim($course[$i] ?? ''),
-                        'units' => trim($units[$i] ?? ''),
-                        'edu_from' => trim($edu_from[$i] ?? ''),
-                        'edu_to' => trim($edu_to[$i] ?? ''),
-                        'year_graduated' => trim($year_graduated[$i] ?? ''),
-                        'honors' => trim($honors[$i] ?? '')
-                    ];
-
-                    if (
-                        $rowData['education_level'] === '' &&
-                        $rowData['school_name'] === '' &&
-                        $rowData['course'] === '' &&
-                        $rowData['units'] === '' &&
-                        $rowData['edu_from'] === '' &&
-                        $rowData['edu_to'] === '' &&
-                        $rowData['year_graduated'] === '' &&
-                        $rowData['honors'] === ''
-                    ) {
-                        continue;
-                    }
+                foreach ($educationRows as $rowData) {
+                    $rowData['person_id'] = $id;
 
                     $bindValues = [];
                     foreach ($eduValueKeys as $key) {
@@ -598,29 +1005,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
                 $placeholders = implode(",", array_fill(0, count($eligInsertCols), "?"));
                 $stmt = $conn->prepare("INSERT INTO `{$eligibility_table}` ({$colList}) VALUES ({$placeholders})");
 
-                for ($i = 0; $i < count($career_service); $i++) {
-                    $rowData = [
-                        'person_id' => $id,
-                        'career_service' => trim($career_service[$i] ?? ''),
-                        'rating' => trim($rating[$i] ?? ''),
-                        'exam_date' => trim($exam_date[$i] ?? ''),
-                        'exam_place' => trim($exam_place[$i] ?? ''),
-                        'license' => trim($license[$i] ?? ''),
-                        'license_number' => trim($license_number[$i] ?? ''),
-                        'valid_until' => trim($valid_until[$i] ?? '')
-                    ];
-
-                    if (
-                        $rowData['career_service'] === '' &&
-                        $rowData['rating'] === '' &&
-                        $rowData['exam_date'] === '' &&
-                        $rowData['exam_place'] === '' &&
-                        $rowData['license'] === '' &&
-                        $rowData['license_number'] === '' &&
-                        $rowData['valid_until'] === ''
-                    ) {
-                        continue;
-                    }
+                foreach ($eligibilityRows as $rowData) {
+                    $rowData['person_id'] = $id;
 
                     $bindValues = [];
                     foreach ($eligValueKeys as $key) {
@@ -691,27 +1077,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
                 $placeholders = implode(",", array_fill(0, count($trainInsertCols), "?"));
                 $stmt = $conn->prepare("INSERT INTO `{$training_table}` ({$colList}) VALUES ({$placeholders})");
 
-                for ($i = 0; $i < count($training_title); $i++) {
-                    $rowData = [
-                        'person_id' => $id,
-                        'title' => trim($training_title[$i] ?? ''),
-                        'hours' => trim($hours[$i] ?? ''),
-                        'training_from' => trim($training_from[$i] ?? ''),
-                        'training_to' => trim($training_to[$i] ?? ''),
-                        'type' => trim($training_type[$i] ?? ''),
-                        'sponsor' => trim($sponsor[$i] ?? '')
-                    ];
-
-                    if (
-                        $rowData['title'] === '' &&
-                        $rowData['hours'] === '' &&
-                        $rowData['training_from'] === '' &&
-                        $rowData['training_to'] === '' &&
-                        $rowData['type'] === '' &&
-                        $rowData['sponsor'] === ''
-                    ) {
-                        continue;
-                    }
+                foreach ($trainingRows as $rowData) {
+                    $rowData['person_id'] = $id;
 
                     $bindValues = [];
                     foreach ($trainValueKeys as $key) {
@@ -734,41 +1101,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
 
         $conn->commit();
 
-    $full_name = trim($firstname . ' ' . $middlename . ' ' . $surname . ' ' . $extension);
-    write_audit_log($conn, $id, 'UPDATE', "Updated PDS record for " . $full_name);
+        $full_name = trim($firstname . ' ' . $middlename . ' ' . $surname . ' ' . $extension);
+        write_audit_log($conn, $id, 'UPDATE', "Updated PDS record for " . $full_name);
 
-        $message = "Record updated successfully.";
+        $_SESSION['success_message'] = "Record updated successfully.";
+
+        $redirectUrl = $_SERVER['PHP_SELF']
+            . '?id=' . urlencode((string)$id)
+            . '&search=' . urlencode($search)
+            . '&sort=' . urlencode($sort)
+            . '&saved=1';
+
+        header("Location: " . $redirectUrl);
+        exit;
     } catch (Exception $ex) {
-        $conn->rollback();
+        try {
+            if (isset($conn) && $conn instanceof mysqli) {
+                $conn->rollback();
+            }
+        } catch (Throwable $rollbackError) {
+        }
+
         $error = "Update failed: " . $ex->getMessage();
     }
 }
 
 /*
 |--------------------------------------------------------------------------
-| SEARCH
+| SEARCH / LIST
 |--------------------------------------------------------------------------
 */
-if ($search !== "") {
-    $stmt = $conn->prepare("
-        SELECT id, firstname, middlename, surname, extension, email, mobile
-        FROM personal_info
-        WHERE CONCAT(firstname, ' ', surname) LIKE ?
-           OR CONCAT(surname, ' ', firstname) LIKE ?
-           OR firstname LIKE ?
-           OR surname LIKE ?
-        ORDER BY surname " . $order . ", firstname " . $order . "
-    ");
-    $like = "%{$search}%";
-    $stmt->bind_param("ssss", $like, $like, $like, $like);
-    $stmt->execute();
-    $result = $stmt->get_result();
+$stmt = null;
 
-    while ($row = $result->fetch_assoc()) {
-        $results[] = $row;
+if ($search !== "") {
+    $searchTerm = trim($search);
+
+    if (mb_strlen($searchTerm) === 1) {
+        $prefix = $searchTerm . "%";
+
+        if ($has_photo_column && $has_photo_type_column) {
+            $stmt = $conn->prepare("
+                SELECT id, firstname, middlename, surname, extension, email, mobile, photo, photo_type
+                FROM personal_info
+                WHERE surname LIKE ?
+                ORDER BY surname {$order}, firstname {$order}
+            ");
+        } else {
+            $stmt = $conn->prepare("
+                SELECT id, firstname, middlename, surname, extension, email, mobile
+                FROM personal_info
+                WHERE surname LIKE ?
+                ORDER BY surname {$order}, firstname {$order}
+            ");
+        }
+
+        $stmt->bind_param("s", $prefix);
+    } else {
+        $like = "%" . $searchTerm . "%";
+
+        if ($has_photo_column && $has_photo_type_column) {
+            $stmt = $conn->prepare("
+                SELECT id, firstname, middlename, surname, extension, email, mobile, photo, photo_type
+                FROM personal_info
+                WHERE firstname LIKE ?
+                   OR surname LIKE ?
+                   OR CONCAT(firstname, ' ', surname) LIKE ?
+                   OR CONCAT(surname, ' ', firstname) LIKE ?
+                   OR CONCAT(surname, ', ', firstname) LIKE ?
+                ORDER BY surname {$order}, firstname {$order}
+            ");
+        } else {
+            $stmt = $conn->prepare("
+                SELECT id, firstname, middlename, surname, extension, email, mobile
+                FROM personal_info
+                WHERE firstname LIKE ?
+                   OR surname LIKE ?
+                   OR CONCAT(firstname, ' ', surname) LIKE ?
+                   OR CONCAT(surname, ' ', firstname) LIKE ?
+                   OR CONCAT(surname, ', ', firstname) LIKE ?
+                ORDER BY surname {$order}, firstname {$order}
+            ");
+        }
+
+        $stmt->bind_param("sssss", $like, $like, $like, $like, $like);
     }
-    $stmt->close();
+} else {
+    if ($has_photo_column && $has_photo_type_column) {
+        $stmt = $conn->prepare("
+            SELECT id, firstname, middlename, surname, extension, email, mobile, photo, photo_type
+            FROM personal_info
+            ORDER BY surname {$order}, firstname {$order}
+        ");
+    } else {
+        $stmt = $conn->prepare("
+            SELECT id, firstname, middlename, surname, extension, email, mobile
+            FROM personal_info
+            ORDER BY surname {$order}, firstname {$order}
+        ");
+    }
 }
+
+$stmt->execute();
+$result = $stmt->get_result();
+
+while ($row = $result->fetch_assoc()) {
+    $results[] = $row;
+}
+$stmt->close();
 
 /*
 |--------------------------------------------------------------------------
@@ -804,6 +1243,17 @@ if ($selected_id > 0) {
             $address_rows[] = $row;
         }
         $stmt->close();
+
+        foreach ($address_rows as $addr) {
+            $normalized = normalize_address_row($addr);
+            $type = strtolower(trim((string)($addr['type'] ?? '')));
+
+            if ($type === 'residential') {
+                $residential = $normalized;
+            } elseif ($type === 'permanent') {
+                $permanent = $normalized;
+            }
+        }
 
         $education_records = [];
         $eligibility_records = [];
@@ -851,6 +1301,11 @@ if ($selected_id > 0) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Search, View, Edit and Delete Personal Record</title>
 <style>
+*, *::before, *::after{box-sizing:border-box;}
+html, body{overflow-x:hidden;}
+img{max-width:100%;height:auto;}
+input, select, textarea, button{font:inherit;}
+
 body{
   font-family: Arial, sans-serif;
   margin:0;
@@ -869,7 +1324,7 @@ body{
   margin-bottom:15px;
   text-decoration:none;
   color:#fff;
-  background:#2f402c;
+  background:#22361e;
   padding:10px 14px;
   border-radius:6px;
 }
@@ -889,10 +1344,31 @@ h1{
 }
 
 .simple-grid{
-  display:grid;
-  grid-template-columns:180px 1fr 180px 1fr;
-  gap:12px 16px;
+  display:flex;
+  align-items:end;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.simple-field{
+  display:flex;
   align-items:center;
+  gap:8px;
+}
+
+.simple-field label{
+  font-weight:bold;
+  white-space:nowrap;
+}
+
+.search-name-field input{
+  width:320px;
+  padding:10px 12px;
+}
+
+.sort-field select{
+  width:95px;
+  padding:10px 12px;
 }
 
 .message{
@@ -942,7 +1418,7 @@ h1{
 }
 
 .btn-primary{
-  background:#2f402c;
+  background:#22361e;
   color:#fff;
 }
 
@@ -959,6 +1435,11 @@ h1{
 table{
   width:100%;
   border-collapse:collapse;
+}
+
+.table-wrap{
+  width:100%;
+  overflow-x:auto;
 }
 
 th, td{
@@ -983,16 +1464,24 @@ th{
 
 .container{
   display:flex;
+  gap:20px;
+  align-items:flex-start;
   min-height:calc(100vh - 50px);
+  max-height:calc(90vh - 40px);
+  align-items:flex-start;
 }
 
 .sidebar{
   width:270px;
-  padding:40px 20px;
-  position:relative;
+  flex:0 0 270px;
+  padding:20px 20px 60px;
+  position:sticky;
+  top:10px;
+  align-self:flex-start;
   display:flex;
   flex-direction:column;
-  gap:35px;
+  gap:24px;
+  min-height:calc(90vh - 80px);
   box-sizing:border-box;
 }
 
@@ -1054,24 +1543,28 @@ th{
 }
 
 .form-area{
-  flex:1;
+  flex:1 1 auto;
+  min-width:0;
   display:flex;
   justify-content:center;
   align-items:flex-start;
-  padding:20px;
+  padding:20px 10px 20px 20px;
   overflow-y:auto;
+  overflow-x:hidden;
+  max-height:calc(90vh - 80px);
   box-sizing:border-box;
 }
 
 .card{
-  width:1150px;
+  width:100%;
   min-height:700px;
   max-width:100%;
   background:#c7d1c3;
-  padding:20px 40px 30px;
+  padding:20px 32px 30px;
   border-radius:15px;
   border:3px solid black;
   box-sizing:border-box;
+  overflow-x:hidden;
 }
 
 .title{
@@ -1082,11 +1575,29 @@ th{
   margin-top:5px;
 }
 
+
+.simple-grid > *,
+.search-actions > *,
+.container > *,
+.personal-grid > *,
+.personal-row > *,
+.citizenship-row > *,
+.address-house-row > *,
+.address-row > *,
+.address-two-col > *,
+.contact-grid > *,
+.contact-row > *,
+.education-grid > *,
+.eligibility-grid > *,
+.training-grid > *{
+  min-width:0;
+}
+
 /* PERSONAL INFORMATION */
 .personal-grid{
   display:grid;
-  grid-template-columns:160px 1fr 160px 1fr;
-  gap:18px 5px;
+  grid-template-columns:minmax(140px, 160px) minmax(0, 1fr) minmax(140px, 160px) minmax(0, 1fr);
+  gap:18px 12px;
   align-items:center;
   width:100%;
 }
@@ -1115,10 +1626,10 @@ th{
 
 .personal-row{
   display:grid;
-  grid-template-columns:1fr auto 140px auto 140px auto 140px;
-  justify-content:center;
+  grid-template-columns:max-content minmax(110px, 140px) max-content minmax(110px, 140px) max-content minmax(110px, 140px);
+  justify-content:start;
   align-items:center;
-  gap:15px 5px;
+  gap:15px 12px;
   margin-top:20px;
 }
 
@@ -1129,8 +1640,8 @@ th{
 
 .citizenship-row{
   display:grid;
-  grid-template-columns:160px 285px 240px 1fr;
-  gap:18px 5px;
+  grid-template-columns:minmax(120px, 150px) minmax(180px, 260px) minmax(180px, 240px) minmax(220px, 1fr);
+  gap:18px 12px;
   align-items:center;
   margin-top:25px;
   width:100%;
@@ -1140,7 +1651,8 @@ th{
   font-size:14px;
   font-weight:600;
   text-align:right;
-  white-space:nowrap;
+  white-space:normal;
+  line-height:1.3;
 }
 
 .citizenship-row select,
@@ -1174,7 +1686,7 @@ th{
 
 .address-house-row{
   display:grid;
-  grid-template-columns:160px 1fr;
+  grid-template-columns:minmax(140px, 160px) minmax(0, 1fr);
   align-items:center;
   gap:18px 5px;
   margin-bottom:18px;
@@ -1196,7 +1708,7 @@ th{
 
 .address-row{
   display:grid;
-  grid-template-columns:160px 1fr;
+  grid-template-columns:minmax(140px, 160px) minmax(0, 1fr);
   align-items:center;
   gap:18px 5px;
   width:100%;
@@ -1244,7 +1756,7 @@ th{
 
 .contact-row{
   display:grid;
-  grid-template-columns:145px 1fr;
+  grid-template-columns:minmax(130px, 145px) minmax(0, 1fr);
   align-items:center;
   column-gap:10px;
 }
@@ -1404,7 +1916,7 @@ button{
 .next-btn,
 .save-btn,
 .add-btn{
-  background:#2f402c;
+  background:#22361e;
   color:#fff;
   border:none;
   padding:10px 22px;
@@ -1421,11 +1933,11 @@ button{
 .next-btn:hover,
 .save-btn:hover,
 .add-btn:hover{
-  background:#3b5237;
+  background:#22361e;
 }
 
 .remove-btn{
-  background:#8b2c2c;
+  background:#8b2c2c;;
   color:#fff;
   border:none;
   padding:8px 16px;
@@ -1447,9 +1959,11 @@ button{
 
 .sidebar-delete-form{
   margin-top:auto;
-  padding:10px 15px 0;
+  padding:8px 15px 0;
+  margin-bottom:12px;
   position:relative;
   z-index:3;
+  background:transparent;
 }
 
 .sidebar-delete-btn{
@@ -1457,33 +1971,75 @@ button{
   background:#8b2c2c;
   color:#fff;
   border:none;
-  padding:10px 16px;
-  border-radius:6px;
+  padding:12px 16px;
+  border-radius:8px;
   font-size:14px;
-  font-weight:600;
+  font-weight:700;
   cursor:pointer;
   margin-top:0;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
 }
 
 .sidebar-delete-btn:hover{
   background:#a63a3a;
 }
 
-@media (max-width: 950px){
-  .simple-grid{
-    grid-template-columns:1fr;
-  }
+.top-actions{
+  margin-bottom:20px;
 }
 
-@media (max-width: 900px){
+.photo-home-row{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  margin-bottom:20px;
+  gap:15px;
+}
+
+.photo-home-row .title{
+  text-align:center;
+  margin:0;
+}
+
+.photo-box{
+  width:120px;
+  height:120px;
+  border:1px solid #555;
+  border-radius:6px;
+  overflow:hidden;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#e9e9ee;
+}
+
+.photo-box img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.photo-box input{
+  display:none;
+}
+
+@media (max-width: 992px){
+  .page{
+    margin:90px auto 20px;
+    padding:0 12px 28px;
+  }
+
   .container{
     flex-direction:column;
   }
 
   .sidebar{
     width:100%;
+    flex:1 1 auto;
     max-height:none;
-    gap:15px;
+    padding:16px 12px;
+    gap:12px;
   }
 
   .sidebar::before,
@@ -1491,17 +2047,13 @@ button{
     display:none;
   }
 
-  .personal-grid,
-  .citizenship-row,
-  .education-grid,
-  .eligibility-grid,
-  .training-grid{
-    grid-template-columns:1fr;
+  .nav-item{
+    width:100%;
+    padding:12px;
   }
 
-  .personal-row{
-    grid-template-columns:1fr;
-    align-items:stretch;
+  .card{
+    padding:18px 16px 24px;
   }
 
   .contact-section{
@@ -1510,24 +2062,150 @@ button{
 
   .contact-grid{
     width:100%;
-    max-width:390px;
+    max-width:100%;
+  }
+}
+
+@media (max-width: 768px){
+  .simple-grid{
+    flex-direction:column;
+    align-items:stretch;
   }
 
-  .contact-row{
+  .simple-field{
+    width:100%;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .search-name-field input,
+  .sort-field select{
+    width:100%;
+  }
+
+  .search-actions{
+    width:100%;
+    flex-wrap:wrap;
+  }
+
+  .search-actions .btn-primary,
+  .search-actions .btn-secondary{
+    width:100%;
+    text-align:center;
+  }
+
+  .modal-overlay{
+    padding:10px;
+  }
+
+  .modal-box{
+    width:100%;
+    max-width:100%;
+    max-height:92vh;
+    padding:12px;
+  }
+
+  .modal-close{
+    top:6px;
+    right:6px;
+    width:42px;
+    height:42px;
+    font-size:32px;
+  }
+
+  .modal-edit-wrapper{
+    margin-top:12px;
+  }
+
+  .container{
+    flex-direction:column;
+    gap:12px;
+    min-height:auto;
+    max-height:none;
+  }
+
+  .sidebar{
+    position:relative;
+    top:auto;
+    width:100%;
+    flex:0 0 auto;
+    min-height:auto;
+    max-height:none;
+    flex-direction:row;
+    align-items:stretch;
+    gap:10px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:12px 12px 6px;
+  }
+
+  .sidebar::before,
+  .progress-line{
+    display:none;
+  }
+
+  .nav-item{
+    flex:0 0 220px;
+    min-height:72px;
+    padding:12px;
+  }
+
+  .nav-label{
+    font-size:12px;
+  }
+
+  .sidebar-delete-form{
+    margin-top:0;
+    margin-bottom:18px;
+    padding:0;
+    flex:0 0 180px;
+    align-self:stretch;
+    display:flex;
+    align-items:flex-end;
+  }
+
+  .sidebar-delete-btn{
+    width:100%;
+  }
+
+  .form-area{
+    width:100%;
+    padding:6px 0 0;
+    max-height:none;
+  }
+
+  .card{
+    width:100%;
+  }
+
+  .photo-home-row{
     grid-template-columns:1fr;
-    row-gap:8px;
+    justify-items:center;
+    text-align:center;
   }
 
+  .personal-grid,
+  .personal-row,
+  .citizenship-row,
+  .education-grid,
+  .eligibility-grid,
+  .training-grid,
   .address-house-row,
-  .address-row{
-    grid-template-columns:1fr;
-    row-gap:8px;
+  .address-row,
+  .address-two-col,
+  .contact-row{
+    grid-template-columns:1fr !important;
+    row-gap:10px;
+    column-gap:0;
   }
 
-  .address-two-col{
-    grid-template-columns:1fr;
-    column-gap:0;
-    row-gap:18px;
+  .personal-grid label,
+  .personal-row label,
+  .citizenship-row label,
+  .contact-row label,
+  .address-house-row label,
+  .address-row label{
+    text-align:left;
   }
 
   .personal-grid input,
@@ -1544,24 +2222,151 @@ button{
   .training-grid input,
   .contact-row input{
     width:100%;
-  }
-
-  .personal-grid label,
-  .personal-row label,
-  .citizenship-row label,
-  .contact-row label,
-  .address-house-row label,
-  .address-row label{
-    text-align:left;
-  }
-
-  .sidebar-delete-form{
-    padding:0;
+    max-width:100%;
+    min-width:0;
   }
 }
+
+@media (max-width: 480px){
+  .page{
+    padding:0 10px 24px;
+  }
+
+  .card-simple,
+  .card{
+    padding:12px;
+    border-radius:10px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-link,
+  .next-btn,
+  .save-btn,
+  .add-btn,
+  .remove-btn,
+  .sidebar-delete-btn{
+    width:100%;
+    text-align:center;
+  }
+
+  th, td{
+    padding:8px;
+    font-size:13px;
+  }
+}
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.35);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:9999;
+}
+
+.modal-overlay.show{
+  display:flex;
+}
+
+.modal-box{
+  background:#fff;
+  width:min(1200px, 95vw);
+  max-height:90vh;
+  overflow:hidden;
+  border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  position:relative;
+  padding:20px;
+}
+
+.modal-close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  border:none;
+  background:#ffffff;
+  font-size:38px;
+  line-height:1;
+  cursor:pointer;
+  color:#111;
+  font-weight:700;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  box-shadow:0 4px 12px rgba(0,0,0,0.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:20;
+}
+
+.modal-edit-wrapper{
+  margin-top:20px;
+}
+
+body.modal-open{
+  overflow:hidden;
+}
+
+.toast{
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:10050;
+  min-width:280px;
+  max-width:420px;
+  padding:14px 16px;
+  border-radius:10px;
+  color:#fff;
+  font-weight:700;
+  box-shadow:0 8px 20px rgba(0,0,0,0.18);
+  opacity:0;
+  transform:translateY(-10px);
+  pointer-events:none;
+  transition:all 0.25s ease;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.toast-success{
+  background:#1f6b2e;
+}
+
+.toast-error{
+  background:#a11a1a;
+}
+
+.unsaved-banner{
+  display:none;
+  position:sticky;
+  top:0;
+  z-index:15;
+  background:#fff8df;
+  border:1px solid #ead48a;
+  color:#7a5d00;
+  padding:10px 12px;
+  border-radius:8px;
+  margin-bottom:15px;
+  font-weight:700;
+}
+
+.unsaved-banner.show{
+  display:block;
+}
+
 </style>
 </head>
 <body>
+<?php include "../includes/header.php"; ?>
 
 <div class="page">
     <a href="../dashboard/dashboard.php" class="top-link">Home</a>
@@ -1570,23 +2375,31 @@ button{
 
     <?php if ($message): ?>
         <div class="message"><?php echo e($message); ?></div>
+        <div id="toastSuccess" class="toast toast-success"><?php echo e($message); ?></div>
     <?php endif; ?>
 
     <?php if ($error): ?>
         <div class="error"><?php echo e($error); ?></div>
+        <div id="toastError" class="toast toast-error"><?php echo e($error); ?></div>
     <?php endif; ?>
 
     <div class="card-simple">
         <h2>Search</h2>
         <form method="GET">
             <div class="simple-grid">
-                <div><label>Search Name</label></div>
-                <div><input type="text" name="search" value="<?php echo e($search); ?>" placeholder="Enter first name or surname"></div>
-                <select name="sort">
-                    <option value="asc" <?php echo ($sort === 'asc') ? 'selected' : ''; ?>>A - Z</option>
-                    <option value="desc" <?php echo ($sort === 'desc') ? 'selected' : ''; ?>>Z - A</option>
-                </select>
-                <div></div>
+                <div class="simple-field search-name-field">
+                    <label for="search">Search Name</label>
+                    <input type="text" id="search" name="search" value="<?php echo e($search); ?>" placeholder="Enter first name or surname">
+                </div>
+
+                <div class="simple-field sort-field">
+                    <label for="sort">Sort</label>
+                    <select name="sort" id="sort" onchange="this.form.submit()">
+                        <option value="asc" <?php echo ($sort === 'asc') ? 'selected' : ''; ?>>A - Z</option>
+                        <option value="desc" <?php echo ($sort === 'desc') ? 'selected' : ''; ?>>Z - A</option>
+                    </select>
+                </div>
+
                 <div class="search-actions">
                     <button type="submit" class="btn-primary">Search</button>
                     <a href="<?php echo e($_SERVER['PHP_SELF']); ?>" class="btn-link btn-secondary">Clear</a>
@@ -1595,40 +2408,61 @@ button{
         </form>
     </div>
 
-    <?php if ($search !== ""): ?>
-    <div class="card-simple">
-        <h2>Search Results</h2>
-        <?php if (count($results) > 0): ?>
-            <table>
-                <thead>
+    <div class="card-simple table-wrap">
+    <h2><?php echo ($search !== "") ? 'Search Results' : 'All Records'; ?></h2>
+    <?php if (count($results) > 0): ?>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:80px;">ID</th>
+                    <th style="width:100px;">Photo</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th style="width:110px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($results as $row): ?>
                     <tr>
-                        <th style="width:80px;">ID</th>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Mobile</th>
-                        <th style="width:110px;">Action</th>
+                        <td><?php echo e($row['id']); ?></td>
+                        <td>
+                            <img
+                                src="<?php echo e(make_photo_src($row['photo'] ?? null, $row['photo_type'] ?? null)); ?>"
+                                alt="Photo"
+                                style="width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid #ccc;"
+                            >
+                        </td>
+                        <td>
+                            <?php
+                            echo e(trim(
+                                ($row['surname'] ?? '') . ", " .
+                                ($row['firstname'] ?? '') . " " .
+                                ($row['middlename'] ?? '') . " " .
+                                ($row['extension'] ?? '')
+                            ));
+                            ?>
+                        </td>
+                        <td><?php echo e($row['email'] ?? ''); ?></td>
+                        <td><?php echo e($row['mobile'] ?? ''); ?></td>
+                        <td>
+                            <a class="btn-link btn-primary" href="?search=<?php echo urlencode($search); ?>&sort=<?php echo urlencode($sort); ?>&id=<?php echo (int)$row['id']; ?>">
+                                Edit
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($results as $row): ?>
-                        <tr>
-                            <td><?php echo e($row['id']); ?></td>
-                            <td><?php echo e(trim($row['surname'] . ", " . $row['firstname'] . " " . $row['middlename'] . " " . $row['extension'])); ?></td>
-                            <td><?php echo e($row['email']); ?></td>
-                            <td><?php echo e($row['mobile']); ?></td>
-                            <td><a class="btn-link btn-primary" href="?search=<?php echo urlencode($search); ?>&id=<?php echo (int)$row['id']; ?>">Edit</a></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <p>No record found.</p>
-        <?php endif; ?>
-    </div>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <p>No record found.</p>
     <?php endif; ?>
-
+</div>
     <?php if ($person): ?>
-    <div class="edit-wrapper">
+    <div id="editModal" class="modal-overlay show">
+        <div class="modal-box">
+            <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
+            <div class="edit-wrapper modal-edit-wrapper">
 
         <?php if (!$education_table): ?>
             <div class="notice">Education table not found. The page will still work without that section.</div>
@@ -1691,18 +2525,31 @@ button{
                 <form method="POST" class="sidebar-delete-form" onsubmit="return confirm('Delete this record? This action cannot be undone.');">
                     <input type="hidden" name="id" value="<?php echo e($person['id']); ?>">
                     <input type="hidden" name="search" value="<?php echo e($search); ?>">
-                    <button type="submit" name="delete" class="sidebar-delete-btn">Delete Record</button>
+                    <button type="submit" name="delete" class="sidebar-delete-btn">🗑️ Delete Record</button>
                 </form>
             </div>
 
             <div class="form-area">
                 <div class="card">
-                    <form method="POST" id="editRecordForm" autocomplete="off">
+                    <form method="POST" id="editRecordForm" autocomplete="off" enctype="multipart/form-data">
                         <input type="hidden" name="id" value="<?php echo e($person['id']); ?>">
                         <input type="hidden" name="search" value="<?php echo e($search); ?>">
+                        <div id="unsavedBanner" class="unsaved-banner">You have unsaved changes.</div>
 
                         <div id="personal" class="section active">
-                            <div class="title">PERSONAL INFORMATION</div>
+                            <div class="photo-home-row">
+                                <div class="top-actions">
+                                    <a href="../dashboard/dashboard.php" class="top-link">Home</a>
+                                </div>
+
+                                <div class="title">PERSONAL INFORMATION</div>
+                                 
+                                <label class="photo-box">
+                                    <?php $photoSrc = make_photo_src($person['photo'] ?? null, $person['photo_type'] ?? null); ?>
+                                    <img id="preview" src="<?php echo e($photoSrc); ?>" alt="Profile Preview">
+                                    <input type="file" name="photo" id="photo" image/*" onchange="loadImage(event)">
+                                </label>
+                            </div>
 
                             <div class="personal-grid">
                                 <label>Last Name:</label>
@@ -2202,18 +3049,38 @@ button{
                         <?php endif; ?>
 
                         <div class="nav-buttons">
-                            <button type="button" class="next-btn" id="nextBtn" onclick="nextSection()">Next</button>
-                            <button type="submit" name="update" class="save-btn" id="saveBtn" style="display:none;">Update Record</button>
+                         <button type="button" class="next-btn" id="nextBtn" onclick="nextSection()">Next</button>
+                                <button type="submit" name="update" class="save-btn" id="saveBtn">Update Record</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+    </div>
     <?php endif; ?>
 </div>
 
 <script>
+function closeEditModal() {
+    if (hasUnsavedChanges) {
+        const leave = confirm("You have unsaved changes. Close anyway?");
+        if (!leave) return;
+    }
+
+    const modal = document.getElementById("editModal");
+    if (modal) {
+        modal.classList.remove("show");
+    }
+
+    document.body.classList.remove("modal-open");
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("id");
+    url.searchParams.delete("saved");
+    window.history.replaceState({}, document.title, url.toString());
+}
+
 let currentSection = 0;
 
 function getVisibleSections() {
@@ -2234,7 +3101,7 @@ function updateProgress(index){
 
     navItems.forEach((nav, i) => {
         nav.classList.remove("active", "completed");
-        if(i < index){
+        if (i < index) {
             nav.classList.add("completed");
         }
     });
@@ -2244,8 +3111,12 @@ function updateProgress(index){
     }
 
     if (navItems.length > 0 && document.getElementById("progressLine")) {
-        const stepHeight = navItems[0].offsetHeight + 35;
-        document.getElementById("progressLine").style.height = (index * stepHeight) + "px";
+        const progressLine = document.getElementById("progressLine");
+        const firstCenter = navItems[0].offsetTop + (navItems[0].offsetHeight / 2);
+        const currentCenter = navItems[index].offsetTop + (navItems[index].offsetHeight / 2);
+
+        progressLine.style.top = firstCenter + "px";
+        progressLine.style.height = Math.max(0, currentCenter - firstCenter) + "px";
     }
 
     currentSection = index;
@@ -2253,14 +3124,14 @@ function updateProgress(index){
     const nextBtn = document.getElementById("nextBtn");
     const saveBtn = document.getElementById("saveBtn");
 
-    if(nextBtn && saveBtn){
-        if(index === sections.length - 1){
+    if (nextBtn && saveBtn) {
+        if (index === sections.length - 1) {
             nextBtn.style.display = "none";
-            saveBtn.style.display = "inline-block";
         } else {
             nextBtn.style.display = "inline-block";
-            saveBtn.style.display = "none";
         }
+
+        saveBtn.style.display = "inline-block";
     }
 }
 
@@ -2270,8 +3141,108 @@ function goToSection(index){
 
 function nextSection(){
     const sections = getVisibleSections();
-    if(currentSection < sections.length - 1){
+    const form = document.getElementById("editRecordForm");
+    if (!form) return;
+
+    const invalidField = validateSectionFields(sections[currentSection]);
+    if (invalidField) {
+        invalidField.focus();
+        invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+    }
+
+    if (currentSection < sections.length - 1) {
         updateProgress(currentSection + 1);
+    }
+}
+
+function loadImage(event) {
+    const preview = document.getElementById("preview");
+    if (preview && event.target.files && event.target.files[0]) {
+        preview.src = URL.createObjectURL(event.target.files[0]);
+    }
+}
+
+function removeEntry(button, selector) {
+    const item = button.closest(selector);
+    if (item) {
+        item.remove();
+        saveFormDraft();
+    }
+}
+
+function getDraftKey() {
+    const form = document.getElementById("editRecordForm");
+    if (!form) return null;
+
+    const idInput = form.querySelector('input[name="id"]');
+    const personId = idInput ? idInput.value : "new";
+    return "personal_record_draft_" + personId;
+}
+
+function collectRepeatedEntries(selector, fieldNames) {
+    const entries = [];
+    document.querySelectorAll(selector).forEach(entry => {
+        const row = {};
+        fieldNames.forEach(name => {
+            const el = entry.querySelector(`[name="${name}[]"]`);
+            row[name] = el ? el.value : "";
+        });
+
+        const hasValue = Object.values(row).some(v => String(v).trim() !== "");
+        if (hasValue) {
+            entries.push(row);
+        }
+    });
+    return entries;
+}
+
+function saveFormDraft() {
+    const form = document.getElementById("editRecordForm");
+    if (!form) return;
+
+    const key = getDraftKey();
+    if (!key) return;
+
+    const data = {
+        simple: {},
+        education: collectRepeatedEntries(".education-entry", [
+            "education_level", "school_name", "course", "units",
+            "edu_from", "edu_to", "year_graduated", "honors"
+        ]),
+        eligibility: collectRepeatedEntries(".eligibility-entry", [
+            "career_service", "rating", "exam_date", "exam_place",
+            "license", "license_number", "valid_until"
+        ]),
+        training: collectRepeatedEntries(".training-entry", [
+            "title", "hours", "training_from", "training_to", "type", "sponsor"
+        ])
+    };
+
+    const fields = form.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([name$="[]"]), select:not([name$="[]"]), textarea:not([name$="[]"])');
+    fields.forEach(field => {
+        if (!field.name) return;
+        data.simple[field.name] = field.value;
+    });
+
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+function restoreSimpleFields(form, data) {
+    if (!data || !data.simple) return;
+
+    Object.keys(data.simple).forEach(name => {
+        const field = form.querySelector(`[name="${name}"]`);
+        if (field) {
+            field.value = data.simple[name];
+        }
+    });
+}
+
+function clearContainer(selector) {
+    const container = document.querySelector(selector);
+    if (container) {
+        container.innerHTML = "";
     }
 }
 
@@ -2296,21 +3267,21 @@ function addEducation(data = {}) {
 
             <div>
                 <label>Name of School</label>
-                <input name="school_name[]" placeholder="School Name">
+                <input name="school_name[]">
             </div>
 
             <div>
                 <label>Basic Education / Degree / Course</label>
-                <input name="course[]" placeholder="Course / Degree">
+                <input name="course[]">
             </div>
 
             <div>
                 <label>Highest Level / Units Earned</label>
-                <input name="units[]" placeholder="Highest Level / Units">
+                <input name="units[]">
             </div>
 
             <div>
-                <label>Period of Attendance From</label>
+                <label>From</label>
                 <input type="date" name="edu_from[]">
             </div>
 
@@ -2321,26 +3292,27 @@ function addEducation(data = {}) {
 
             <div>
                 <label>Year Graduated</label>
-                <input name="year_graduated[]" placeholder="Year Graduated">
+                <input name="year_graduated[]">
             </div>
 
             <div>
-                <label>Scholarship / Academic Honors</label>
-                <input name="honors[]" placeholder="Scholarship / Honors">
+                <label>Honors</label>
+                <input name="honors[]">
             </div>
         </div>
+
         <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
     `;
     container.appendChild(div);
 
-    div.querySelector('[name="education_level[]"]').value = data.education_level || 'Elementary';
-    div.querySelector('[name="school_name[]"]').value = data.school_name || '';
-    div.querySelector('[name="course[]"]').value = data.course || '';
-    div.querySelector('[name="units[]"]').value = data.units || '';
-    div.querySelector('[name="edu_from[]"]').value = data.edu_from || '';
-    div.querySelector('[name="edu_to[]"]').value = data.edu_to || '';
-    div.querySelector('[name="year_graduated[]"]').value = data.year_graduated || '';
-    div.querySelector('[name="honors[]"]').value = data.honors || '';
+    div.querySelector('[name="education_level[]"]').value = data.education_level || "";
+    div.querySelector('[name="school_name[]"]').value = data.school_name || "";
+    div.querySelector('[name="course[]"]').value = data.course || "";
+    div.querySelector('[name="units[]"]').value = data.units || "";
+    div.querySelector('[name="edu_from[]"]').value = data.edu_from || "";
+    div.querySelector('[name="edu_to[]"]').value = data.edu_to || "";
+    div.querySelector('[name="year_graduated[]"]').value = data.year_graduated || "";
+    div.querySelector('[name="honors[]"]').value = data.honors || "";
 
     saveFormDraft();
 }
@@ -2355,12 +3327,12 @@ function addEligibility(data = {}) {
         <div class="eligibility-grid">
             <div>
                 <label>Career Service / CSC / CES</label>
-                <input name="career_service[]" placeholder="Career Service / CSC / CES">
+                <input name="career_service[]">
             </div>
 
             <div>
                 <label>Rating</label>
-                <input name="rating[]" placeholder="Rating">
+                <input name="rating[]">
             </div>
 
             <div>
@@ -2370,17 +3342,17 @@ function addEligibility(data = {}) {
 
             <div>
                 <label>Place of Examination</label>
-                <input name="exam_place[]" placeholder="Place of Examination">
+                <input name="exam_place[]">
             </div>
 
             <div>
                 <label>License</label>
-                <input name="license[]" placeholder="License">
+                <input name="license[]">
             </div>
 
             <div>
                 <label>License Number</label>
-                <input name="license_number[]" placeholder="License Number">
+                <input name="license_number[]">
             </div>
 
             <div>
@@ -2388,17 +3360,18 @@ function addEligibility(data = {}) {
                 <input type="date" name="valid_until[]">
             </div>
         </div>
+
         <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
     `;
     container.appendChild(div);
 
-    div.querySelector('[name="career_service[]"]').value = data.career_service || '';
-    div.querySelector('[name="rating[]"]').value = data.rating || '';
-    div.querySelector('[name="exam_date[]"]').value = data.exam_date || '';
-    div.querySelector('[name="exam_place[]"]').value = data.exam_place || '';
-    div.querySelector('[name="license[]"]').value = data.license || '';
-    div.querySelector('[name="license_number[]"]').value = data.license_number || '';
-    div.querySelector('[name="valid_until[]"]').value = data.valid_until || '';
+    div.querySelector('[name="career_service[]"]').value = data.career_service || "";
+    div.querySelector('[name="rating[]"]').value = data.rating || "";
+    div.querySelector('[name="exam_date[]"]').value = data.exam_date || "";
+    div.querySelector('[name="exam_place[]"]').value = data.exam_place || "";
+    div.querySelector('[name="license[]"]').value = data.license || "";
+    div.querySelector('[name="license_number[]"]').value = data.license_number || "";
+    div.querySelector('[name="valid_until[]"]').value = data.valid_until || "";
 
     saveFormDraft();
 }
@@ -2413,12 +3386,12 @@ function addTraining(data = {}) {
         <div class="training-grid">
             <div>
                 <label>Training Title</label>
-                <input name="title[]" placeholder="Training Title">
+                <input name="title[]">
             </div>
 
             <div>
                 <label>Hours</label>
-                <input name="hours[]" placeholder="Hours">
+                <input name="hours[]">
             </div>
 
             <div>
@@ -2433,113 +3406,31 @@ function addTraining(data = {}) {
 
             <div>
                 <label>Type</label>
-                <input name="type[]" placeholder="Managerial / Technical">
+                <input name="type[]">
             </div>
 
             <div>
                 <label>Sponsor</label>
-                <input name="sponsor[]" placeholder="Sponsor">
+                <input name="sponsor[]">
             </div>
         </div>
+
         <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
     `;
     container.appendChild(div);
 
-    div.querySelector('[name="title[]"]').value = data.title || '';
-    div.querySelector('[name="hours[]"]').value = data.hours || '';
-    div.querySelector('[name="training_from[]"]').value = data.training_from || '';
-    div.querySelector('[name="training_to[]"]').value = data.training_to || '';
-    div.querySelector('[name="type[]"]').value = data.type || '';
-    div.querySelector('[name="sponsor[]"]').value = data.sponsor || '';
+    div.querySelector('[name="title[]"]').value = data.title || "";
+    div.querySelector('[name="hours[]"]').value = data.hours || "";
+    div.querySelector('[name="training_from[]"]').value = data.training_from || "";
+    div.querySelector('[name="training_to[]"]').value = data.training_to || "";
+    div.querySelector('[name="type[]"]').value = data.type || "";
+    div.querySelector('[name="sponsor[]"]').value = data.sponsor || "";
 
     saveFormDraft();
 }
 
-function removeEntry(button, selector) {
-    const item = button.closest(selector);
-    if (item) {
-        item.remove();
-        saveFormDraft();
-    }
-}
-
-function getDraftKey() {
-    const form = document.getElementById('editRecordForm');
-    if (!form) return null;
-
-    const idInput = form.querySelector('input[name="id"]');
-    const personId = idInput ? idInput.value : 'new';
-    return 'personal_record_draft_' + personId;
-}
-
-function collectRepeatedEntries(selector, fieldNames) {
-    const entries = [];
-    document.querySelectorAll(selector).forEach(entry => {
-        const row = {};
-        fieldNames.forEach(name => {
-            const el = entry.querySelector(`[name="${name}[]"]`);
-            row[name] = el ? el.value : '';
-        });
-
-        const hasValue = Object.values(row).some(v => String(v).trim() !== '');
-        if (hasValue) {
-            entries.push(row);
-        }
-    });
-    return entries;
-}
-
-function saveFormDraft() {
-    const form = document.getElementById('editRecordForm');
-    if (!form) return;
-
-    const key = getDraftKey();
-    if (!key) return;
-
-    const data = {
-        simple: {},
-        education: collectRepeatedEntries('.education-entry', [
-            'education_level', 'school_name', 'course', 'units',
-            'edu_from', 'edu_to', 'year_graduated', 'honors'
-        ]),
-        eligibility: collectRepeatedEntries('.eligibility-entry', [
-            'career_service', 'rating', 'exam_date', 'exam_place',
-            'license', 'license_number', 'valid_until'
-        ]),
-        training: collectRepeatedEntries('.training-entry', [
-            'title', 'hours', 'training_from', 'training_to', 'type', 'sponsor'
-        ])
-    };
-
-    const fields = form.querySelectorAll('input:not([type="hidden"]):not([name$="[]"]), select:not([name$="[]"]), textarea:not([name$="[]"])');
-    fields.forEach(field => {
-        if (!field.name) return;
-        data.simple[field.name] = field.value;
-    });
-
-    localStorage.setItem(key, JSON.stringify(data));
-}
-
-function restoreSimpleFields(form, data) {
-    if (!data || !data.simple) return;
-
-    Object.keys(data.simple).forEach(name => {
-        const field = form.querySelector(`[name="${name}"]`);
-        if (field) {
-            field.value = data.simple[name];
-        }
-    });
-}
-
-function clearContainer(selector) {
-    const container = document.querySelector(selector);
-    if (container) {
-        container.innerHTML = '';
-    }
-}
-
 function restoreDraft() {
-    const form = document.getElementById('editRecordForm');
+    const form = document.getElementById("editRecordForm");
     if (!form) return;
 
     const key = getDraftKey();
@@ -2557,8 +3448,8 @@ function restoreDraft() {
 
     restoreSimpleFields(form, data);
 
-    if (document.getElementById('education-container') && Array.isArray(data.education)) {
-        clearContainer('#education-container');
+    if (document.getElementById("education-container") && Array.isArray(data.education)) {
+        clearContainer("#education-container");
         if (data.education.length > 0) {
             data.education.forEach(row => addEducation(row));
         } else {
@@ -2566,8 +3457,8 @@ function restoreDraft() {
         }
     }
 
-    if (document.getElementById('eligibility-container') && Array.isArray(data.eligibility)) {
-        clearContainer('#eligibility-container');
+    if (document.getElementById("eligibility-container") && Array.isArray(data.eligibility)) {
+        clearContainer("#eligibility-container");
         if (data.eligibility.length > 0) {
             data.eligibility.forEach(row => addEligibility(row));
         } else {
@@ -2575,8 +3466,8 @@ function restoreDraft() {
         }
     }
 
-    if (document.getElementById('training-container') && Array.isArray(data.training)) {
-        clearContainer('#training-container');
+    if (document.getElementById("training-container") && Array.isArray(data.training)) {
+        clearContainer("#training-container");
         if (data.training.length > 0) {
             data.training.forEach(row => addTraining(row));
         } else {
@@ -2592,20 +3483,438 @@ function clearDraft() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('editRecordForm');
+/* -------------------------
+   VALIDATION
+------------------------- */
+function addFieldError(input, message){
+    input.classList.add("field-error");
+
+    const wrapper = input.parentElement;
+    if (!wrapper) return;
+
+    const old = wrapper.querySelector(".field-error-message");
+    if (old) old.remove();
+
+    const msg = document.createElement("div");
+    msg.className = "field-error-message";
+    msg.textContent = message;
+    wrapper.appendChild(msg);
+}
+
+function clearFieldErrorState(input) {
+    if (!input) return;
+    input.classList.remove("field-error");
+    const wrapper = input.parentElement;
+    if (wrapper) {
+        const old = wrapper.querySelector(".field-error-message");
+        if (old) old.remove();
+    }
+}
+
+function sanitizeIdNumber(value) {
+    return value.replace(/[^\d\- ]/g, '');
+}
+
+function isLettersOnly(value) {
+    return /^[A-Za-zÑñ\s.'-]+$/.test(value);
+}
+
+function isAlphaNumericBasic(value) {
+    return /^[A-Za-z0-9Ññ\s./#,-]+$/.test(value);
+}
+
+function isValidEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidMobile(value) {
+    return /^(09\d{9}|\+639\d{9})$/.test(value);
+}
+
+function isValidTelephone(value) {
+    return /^[0-9()\-\s]{7,15}$/.test(value);
+}
+
+function isValidZip(value) {
+    return /^\d{4}$/.test(value);
+}
+
+function isValidYear(value) {
+    return /^(19|20)\d{2}$/.test(value);
+}
+
+function isPositiveNumber(value) {
+    return /^\d+(\.\d+)?$/.test(value) && parseFloat(value) > 0;
+}
+
+function isValidBloodType(value) {
+    return /^(A|B|AB|O)[+-]$/i.test(value.trim());
+}
+
+function isValidTin(value) {
+    return /^(\d{3}-\d{3}-\d{3}|\d{9}|\d{12}|\d{3}-\d{3}-\d{3}-\d{3})$/.test(value);
+}
+
+function isValidDateOrder(fromValue, toValue) {
+    if (!fromValue || !toValue) return true;
+    return new Date(fromValue) <= new Date(toValue);
+}
+
+function isPastOrToday(value) {
+    if (!value) return true;
+    const inputDate = new Date(value);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return inputDate <= today;
+}
+
+function validateSingleField(input) {
+    if (!input || !input.name) return true;
+
+    const form = document.getElementById("editRecordForm");
+    const name = input.name;
+    const value = (input.value || "").trim();
+
+    clearFieldErrorState(input);
+
+    const markInvalid = (message) => {
+        addFieldError(input, message);
+        return false;
+    };
+
+    switch (name) {
+        case "surname":
+        case "firstname":
+        case "middlename":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isLettersOnly(value)) return markInvalid("Letters only.");
+            return true;
+
+        case "extension":
+            if (value !== "" && !/^[A-Za-z0-9.\s-]{1,10}$/.test(value)) {
+                return markInvalid("Invalid name extension.");
+            }
+            return true;
+
+        case "birth_place":
+        case "r_house1":
+        case "r_street":
+        case "r_subdivision":
+        case "r_city":
+        case "r_barangay":
+        case "r_province":
+        case "p_house1":
+        case "p_street":
+        case "p_subdivision":
+        case "p_city":
+        case "p_barangay":
+        case "p_province":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isAlphaNumericBasic(value)) return markInvalid("Invalid characters.");
+            return true;
+
+        case "dob":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isPastOrToday(value)) return markInvalid("Date of birth cannot be in the future.");
+            return true;
+
+        case "civil_status":
+            if (value === "") return markInvalid("This field is required.");
+            if (!["Single", "Married", "Widowed", "Separated"].includes(value)) {
+                return markInvalid("Invalid civil status.");
+            }
+            return true;
+
+        case "sex":
+            if (value === "") return markInvalid("This field is required.");
+            if (!["Male", "Female"].includes(value)) {
+                return markInvalid("Please select a valid sex.");
+            }
+            return true;
+
+        case "blood_type":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isValidBloodType(value)) {
+                return markInvalid("Use A+, A-, B+, B-, AB+, AB-, O+, or O-.");
+            }
+            return true;
+
+        case "height":
+        case "weight":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isPositiveNumber(value)) {
+                return markInvalid("Must be a positive number.");
+            }
+            return true;
+
+        case "umid":
+        case "philsys":
+        case "pagibig":
+        case "philhealth":
+        case "agency_employee":
+            if (value === "") return markInvalid("This field is required.");
+            if (!/^[0-9][0-9\- ]{3,29}$/.test(value)) {
+                return markInvalid("Numbers only. Hyphen and spaces are allowed.");
+            }
+            return true;
+
+        case "tin":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isValidTin(value)) {
+                return markInvalid("Invalid TIN format.");
+            }
+            return true;
+
+        case "citizenship":
+            if (value === "") return markInvalid("This field is required.");
+            if (!["Filipino", "Dual Citizen"].includes(value)) {
+                return markInvalid("Invalid citizenship.");
+            }
+            return true;
+
+        case "dual_country":
+            const citizenship = form.querySelector('[name="citizenship"]')?.value || "";
+            if (citizenship === "Dual Citizen" && value === "") {
+                return markInvalid("Country is required for dual citizenship.");
+            }
+            return true;
+
+        case "r_zip":
+        case "p_zip":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isValidZip(value)) {
+                return markInvalid("Zip code must be 4 digits.");
+            }
+            return true;
+
+        case "telephone":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isValidTelephone(value)) {
+                return markInvalid("Invalid telephone number.");
+            }
+            return true;
+
+        case "mobile":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isValidMobile(value)) {
+                return markInvalid("Use 09XXXXXXXXX or +639XXXXXXXXX.");
+            }
+            return true;
+
+        case "email":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isValidEmail(value)) {
+                return markInvalid("Invalid email address.");
+            }
+            return true;
+    }
+
+    return true;
+}
+
+function validateSectionFields(section) {
+    if (!section) return null;
+
+    let firstInvalid = null;
+
+    section.querySelectorAll("input, select, textarea").forEach(input => {
+        const ok = validateSingleField(input);
+        if (!ok && !firstInvalid) {
+            firstInvalid = input;
+        }
+    });
+
+    if (section.id === "education") {
+        section.querySelectorAll(".education-entry").forEach(entry => {
+            const from = entry.querySelector('[name="edu_from[]"]');
+            const to = entry.querySelector('[name="edu_to[]"]');
+            const yearGraduated = entry.querySelector('[name="year_graduated[]"]');
+
+            if (from && to && from.value && to.value && !isValidDateOrder(from.value, to.value)) {
+                addFieldError(to, '"To" date must not be earlier than "From" date.');
+                if (!firstInvalid) firstInvalid = to;
+            }
+
+            if (yearGraduated && yearGraduated.value.trim() !== "" && !isValidYear(yearGraduated.value.trim())) {
+                addFieldError(yearGraduated, "Enter a valid 4-digit year.");
+                if (!firstInvalid) firstInvalid = yearGraduated;
+            }
+        });
+    }
+
+    if (section.id === "eligibility-section") {
+        section.querySelectorAll(".eligibility-entry").forEach(entry => {
+            const examDate = entry.querySelector('[name="exam_date[]"]');
+            const validUntil = entry.querySelector('[name="valid_until[]"]');
+            const rating = entry.querySelector('[name="rating[]"]');
+
+            if (rating && rating.value.trim() !== "" && !/^\d+(\.\d+)?$/.test(rating.value.trim())) {
+                addFieldError(rating, "Rating must be numeric.");
+                if (!firstInvalid) firstInvalid = rating;
+            }
+
+            if (examDate && examDate.value && !isPastOrToday(examDate.value)) {
+                addFieldError(examDate, "Exam date cannot be in the future.");
+                if (!firstInvalid) firstInvalid = examDate;
+            }
+
+            if (examDate && validUntil && examDate.value && validUntil.value && new Date(validUntil.value) < new Date(examDate.value)) {
+                addFieldError(validUntil, "Valid until must be after exam date.");
+                if (!firstInvalid) firstInvalid = validUntil;
+            }
+        });
+    }
+
+    if (section.id === "training-section") {
+        section.querySelectorAll(".training-entry").forEach(entry => {
+            const from = entry.querySelector('[name="training_from[]"]');
+            const to = entry.querySelector('[name="training_to[]"]');
+            const hours = entry.querySelector('[name="hours[]"]');
+
+            if (hours && hours.value.trim() !== "" && !isPositiveNumber(hours.value.trim())) {
+                addFieldError(hours, "Hours must be a positive number.");
+                if (!firstInvalid) firstInvalid = hours;
+            }
+
+            if (from && to && from.value && to.value && !isValidDateOrder(from.value, to.value)) {
+                addFieldError(to, '"To" date must not be earlier than "From" date.');
+                if (!firstInvalid) firstInvalid = to;
+            }
+        });
+    }
+
+    return firstInvalid;
+}
+
+function validateAllSections() {
+    const sections = getVisibleSections();
+    for (let i = 0; i < sections.length; i++) {
+        const invalidField = validateSectionFields(sections[i]);
+        if (invalidField) {
+            updateProgress(i);
+            invalidField.focus();
+            invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+            return false;
+        }
+    }
+    return true;
+}
+
+let hasUnsavedChanges = false;
+
+function showToast(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add("show");
+    setTimeout(() => {
+        el.classList.remove("show");
+    }, 3000);
+}
+
+function setUnsavedState(state) {
+    hasUnsavedChanges = state;
+    const banner = document.getElementById("unsavedBanner");
+    if (banner) {
+        banner.classList.toggle("show", state);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("editModal");
+
+    if (modal) {
+        document.body.classList.add("modal-open");
+
+        modal.addEventListener("click", function (e) {
+            if (e.target === modal) {
+                closeEditModal();
+            }
+        });
+    }
+
+    showToast("toastSuccess");
+    showToast("toastError");
+
+    const form = document.getElementById("editRecordForm");
     if (!form) return;
 
     restoreDraft();
     updateProgress(0);
+    setUnsavedState(false);
 
-    form.addEventListener('input', saveFormDraft);
-    form.addEventListener('change', saveFormDraft);
+    form.addEventListener("input", function(e) {
+        const field = e.target;
+        if (!field.matches("input, select, textarea")) return;
 
-    form.addEventListener('submit', function () {
-        clearDraft();
+        if (["umid", "philsys", "pagibig", "tin", "philhealth", "agency_employee"].includes(field.name)) {
+            const cleaned = sanitizeIdNumber(field.value);
+            if (field.value !== cleaned) {
+                field.value = cleaned;
+            }
+        }
+
+        validateSingleField(field);
+
+        if (field.name === "citizenship") {
+            const dualCountryField = form.querySelector('[name="dual_country"]');
+            if (dualCountryField) validateSingleField(dualCountryField);
+        }
+
+        saveFormDraft();
+        setUnsavedState(true);
     });
+
+    form.addEventListener("change", function(e) {
+        const field = e.target;
+        if (!field.matches("input, select, textarea")) return;
+
+        validateSingleField(field);
+
+        if (field.name === "citizenship") {
+            const dualCountryField = form.querySelector('[name="dual_country"]');
+            if (dualCountryField) validateSingleField(dualCountryField);
+        }
+
+        saveFormDraft();
+        setUnsavedState(true);
+    });
+
+    form.addEventListener("submit", function (e) {
+        const ok = validateAllSections();
+        if (!ok) {
+            e.preventDefault();
+            const firstError = document.querySelector(".field-error");
+            if (firstError) {
+                firstError.focus();
+                firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            return false;
+        }
+
+        setUnsavedState(false);
+    });
+
+    form.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+            e.preventDefault();
+            const saveBtn = document.getElementById("saveBtn");
+            if (saveBtn) saveBtn.click();
+        }
+    });
+
+    window.addEventListener("beforeunload", function (e) {
+        if (!hasUnsavedChanges) return;
+        e.preventDefault();
+        e.returnValue = "";
+    });
+});
+
+document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+        closeEditModal();
+    }
 });
 </script>
 </body>
 </html>
+<?php ob_end_flush(); ?>

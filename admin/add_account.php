@@ -80,21 +80,23 @@ if (isset($_POST['create'])) {
 
         body {
             background: #e9e9e9;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            align-items: flex-start;
+            padding: 20px;
+            overflow-x: hidden;
         }
 
         .wrapper {
             width: 100%;
             max-width: 600px;
-            max-height: 95vh;
             background: #f5f5f5;
             border: 3px solid #2d4725;
             border-radius: 28px;
             overflow: hidden;
+            margin: 20px 0;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
         }
 
         .header {
@@ -102,11 +104,13 @@ if (isset($_POST['create'])) {
             background: linear-gradient(90deg, #1f4a18, #173714);
             color: #fff;
             text-align: center;
-            padding: 25px 15px;
+            padding: 24px 18px;
         }
 
         .header h1 {
             font-size: 28px;
+            line-height: 1.2;
+            padding: 0 45px;
         }
 
         .home-btn {
@@ -116,8 +120,8 @@ if (isset($_POST['create'])) {
             transform: translateY(-50%);
             background: rgba(255, 255, 255, 0.14);
             border-radius: 50%;
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -140,6 +144,8 @@ if (isset($_POST['create'])) {
             padding: 12px;
             border-radius: 12px;
             font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
         }
 
         .message.success {
@@ -160,16 +166,18 @@ if (isset($_POST['create'])) {
             display: block;
             font-weight: bold;
             margin-bottom: 6px;
+            font-size: 15px;
         }
 
         input,
         select {
             width: 100%;
-            height: 48px;
-            padding: 0 12px;
+            min-height: 48px;
+            padding: 12px;
             border-radius: 10px;
             border: 2px solid #8e8e8e;
             outline: none;
+            font-size: 16px;
         }
 
         .input-blue {
@@ -199,20 +207,111 @@ if (isset($_POST['create'])) {
         }
 
         .btn {
-            width: 40%;
+            width: 100%;
+            max-width: 220px;
             background: #98b38e;
             border: none;
-            padding: 12px;
+            padding: 14px;
             border-radius: 20px;
             font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
             transition: 0.2s ease;
             display: block;
-            margin: 20px auto 0; /* centers horizontally */
+            margin: 20px auto 0;
         }
 
         .btn:hover {
             background: #87a57d;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 14px;
+            }
+
+            .wrapper {
+                border-radius: 22px;
+                margin: 10px 0;
+            }
+
+            .content {
+                padding: 22px 20px;
+            }
+
+            .header {
+                padding: 20px 16px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+                padding: 0 42px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .wrapper {
+                border-width: 2px;
+                border-radius: 18px;
+            }
+
+            .header {
+                padding: 18px 14px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+                padding: 0 38px;
+            }
+
+            .home-btn {
+                width: 34px;
+                height: 34px;
+                left: 10px;
+                font-size: 14px;
+            }
+
+            .content {
+                padding: 18px 14px;
+            }
+
+            label {
+                font-size: 14px;
+            }
+
+            input,
+            select {
+                min-height: 46px;
+                font-size: 15px;
+                padding: 10px 12px;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 100%;
+                padding: 13px;
+                font-size: 15px;
+                border-radius: 14px;
+            }
+
+            .message {
+                font-size: 13px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .content {
+                padding: 14px 12px;
+            }
         }
     </style>
 </head>
