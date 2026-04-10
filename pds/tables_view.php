@@ -417,7 +417,7 @@ tbody tr:hover{
 
     <div class="top-bar">
         <h1 class="page-title">Database Viewer</h1>
-        <a href="../dashboard/dashboard.php" class="home-btn">Home</a>
+        <a href="../dashboard/dashboard.php" class="home-btn">🏠︎ Home</a>
     </div>
 
     <div class="card">
@@ -425,7 +425,7 @@ tbody tr:hover{
             <div class="toolbar">
                 <div class="field">
                     <label for="table">Select Data</label>
-                    <select name="table" id="table">
+                    <select name="table" id="table" onchange="this.form.submit()">
                         <?php foreach ($existingTables as $t): ?>
                             <option value="<?php echo e($t); ?>" <?php echo ($t === $selectedTable ? 'selected' : ''); ?>>
                                 <?php echo e($tableMap[$t] ?? $t); ?>
@@ -434,7 +434,7 @@ tbody tr:hover{
                     </select>
                 </div>
 
-                <button type="submit" class="load-btn">Load</button>
+                <button type="submit" class="load-btn">↻ Load</button>
             </div>
         </form>
     </div>
@@ -466,10 +466,10 @@ tbody tr:hover{
                                     </td>
                                 <?php endif; ?>
 
-                               <?php foreach ($displayColumns as $col): ?>
-                                        <td><?php echo e($row[$col] ?? ''); ?></td>
-                                        <?php endforeach; ?>
-                                        </tr>
+                                <?php foreach ($displayColumns as $col): ?>
+                                    <td><?php echo e($row[$col] ?? ''); ?></td>
+                                <?php endforeach; ?>
+                            </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>

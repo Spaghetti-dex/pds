@@ -2369,7 +2369,7 @@ body.modal-open{
 <?php include "../includes/header.php"; ?>
 
 <div class="page">
-    <a href="../dashboard/dashboard.php" class="top-link">Home</a>
+    <a href="../dashboard/dashboard.php" class="top-link">🏠︎ Home</a>
 
     <h1>Search, View, Edit and Delete Personal Record</h1>
 
@@ -2401,8 +2401,8 @@ body.modal-open{
                 </div>
 
                 <div class="search-actions">
-                    <button type="submit" class="btn-primary">Search</button>
-                    <a href="<?php echo e($_SERVER['PHP_SELF']); ?>" class="btn-link btn-secondary">Clear</a>
+                    <button type="submit" class="btn-primary">Search 🔍︎</button>
+                    <a href="<?php echo e($_SERVER['PHP_SELF']); ?>" class="btn-link btn-secondary">⟳ Clear</a>
                 </div>
             </div>
         </form>
@@ -2447,7 +2447,7 @@ body.modal-open{
                         <td><?php echo e($row['mobile'] ?? ''); ?></td>
                         <td>
                             <a class="btn-link btn-primary" href="?search=<?php echo urlencode($search); ?>&sort=<?php echo urlencode($sort); ?>&id=<?php echo (int)$row['id']; ?>">
-                                Edit
+                                ✎ Edit
                             </a>
                         </td>
                     </tr>
@@ -2539,7 +2539,7 @@ body.modal-open{
                         <div id="personal" class="section active">
                             <div class="photo-home-row">
                                 <div class="top-actions">
-                                    <a href="../dashboard/dashboard.php" class="top-link">Home</a>
+                                    <a href="../dashboard/dashboard.php" class="top-link">🏠︎ Home</a>
                                 </div>
 
                                 <div class="title">PERSONAL INFORMATION</div>
@@ -2593,10 +2593,10 @@ body.modal-open{
                             </div>
 
                             <div class="personal-row small">
-                                <label>Height:</label>
+                                <label>Height (cm):</label>
                                 <input name="height" value="<?php echo e($person['height'] ?? ''); ?>">
 
-                                <label>Weight:</label>
+                                <label>Weight (kg):</label>
                                 <input name="weight" value="<?php echo e($person['weight'] ?? ''); ?>">
                             </div>
 
@@ -2804,7 +2804,7 @@ body.modal-open{
                                                 </div>
                                             </div>
 
-                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
+                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">✖ Remove</button>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -2857,12 +2857,12 @@ body.modal-open{
                                             </div>
                                         </div>
 
-                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
+                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">✖ Remove</button>
                                     </div>
                                 <?php endif; ?>
                             </div>
 
-                            <button type="button" class="add-btn" onclick="addEducation()">Add More</button>
+                            <button type="button" class="add-btn" onclick="addEducation()">✚ Add More</button>
                         </div>
                         <?php endif; ?>
 
@@ -2911,7 +2911,7 @@ body.modal-open{
                                                 </div>
                                             </div>
 
-                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">✖ Remove</button>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -2953,12 +2953,12 @@ body.modal-open{
                                             </div>
                                         </div>
 
-                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">✖ Remove</button>
                                     </div>
                                 <?php endif; ?>
                             </div>
 
-                            <button type="button" class="add-btn" onclick="addEligibility()">Add More</button>
+                            <button type="button" class="add-btn" onclick="addEligibility()">✚ Add More</button>
                         </div>
                         <?php endif; ?>
 
@@ -3002,7 +3002,7 @@ body.modal-open{
                                                 </div>
                                             </div>
 
-                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+                                            <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">✖ Remove</button>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -3039,18 +3039,18 @@ body.modal-open{
                                             </div>
                                         </div>
 
-                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+                                        <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">✖ Remove</button>
                                     </div>
                                 <?php endif; ?>
                             </div>
 
-                            <button type="button" class="add-btn" onclick="addTraining()">Add More</button>
+                            <button type="button" class="add-btn" onclick="addTraining()">✚ Add More</button>
                         </div>
                         <?php endif; ?>
 
                         <div class="nav-buttons">
-                         <button type="button" class="next-btn" id="nextBtn" onclick="nextSection()">Next</button>
-                                <button type="submit" name="update" class="save-btn" id="saveBtn">Update Record</button>
+                         <button type="button" class="next-btn" id="nextBtn" onclick="nextSection()">Next ➡</button>
+                                <button type="submit" name="update" class="save-btn" id="saveBtn">✔ Update Record</button>
                         </div>
                     </form>
                 </div>
@@ -3301,7 +3301,7 @@ function addEducation(data = {}) {
             </div>
         </div>
 
-        <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">Remove</button>
+        <button type="button" class="remove-btn" onclick="removeEntry(this, '.education-entry')">✖ Remove</button>
     `;
     container.appendChild(div);
 
@@ -3361,7 +3361,7 @@ function addEligibility(data = {}) {
             </div>
         </div>
 
-        <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+        <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">✖ Remove</button>
     `;
     container.appendChild(div);
 
@@ -3415,7 +3415,7 @@ function addTraining(data = {}) {
             </div>
         </div>
 
-        <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+        <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">✖ Remove</button>
     `;
     container.appendChild(div);
 

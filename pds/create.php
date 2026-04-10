@@ -2188,7 +2188,7 @@ function addEligibility(data = {}) {
         <input type="date" name="valid_until[]">
       </div>
     </div>
-    <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">Remove</button>
+    <button type="button" class="remove-btn" onclick="removeEntry(this, '.eligibility-entry')">✖ Remove</button>
   `;
   container.appendChild(div);
 
@@ -2237,7 +2237,7 @@ function addTraining(data = {}) {
         <input name="sponsor[]" placeholder="Sponsor">
       </div>
     </div>
-    <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">Remove</button>
+    <button type="button" class="remove-btn" onclick="removeEntry(this, '.training-entry')">✖ Remove</button>
   `;
   container.appendChild(div);
 
