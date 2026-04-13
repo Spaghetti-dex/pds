@@ -216,9 +216,7 @@ $training_records = [];
 */
 $education_table = table_exists($conn, 'education') ? 'education' : null;
 
-$eligibility_table = table_exists($conn, 'service_eligibility')
-    ? 'service_eligibility'
-    : (table_exists($conn, 'eligibility') ? 'eligibility' : null);
+$eligibility_table = table_exists($conn, 'eligibility') ? 'eligibility' : null;
 
 $training_table = table_exists($conn, 'learning_development')
     ? 'learning_development'
@@ -1655,17 +1653,16 @@ th{
   line-height:1.3;
 }
 
-.citizenship-row select,
-.citizenship-row input{
+.disabled-look-text{
+  display:inline-block;
   width:100%;
-  height:36px;
   padding:6px 10px;
-  border:1px solid #555;
+  background:#cfcfcf;
+  border:1px solid #999;
   border-radius:6px;
-  background:#e9e9ee;
-  font-size:14px;
-  box-sizing:border-box;
+  color:#666;
 }
+
 
 /* ADDRESS */
 .address-section{
@@ -2588,8 +2585,18 @@ body.modal-open{
                                     <option value="Female" <?php echo (($person['sex'] ?? '') === 'Female') ? 'selected' : ''; ?>>Female</option>
                                 </select>
 
-                                <label>Blood Type:</label>
-                                <input name="blood_type" value="<?php echo e($person['blood_type'] ?? ''); ?>">
+                                    <label>Blood Type:</label>
+                                        <select name="blood_type">
+                                            <option value=""> </option>
+                                            <option value="A+" <?php echo (isset($person['blood_type']) && $person['blood_type'] == 'A+') ? 'selected' : ''; ?>>A+</option>
+                                            <option value="A-" <?php echo (isset($person['blood_type']) && $person['blood_type'] == 'A-') ? 'selected' : ''; ?>>A-</option>
+                                            <option value="B+" <?php echo (isset($person['blood_type']) && $person['blood_type'] == 'B+') ? 'selected' : ''; ?>>B+</option>
+                                            <option value="B-" <?php echo (isset($person['blood_type']) && $person['blood_type'] == 'B-') ? 'selected' : ''; ?>>B-</option>
+                                            <option value="AB+" <?php echo (isset($person['blood_type']) && $person['blood_type'] == 'AB+') ? 'selected' : ''; ?>>AB+</option>
+                                            <option value="AB-" <?php echo (isset($person['blood_type']) && $person['blood_type'] == 'AB-') ? 'selected' : ''; ?>>AB-</option>
+                                            <option value="O+" <?php echo (isset($person['blood_type']) && $person['blood_type'] == 'O+') ? 'selected' : ''; ?>>O+</option>
+                                            <option value="O-" <?php echo (isset($person['blood_type']) && $person['blood_type'] == 'O-') ? 'selected' : ''; ?>>O-</option>
+                                        </select>
                             </div>
 
                             <div class="personal-row small">
@@ -2621,15 +2628,21 @@ body.modal-open{
                             </div>
 
                             <div class="citizenship-row">
-                                <label>Citizenship:</label>
-                                <select name="citizenship">
-                                    <option value=""></option>
-                                    <option value="Filipino" <?php echo (($person['citizenship'] ?? '') === 'Filipino') ? 'selected' : ''; ?>>Filipino</option>
-                                    <option value="Dual Citizen" <?php echo (($person['citizenship'] ?? '') === 'Dual Citizen') ? 'selected' : ''; ?>>Dual Citizen</option>
-                                </select>
+                                    <label>Citizenship:</label>
+                                    <select name="citizenship" id="citizenship">
+                                        <option value=""></option>
+                                        <option value="Filipino" <?php echo (($person['citizenship'] ?? '') === 'Filipino') ? 'selected' : ''; ?>>Filipino</option>
+                                        <option value="Dual Citizen" <?php echo (($person['citizenship'] ?? '') === 'Dual Citizen') ? 'selected' : ''; ?>>Dual Citizen</option>
+                                    </select>
 
-                                <label>If Dual Citizen(Indicate Country):</label>
-                                <input name="dual_country" value="<?php echo e($person['dual_country'] ?? ''); ?>">
+                                    <label>If Dual Citizen (Indicate Country):</label>
+                                    <input 
+                                        name="dual_country"
+                                        id="dual_country"
+                                        value="<?php echo e($person['dual_country'] ?? ''); ?>"
+                                        class="<?php echo (($person['citizenship'] ?? '') === 'Filipino') ? 'disabled-look' : ''; ?>"
+                                        <?php echo (($person['citizenship'] ?? '') === 'Filipino') ? 'disabled' : ''; ?>
+                                    >
                             </div>
                         </div>
 
@@ -3233,10 +3246,27 @@ function restoreSimpleFields(form, data) {
 
     Object.keys(data.simple).forEach(name => {
         const field = form.querySelector(`[name="${name}"]`);
-        if (field) {
-            field.value = data.simple[name];
-        }
+        if (!field) return;
+
+        const currentValue = (field.value || "").trim();
+        if (currentValue !== "") return;
+
+        field.value = data.simple[name];
     });
+}
+
+function containerHasPopulatedInputs(selector) {
+    const container = document.querySelector(selector);
+    if (!container) return false;
+
+    const fields = container.querySelectorAll('input, select, textarea');
+    for (const field of fields) {
+        const value = (field.value || "").trim();
+        if (value !== "") {
+            return true;
+        }
+    }
+    return false;
 }
 
 function clearContainer(selector) {
@@ -3448,7 +3478,7 @@ function restoreDraft() {
 
     restoreSimpleFields(form, data);
 
-    if (document.getElementById("education-container") && Array.isArray(data.education)) {
+    if (document.getElementById("education-container") && Array.isArray(data.education) && !containerHasPopulatedInputs("#education-container")) {
         clearContainer("#education-container");
         if (data.education.length > 0) {
             data.education.forEach(row => addEducation(row));
@@ -3457,7 +3487,7 @@ function restoreDraft() {
         }
     }
 
-    if (document.getElementById("eligibility-container") && Array.isArray(data.eligibility)) {
+    if (document.getElementById("eligibility-container") && Array.isArray(data.eligibility) && !containerHasPopulatedInputs("#eligibility-container")) {
         clearContainer("#eligibility-container");
         if (data.eligibility.length > 0) {
             data.eligibility.forEach(row => addEligibility(row));
@@ -3466,7 +3496,7 @@ function restoreDraft() {
         }
     }
 
-    if (document.getElementById("training-container") && Array.isArray(data.training)) {
+    if (document.getElementById("training-container") && Array.isArray(data.training) && !containerHasPopulatedInputs("#training-container")) {
         clearContainer("#training-container");
         if (data.training.length > 0) {
             data.training.forEach(row => addTraining(row));
@@ -3914,6 +3944,23 @@ document.addEventListener("keydown", function (e) {
         closeEditModal();
     }
 });
+
+const citizenship = document.getElementById("citizenship");
+const dualCountry = document.querySelector('[name="dual_country"]');
+
+function toggleDual() {
+  if (citizenship.value === "Dual Citizen") {
+    dualCountry.disabled = false;
+    dualCountry.classList.remove("disabled-look");
+  } else {
+    dualCountry.disabled = true;
+    dualCountry.value = "";
+    dualCountry.classList.add("disabled-look");
+  }
+}
+
+citizenship.addEventListener("change", toggleDual);
+toggleDual(); // run on load
 </script>
 </body>
 </html>

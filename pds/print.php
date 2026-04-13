@@ -117,16 +117,12 @@ $selected_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $logoPath = '../assets/logo.png';
 
 $education_table = table_exists($conn, 'education') ? 'education' : null;
-$eligibility_table = table_exists($conn, 'service_eligibility')
-    ? 'service_eligibility'
-    : (table_exists($conn, 'eligibility') ? 'eligibility' : null);
-$training_table = table_exists($conn, 'learning_development')
-    ? 'learning_development'
-    : (table_exists($conn, 'training') ? 'training' : null);
+$eligibility_table = table_exists($conn, 'eligibility') ? 'eligibility' : null;
+$training_table = 'training';
 
 $education_columns = $education_table ? get_columns($conn, $education_table) : [];
 $eligibility_columns = $eligibility_table ? get_columns($conn, $eligibility_table) : [];
-$training_columns = $training_table ? get_columns($conn, $training_table) : [];
+$training_columns = get_columns($conn, $training_table);
 $personal_info_columns = get_columns($conn, 'personal_info');
 $has_photo_column = in_array('photo', $personal_info_columns, true);
 $has_photo_type_column = in_array('photo_type', $personal_info_columns, true);
@@ -210,7 +206,7 @@ if ($selected_id > 0) {
         $stmt->close();
     }
 
-    if ($person && $training_table && has_column($training_columns, 'person_id')) {
+    if ($person && has_column($training_columns, 'person_id')) {
         $stmt = $conn->prepare("SELECT * FROM `{$training_table}` WHERE person_id = ? ORDER BY id ASC");
         $stmt->bind_param("i", $selected_id);
         $stmt->execute();
@@ -764,10 +760,10 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
                         <tbody>
                         <?php foreach ($training_records as $row): ?>
                             <tr>
-                                <td><?php echo e($row['title'] ?? $row['training_title'] ?? ''); ?></td>
+                                <td><?php echo e($row['title'] ?? ''); ?></td>
                                 <td><?php echo e($row['hours'] ?? ''); ?></td>
                                 <td><?php echo e(format_date_display($row['training_from'] ?? '')); ?> - <?php echo e(format_date_display($row['training_to'] ?? '')); ?></td>
-                                <td><?php echo e($row['type'] ?? $row['training_type'] ?? ''); ?></td>
+                                <td><?php echo e($row['type'] ?? ''); ?></td>
                                 <td><?php echo e($row['sponsor'] ?? ''); ?></td>
                             </tr>
                         <?php endforeach; ?>

@@ -61,6 +61,9 @@ body{
   z-index:2;
 }
 
+.input::placeholder {
+}
+
 /* NAV ITEM */
 .nav-item{
   display:flex;
@@ -150,7 +153,6 @@ body{
   text-align:right;
   white-space:nowrap;
 }
-
 .personal-grid input,
 .personal-grid select,
 .personal-row input,
@@ -189,7 +191,7 @@ body{
 .field-pair,
 .citizenship-pair{
   display:grid;
-  grid-template-columns:140px minmax(0, 1fr);
+  grid-template-columns:250px minmax(0, 1fr);
   gap:10px;
   align-items:center;
   min-width:0;
@@ -204,6 +206,15 @@ body{
   width:100%;
 }
 
+/* make disabled Dual Citizen box obviously gray */
+.citizenship-row input:disabled,
+.citizenship-pair input:disabled{
+  background:#cfcfcf;
+  color:#666;
+  border:1px solid #999;
+  cursor:not-allowed;
+  opacity:1;
+}
 /* =========================
    ADDRESS
 ========================= */
@@ -881,7 +892,7 @@ label.required::after{
             <input name="extension">
 
             <label>First Name: </label>
-            <input name="firstname" required>
+            <input class="input" name="firstname" placeholder="Enter your first name" required>
 
             <label>Date of Birth: </label>
             <input type="date" name="dob" required>
@@ -890,7 +901,7 @@ label.required::after{
             <input name="middlename" required>
 
             <label>Place of Birth: </label>
-            <input name="birth_place" required>
+            <input name="birth_place" placeholder="ex. Pasig City" required>
           </div>
 
           <div class="personal-row small">
@@ -916,19 +927,29 @@ label.required::after{
 
             <div class="field-pair">
               <label>Blood Type:</label>
-              <input name="blood_type" required>
+              <select name="blood_type" required>
+                <option value= ""></option>
+                <option value="O+">O+</option>
+                <option value="O+">O-</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB+</option>
+            </select>
             </div>
           </div>
 
           <div class="personal-row small">
             <div class="field-pair">
-              <label>Height:</label>
-              <input name="height" required>
+              <label>Height (cm):</label>
+              <input name="height" placeholder="ex. 165" required>
             </div>
 
             <div class="field-pair">
-              <label>Weight:</label>
-              <input name="weight" required>
+              <label>Weight (kg):</label>
+              <input name="weight" placeholder="ex. 82" required>
             </div>
           </div>
 
@@ -943,7 +964,7 @@ label.required::after{
             <input name="pagibig" maxlength="30" required>
 
             <label>TIN No:</label>
-            <input name="tin" maxlength="20" required>
+            <input name="tin" maxlength="20" placeholder="000-000-000-000" required>
 
             <label>PhilHealth No:</label>
             <input name="philhealth" maxlength="30" required>
@@ -953,21 +974,20 @@ label.required::after{
           </div>
 
           <div class="citizenship-row">
-            <div class="citizenship-pair">
-              <label>Citizenship:</label>
-              <select name="citizenship" required>
-                <option value=""></option>
-                <option value="Filipino">Filipino</option>
-                <option value="Dual Citizen">Dual Citizen</option>
-              </select>
-            </div>
+                <div class="citizenship-pair">
+                  <label>Citizenship:</label>
+                  <select name="citizenship" id="citizenship" required>
+                    <option value=""></option>
+                    <option value="Filipino">Filipino</option>
+                    <option value="Dual Citizen">Dual Citizen</option>
+                  </select>
+                </div>
 
-            <div class="citizenship-pair">
-              <label>If Dual Citizen(Indicate Country):</label>
-              <input name="dual_country">
-            </div>
-          </div>
-        </div>
+                <div class="citizenship-pair">
+                  <label>If Dual Citizen (Indicate Country):</label>
+                  <input name="dual_country" id="dual_country" disabled>
+                </div>
+              </div>
 
         <!-- ADDRESS -->
         <div id="address" class="section">
@@ -978,7 +998,7 @@ label.required::after{
               <div class="address-house-row">
                 <label>House / Block / Lot No.</label>
                 <input name="r_house" required>
-              </div>
+              </div> 
 
               <div class="address-two-col">
                 <div class="address-col">
@@ -1079,17 +1099,17 @@ label.required::after{
             <div class="contact-grid">
               <div class="contact-row">
                 <label>Telephone Number:</label>
-                <input name="telephone" required>
+                <input name="telephone" placeholder="ex. 02-xxxx-xxxx" exrequired>
               </div>
 
               <div class="contact-row">
                 <label>Mobile Number:</label>
-                <input name="mobile" required>
+                <input name="mobile" placeholder="09XXXXXXXXX" required>
               </div>
 
               <div class="contact-row">
                 <label>E-Mail:</label>
-                <input type="email" name="email" required>
+                <input type="email" name="email" placeholder="" required>
               </div>
             </div>
           </div>
@@ -1907,7 +1927,7 @@ function validateAllSections(){
 }
 
 function getDraftKey() {
-  return "personal_record_create_draft";
+  return "personal_record_create_draft_v2";
 }
 
 function collectRepeatedEntries(selector, fieldNames) {
@@ -1974,14 +1994,31 @@ function restoreSimpleFields(data) {
 
   Object.keys(data.simple).forEach(name => {
     const field = form.querySelector(`[name="${name}"]`);
-    if (field) {
-      if (field.type === 'checkbox') {
-        field.checked = !!data.simple[name];
-      } else {
-        field.value = data.simple[name];
-      }
+    if (!field) return;
+
+    if (field.type === 'checkbox') {
+      field.checked = !!data.simple[name];
+      return;
     }
+
+    const currentValue = (field.value || '').trim();
+    if (currentValue !== '') return;
+
+    field.value = data.simple[name];
   });
+}
+
+function containerHasPopulatedInputs(selector) {
+  const container = document.querySelector(selector);
+  if (!container) return false;
+
+  const fields = container.querySelectorAll('input, select, textarea');
+  for (const field of fields) {
+    const value = (field.value || '').trim();
+    if (value !== '') return true;
+  }
+
+  return false;
 }
 
 function clearContainer(selector) {
@@ -2006,7 +2043,7 @@ function restoreDraft() {
 
   restoreSimpleFields(data);
 
-  if (document.getElementById('education-container') && Array.isArray(data.education)) {
+  if (document.getElementById('education-container') && Array.isArray(data.education) && !containerHasPopulatedInputs('#education-container')) {
     clearContainer('#education-container');
     if (data.education.length > 0) {
       data.education.forEach(row => addEducation(row));
@@ -2015,7 +2052,7 @@ function restoreDraft() {
     }
   }
 
-  if (document.getElementById('eligibility') && Array.isArray(data.eligibility)) {
+  if (document.getElementById('eligibility') && Array.isArray(data.eligibility) && !containerHasPopulatedInputs('#eligibility')) {
     clearContainer('#eligibility');
     if (data.eligibility.length > 0) {
       data.eligibility.forEach(row => addEligibility(row));
@@ -2024,7 +2061,7 @@ function restoreDraft() {
     }
   }
 
-  if (document.getElementById('training') && Array.isArray(data.training)) {
+  if (document.getElementById('training') && Array.isArray(data.training) && !containerHasPopulatedInputs('#training')) {
     clearContainer('#training');
     if (data.training.length > 0) {
       data.training.forEach(row => addTraining(row));
@@ -2326,6 +2363,18 @@ document.addEventListener("DOMContentLoaded", function () {
     currentSection = 0;
   }
   updateProgress(currentSection);
+});
+
+const citizenship = document.getElementById("citizenship");
+const dualCountry = document.getElementById("dual_country");
+
+citizenship.addEventListener("change", function () {
+    if (this.value === "Dual Citizen") {
+        dualCountry.disabled = false;
+    } else {
+        dualCountry.disabled = true;
+        dualCountry.value = ""; // clear input when disabled
+    }
 });
 </script>
 

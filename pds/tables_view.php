@@ -14,10 +14,8 @@ $tableMap = [
     'addresses' => 'Address Records',
     'education' => 'Educational Background',
     'eligibility' => 'Eligibility Records',
-    'learning_development' => 'Learning and Development',
     'personal_info' => 'Personal Information',
-    'service_eligibility' => 'Service Eligibility',
-    'training' => 'Training Records'
+    'training' => 'Learning and Development'
 ];
 
 function table_exists(mysqli $conn, string $table): bool {
@@ -433,8 +431,6 @@ tbody tr:hover{
                         <?php endforeach; ?>
                     </select>
                 </div>
-
-                <button type="submit" class="load-btn">↻ Load</button>
             </div>
         </form>
     </div>
