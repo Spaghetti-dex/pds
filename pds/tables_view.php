@@ -205,6 +205,13 @@ body{
     flex-wrap:wrap;
 }
 
+.top-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
 .page-title{
     margin:0;
     font-size:28px;
@@ -213,7 +220,8 @@ body{
 }
 
 .home-btn,
-.load-btn{
+.load-btn,
+.print-btn{
     display:inline-block;
     border:none;
     border-radius:8px;
@@ -240,6 +248,15 @@ body{
 }
 
 .load-btn:hover{
+    background:#2d4728;
+}
+
+.print-btn{
+    background:#22361e;
+    color:#fff;
+}
+
+.print-btn:hover{
     background:#2d4728;
 }
 
@@ -372,6 +389,66 @@ tbody tr:hover{
     font-style:italic;
 }
 
+@media print{
+    body{
+        background:#fff;
+        margin:0;
+        padding:0;
+    }
+
+    .top-bar,
+    .card:first-of-type,
+    .print-btn,
+    .home-btn{
+        display:none !important;
+    }
+
+    .page{
+        max-width:100%;
+        margin:0;
+        padding:0;
+    }
+
+    .card{
+        box-shadow:none;
+        border:none;
+        border-radius:0;
+        margin:0;
+        padding:0;
+        overflow:visible;
+    }
+
+    .table-title{
+        margin:0 0 12px 0;
+        font-size:20px;
+    }
+
+    .table-wrap{
+        overflow:visible;
+        border:none;
+        border-radius:0;
+    }
+
+    table{
+        min-width:0;
+        width:100%;
+    }
+
+    th,
+    td{
+        font-size:12px;
+        padding:8px;
+    }
+
+    tbody tr:nth-child(even){
+        background:#fff;
+    }
+
+    tbody tr:hover{
+        background:#fff;
+    }
+}
+
 @media (max-width: 768px){
     .page{
         margin:90px auto 20px;
@@ -379,6 +456,11 @@ tbody tr:hover{
     }
 
     .top-bar{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .top-actions{
         flex-direction:column;
         align-items:stretch;
     }
@@ -394,7 +476,8 @@ tbody tr:hover{
     }
 
     .home-btn,
-    .load-btn{
+    .load-btn,
+    .print-btn{
         width:100%;
         text-align:center;
     }
@@ -415,7 +498,10 @@ tbody tr:hover{
 
     <div class="top-bar">
         <h1 class="page-title">Database Viewer</h1>
-        <a href="../dashboard/dashboard.php" class="home-btn">🏠︎ Home</a>
+        <div class="top-actions">
+            <a href="../dashboard/dashboard.php" class="home-btn">🏠︎ Home</a>
+            <button type="button" class="print-btn" onclick="printTable()">🗐 Print Table</button>
+        </div>
     </div>
 
     <div class="card">
@@ -435,7 +521,7 @@ tbody tr:hover{
         </form>
     </div>
 
-    <div class="card">
+    <div class="card" id="print-section">
         <h2 class="table-title"><?php echo e($tableMap[$selectedTable] ?? $selectedTable); ?></h2>
 
         <div class="table-wrap">
@@ -480,6 +566,12 @@ tbody tr:hover{
     </div>
 
 </div>
+
+<script>
+function printTable() {
+    window.print();
+}
+</script>
 
 </body>
 </html>

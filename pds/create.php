@@ -153,6 +153,7 @@ body{
   text-align:right;
   white-space:nowrap;
 }
+
 .personal-grid input,
 .personal-grid select,
 .personal-row input,
@@ -206,7 +207,6 @@ body{
   width:100%;
 }
 
-/* make disabled Dual Citizen box obviously gray */
 .citizenship-row input:disabled,
 .citizenship-pair input:disabled{
   background:#cfcfcf;
@@ -215,6 +215,7 @@ body{
   cursor:not-allowed;
   opacity:1;
 }
+
 /* =========================
    ADDRESS
 ========================= */
@@ -885,29 +886,29 @@ label.required::after{
           </div>
 
           <div class="personal-grid">
-            <label>Last Name:</label>
-            <input name="surname" required>
+            <label for="surname">Last Name:</label>
+            <input id="surname" name="surname" required>
 
-            <label>Name Extension:</label>
-            <input name="extension">
+            <label for="extension">Name Extension:</label>
+            <input id="extension" name="extension">
 
-            <label>First Name: </label>
-            <input class="input" name="firstname" placeholder="Enter your first name" required>
+            <label for="firstname">First Name:</label>
+            <input id="firstname" class="input" name="firstname" placeholder="Enter your first name" required>
 
-            <label>Date of Birth: </label>
-            <input type="date" name="dob" required>
+            <label for="dob">Date of Birth:</label>
+            <input id="dob" type="date" name="dob" required>
 
-            <label>Middle Name:</label>
-            <input name="middlename" required>
+            <label for="middlename">Middle Name:</label>
+            <input id="middlename" name="middlename" required>
 
-            <label>Place of Birth: </label>
-            <input name="birth_place" placeholder="ex. Pasig City" required>
+            <label for="birth_place">Place of Birth:</label>
+            <input id="birth_place" name="birth_place" placeholder="ex. Pasig City" required>
           </div>
 
           <div class="personal-row small">
             <div class="field-pair">
-              <label>Civil Status:</label>
-              <select name="civil_status" required>
+              <label for="civil_status">Civil Status:</label>
+              <select id="civil_status" name="civil_status" required>
                 <option value=""></option>
                 <option value="Single">Single</option>
                 <option value="Married">Married</option>
@@ -917,8 +918,8 @@ label.required::after{
             </div>
 
             <div class="field-pair">
-              <label>Sex:</label>
-              <select name="sex" required>
+              <label for="sex">Sex:</label>
+              <select id="sex" name="sex" required>
                 <option value=""></option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -926,68 +927,69 @@ label.required::after{
             </div>
 
             <div class="field-pair">
-              <label>Blood Type:</label>
-              <select name="blood_type" required>
-                <option value= ""></option>
+              <label for="blood_type">Blood Type:</label>
+              <select id="blood_type" name="blood_type" required>
+                <option value=""></option>
                 <option value="O+">O+</option>
-                <option value="O+">O-</option>
+                <option value="O-">O-</option>
                 <option value="A+">A+</option>
                 <option value="A-">A-</option>
                 <option value="B+">B+</option>
                 <option value="B-">B-</option>
                 <option value="AB+">AB+</option>
-                <option value="AB-">AB+</option>
-            </select>
+                <option value="AB-">AB-</option>
+              </select>
             </div>
           </div>
 
           <div class="personal-row small">
             <div class="field-pair">
-              <label>Height (cm):</label>
-              <input name="height" placeholder="ex. 165" required>
+              <label for="height">Height (cm):</label>
+              <input id="height" name="height" placeholder="ex. 165" required>
             </div>
 
             <div class="field-pair">
-              <label>Weight (kg):</label>
-              <input name="weight" placeholder="ex. 82" required>
+              <label for="weight">Weight (kg):</label>
+              <input id="weight" name="weight" placeholder="ex. 82" required>
             </div>
           </div>
 
           <div class="personal-grid" style="margin-top:25px;">
-            <label>UMID ID:</label>
-            <input name="umid" maxlength="30" required>
+            <label for="umid">UMID ID:</label>
+            <input id="umid" name="umid" maxlength="30" required>
 
-            <label>PhilSys No.(PSN):</label>
-            <input name="philsys" maxlength="30" required>
+            <label for="philsys">PhilSys No.(PSN):</label>
+            <input id="philsys" name="philsys" maxlength="30" required>
 
-            <label>Pag-IBIG ID No:</label>
-            <input name="pagibig" maxlength="30" required>
+            <label for="pagibig">Pag-IBIG ID No:</label>
+            <input id="pagibig" name="pagibig" maxlength="30" required>
 
-            <label>TIN No:</label>
-            <input name="tin" maxlength="20" placeholder="000-000-000-000" required>
+            <label for="tin">TIN No:</label>
+            <input id="tin" name="tin" maxlength="20" placeholder="000-000-000-000" required>
 
-            <label>PhilHealth No:</label>
-            <input name="philhealth" maxlength="30" required>
+            <label for="philhealth">PhilHealth No:</label>
+            <input id="philhealth" name="philhealth" maxlength="30" required>
 
-            <label>Agency Employee No:</label>
-            <input name="agency_employee" maxlength="30" required>
+            <label for="agency_employee">Agency Employee No:</label>
+            <input id="agency_employee" name="agency_employee" maxlength="30" required>
           </div>
 
           <div class="citizenship-row">
-                <div class="citizenship-pair">
-                  <label>Citizenship:</label>
-                  <select name="citizenship" id="citizenship" required>
-                    <option value=""></option>
-                    <option value="Filipino">Filipino</option>
-                    <option value="Dual Citizen">Dual Citizen</option>
-                  </select>
-                </div>
+            <div class="citizenship-pair">
+              <label for="citizenship">Citizenship:</label>
+              <select name="citizenship" id="citizenship" required>
+                <option value=""></option>
+                <option value="Filipino">Filipino</option>
+                <option value="Dual Citizen">Dual Citizen</option>
+              </select>
+            </div>
 
-                <div class="citizenship-pair">
-                  <label>If Dual Citizen (Indicate Country):</label>
-                  <input name="dual_country" id="dual_country" disabled>
-                </div>
-              </div>
+            <div class="citizenship-pair">
+              <label for="dual_country">If Dual Citizen (Indicate Country):</label>
+              <input name="dual_country" id="dual_country" disabled>
+            </div>
+          </div>
+        </div>
 
         <!-- ADDRESS -->
         <div id="address" class="section">
@@ -996,42 +998,42 @@ label.required::after{
             <div class="address-title">RESIDENTIAL ADDRESS</div>
             <div class="address-block">
               <div class="address-house-row">
-                <label>House / Block / Lot No.</label>
-                <input name="r_house" required>
+                <label for="r_house">House / Block / Lot No.</label>
+                <input id="r_house" name="r_house" required>
               </div> 
 
               <div class="address-two-col">
                 <div class="address-col">
                   <div class="address-row">
-                    <label>Street:</label>
-                    <input name="r_street" required>
+                    <label for="r_street">Street:</label>
+                    <input id="r_street" name="r_street" required>
                   </div>
 
                   <div class="address-row">
-                    <label>Subdivision / Village:</label>
-                    <input name="r_subdivision" required>
+                    <label for="r_subdivision">Subdivision / Village:</label>
+                    <input id="r_subdivision" name="r_subdivision" required>
                   </div>
 
                   <div class="address-row">
-                    <label>City / Municipality:</label>
-                    <input name="r_city" required>
+                    <label for="r_city">City / Municipality:</label>
+                    <input id="r_city" name="r_city" required>
                   </div>
                 </div>
 
                 <div class="address-col">
                   <div class="address-row">
-                    <label>Barangay:</label>
-                    <input name="r_barangay" required>
+                    <label for="r_barangay">Barangay:</label>
+                    <input id="r_barangay" name="r_barangay" required>
                   </div>
 
                   <div class="address-row">
-                    <label>Province:</label>
-                    <input name="r_province" required>
+                    <label for="r_province">Province:</label>
+                    <input id="r_province" name="r_province" required>
                   </div>
 
                   <div class="address-row">
-                    <label>Zip Code:</label>
-                    <input name="r_zip" required>
+                    <label for="r_zip">Zip Code:</label>
+                    <input id="r_zip" name="r_zip" required>
                   </div>
                 </div>
               </div>
@@ -1047,42 +1049,42 @@ label.required::after{
             <div class="address-title" style="margin-top:18px;">PERMANENT ADDRESS</div>
             <div class="address-block">
               <div class="address-house-row">
-                <label>House / Block / Lot No.</label>
-                <input name="p_house" required>
+                <label for="p_house">House / Block / Lot No.</label>
+                <input id="p_house" name="p_house" required>
               </div>
 
               <div class="address-two-col">
                 <div class="address-col">
                   <div class="address-row">
-                    <label>Street:</label>
-                    <input name="p_street" required>
+                    <label for="p_street">Street:</label>
+                    <input id="p_street" name="p_street" required>
                   </div>
 
                   <div class="address-row">
-                    <label>Subdivision / Village:</label>
-                    <input name="p_subdivision" required>
+                    <label for="p_subdivision">Subdivision / Village:</label>
+                    <input id="p_subdivision" name="p_subdivision" required>
                   </div>
 
                   <div class="address-row">
-                    <label>City / Municipality:</label>
-                    <input name="p_city" required>
+                    <label for="p_city">City / Municipality:</label>
+                    <input id="p_city" name="p_city" required>
                   </div>
                 </div>
 
                 <div class="address-col">
                   <div class="address-row">
-                    <label>Barangay:</label>
-                    <input name="p_barangay" required>
+                    <label for="p_barangay">Barangay:</label>
+                    <input id="p_barangay" name="p_barangay" required>
                   </div>
 
                   <div class="address-row">
-                    <label>Province:</label>
-                    <input name="p_province" required>
+                    <label for="p_province">Province:</label>
+                    <input id="p_province" name="p_province" required>
                   </div>
 
                   <div class="address-row">
-                    <label>Zip Code:</label>
-                    <input name="p_zip" required>
+                    <label for="p_zip">Zip Code:</label>
+                    <input id="p_zip" name="p_zip" required>
                   </div>
                 </div>
               </div>
@@ -1098,18 +1100,18 @@ label.required::after{
 
             <div class="contact-grid">
               <div class="contact-row">
-                <label>Telephone Number:</label>
-                <input name="telephone" placeholder="ex. 02-xxxx-xxxx" exrequired>
+                <label for="telephone">Telephone Number:</label>
+                <input id="telephone" name="telephone" placeholder="ex. 02-xxxx-xxxx">
               </div>
 
               <div class="contact-row">
-                <label>Mobile Number:</label>
-                <input name="mobile" placeholder="09XXXXXXXXX" required>
+                <label for="mobile">Mobile Number:</label>
+                <input id="mobile" name="mobile" placeholder="09XXXXXXXXX" required>
               </div>
 
               <div class="contact-row">
-                <label>E-Mail:</label>
-                <input type="email" name="email" placeholder="" required>
+                <label for="email">E-Mail:</label>
+                <input id="email" type="email" name="email" required>
               </div>
             </div>
           </div>
@@ -1139,22 +1141,22 @@ label.required::after{
                 </div>
 
                 <div>
-                  <label>Basic Education /Degree /Course</label>
+                  <label>Basic Education / Degree / Course</label>
                   <input name="course[]" placeholder="Course / Degree" required>
                 </div>
 
                 <div>
-                  <label>Highest Level /Units Earned</label>
+                  <label>Highest Level / Units Earned</label>
                   <input name="units[]" placeholder="Highest Level / Units" required>
                 </div>
 
                 <div>
-                  <label>Period of Attendance From </label>
+                  <label>Period of Attendance From</label>
                   <input type="date" name="edu_from[]" required>
                 </div>
 
                 <div>
-                  <label>To </label>
+                  <label>To</label>
                   <input type="date" name="edu_to[]" required>
                 </div>
 
@@ -1164,7 +1166,7 @@ label.required::after{
                 </div>
 
                 <div>
-                  <label>Scholarship /Academic Honors</label>
+                  <label>Scholarship / Academic Honors</label>
                   <input name="honors[]" placeholder="Scholarship / Honors">
                 </div>
               </div>
@@ -1184,7 +1186,7 @@ label.required::after{
             <div class="eligibility-entry eligibility-box">
               <div class="eligibility-grid">
                 <div>
-                  <label>Career Service /CSC /CES</label>
+                  <label>Career Service / CSC / CES</label>
                   <input name="career_service[]" placeholder="Career Service / CSC / CES" required>
                 </div>
 
@@ -1214,7 +1216,7 @@ label.required::after{
                 </div>
 
                 <div>
-                  <label>Valid Until </label>
+                  <label>Valid Until</label>
                   <input type="date" name="valid_until[]">
                 </div>
               </div>
@@ -1244,12 +1246,12 @@ label.required::after{
                 </div>
 
                 <div>
-                  <label>From </label>
+                  <label>From</label>
                   <input type="date" name="training_from[]" required>
                 </div>
 
                 <div>
-                  <label>To </label>
+                  <label>To</label>
                   <input type="date" name="training_to[]" required>
                 </div>
 
@@ -1367,24 +1369,6 @@ function goToSection(index){
   updateProgress(index);
 }
 
-function nextSection(){
-  clearFieldErrors();
-  hideSummary();
-
-  const invalidField = validateSection(sections[currentSection]);
-  if(invalidField){
-    showSummary("Please fix the highlighted field(s) in " + getSectionName(sections[currentSection].id) + ".");
-    invalidField.focus();
-    invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
-    saveFormDraft();
-    return;
-  }
-
-  if(currentSection < sections.length - 1){
-    updateProgress(currentSection + 1);
-  }
-}
-
 function prevSection(){
   hideSummary();
   if(currentSection > 0){
@@ -1459,7 +1443,7 @@ if (sameAddressCheckbox) {
 
 function showSummary(message){
   errorSummary.style.display = "block";
-  errorSummary.textContent = message;
+  errorSummary.innerHTML = message;
 }
 
 function hideSummary(){
@@ -1507,6 +1491,36 @@ function getSectionName(sectionId){
     "training-section": "Learning and Development"
   };
   return names[sectionId] || "this section";
+}
+
+function getFieldLabel(input){
+  if (!input) return "this field";
+
+  if (input.dataset.label) {
+    return input.dataset.label.trim();
+  }
+
+  if (input.id) {
+    const linkedLabel = document.querySelector(`label[for="${input.id}"]`);
+    if (linkedLabel) {
+      return linkedLabel.textContent.replace(/\s+/g, " ").replace(/\*/g, "").trim();
+    }
+  }
+
+  const closestPair = input.closest(".field-pair, .citizenship-pair, .contact-row, .address-row, .address-house-row");
+  if (closestPair) {
+    const pairLabel = closestPair.querySelector("label");
+    if (pairLabel) {
+      return pairLabel.textContent.replace(/\s+/g, " ").replace(/\*/g, "").trim();
+    }
+  }
+
+  const prev = input.previousElementSibling;
+  if (prev && prev.tagName === "LABEL") {
+    return prev.textContent.replace(/\s+/g, " ").replace(/\*/g, "").trim();
+  }
+
+  return input.name || "this field";
 }
 
 function sanitizeIdNumber(value) {
@@ -1566,8 +1580,20 @@ function isPastOrToday(value) {
   return inputDate <= today;
 }
 
+function shouldSkipValidation(input){
+  if (!input) return true;
+  if (input.type === "hidden") return true;
+  if (input.disabled) return true;
+  if (input.closest(".section") && !input.closest(".section").classList.contains("active")) return true;
+  return false;
+}
+
 function validateSingleField(input) {
   if (!input || !input.name) return true;
+  if (input.disabled) {
+    clearFieldErrorState(input);
+    return true;
+  }
 
   const name = input.name;
   const value = (input.value || "").trim();
@@ -1580,7 +1606,15 @@ function validateSingleField(input) {
     return false;
   };
 
-  if (isRequired && value === "") {
+  if (name === "dual_country") {
+    const citizenship = form.querySelector('[name="citizenship"]')?.value || "";
+    if (citizenship !== "Dual Citizen") {
+      return true;
+    }
+    if (value === "") {
+      return markInvalid("Country is required for dual citizenship.");
+    }
+  } else if (isRequired && value === "") {
     return markInvalid("This field is required.");
   }
 
@@ -1594,7 +1628,7 @@ function validateSingleField(input) {
       return true;
 
     case "extension":
-      if (value !== "" && !/^[A-Za-z0-9.\s-]{1,10}$/.test(value)) {
+      if (!/^[A-Za-z0-9.\s-]{1,10}$/.test(value)) {
         return markInvalid("Invalid name extension.");
       }
       return true;
@@ -1667,10 +1701,6 @@ function validateSingleField(input) {
       return true;
 
     case "dual_country":
-      const citizenship = form.querySelector('[name="citizenship"]')?.value || "";
-      if (citizenship === "Dual Citizen" && value === "") {
-        return markInvalid("Country is required for dual citizenship.");
-      }
       return true;
 
     case "r_zip":
@@ -1712,11 +1742,23 @@ function validateSection(section){
   };
 
   fields.forEach(input => {
+    if (shouldSkipValidation(input)) return;
+
     const name = input.name || "";
     const value = (input.value || "").trim();
     const isRequired = input.hasAttribute("required");
 
     clearFieldErrorState(input);
+
+    if (name === "dual_country") {
+      const citizenship = form.querySelector('[name="citizenship"]')?.value || "";
+      if (citizenship === "Dual Citizen" && value === "") {
+        markInvalid(input, "Country is required for dual citizenship.");
+      } else if (value !== "" && !/^[A-Za-zÑñ\s.'-]+$/.test(value)) {
+        markInvalid(input, "Letters only.");
+      }
+      return;
+    }
 
     if (isRequired && value === "") {
       markInvalid(input, "This field is required.");
@@ -1733,7 +1775,7 @@ function validateSection(section){
         break;
 
       case "extension":
-        if (value !== "" && !/^[A-Za-z0-9.\s-]{1,10}$/.test(value)) {
+        if (!/^[A-Za-z0-9.\s-]{1,10}$/.test(value)) {
           markInvalid(input, "Invalid name extension.");
         }
         break;
@@ -1809,13 +1851,6 @@ function validateSection(section){
         }
         break;
 
-      case "dual_country":
-        const citizenship = form.querySelector('[name="citizenship"]')?.value || "";
-        if (citizenship === "Dual Citizen" && value === "") {
-          markInvalid(input, "Country is required for dual citizenship.");
-        }
-        break;
-
       case "r_zip":
       case "p_zip":
         if (!isValidZip(value)) {
@@ -1844,12 +1879,12 @@ function validateSection(section){
   });
 
   if (section.id === "education") {
-    document.querySelectorAll(".education-entry").forEach(entry => {
+    section.querySelectorAll(".education-entry").forEach(entry => {
       const from = entry.querySelector('[name="edu_from[]"]');
       const to = entry.querySelector('[name="edu_to[]"]');
       const yearGraduated = entry.querySelector('[name="year_graduated[]"]');
 
-      if (from && to && !isValidDateOrder(from.value, to.value)) {
+      if (from && to && from.value && to.value && !isValidDateOrder(from.value, to.value)) {
         markInvalid(to, '"To" date must not be earlier than "From" date.');
       }
 
@@ -1860,7 +1895,7 @@ function validateSection(section){
   }
 
   if (section.id === "eligibility-section") {
-    document.querySelectorAll(".eligibility-entry").forEach(entry => {
+    section.querySelectorAll(".eligibility-entry").forEach(entry => {
       const examDate = entry.querySelector('[name="exam_date[]"]');
       const validUntil = entry.querySelector('[name="valid_until[]"]');
       const rating = entry.querySelector('[name="rating[]"]');
@@ -1887,7 +1922,7 @@ function validateSection(section){
   }
 
   if (section.id === "training-section") {
-    document.querySelectorAll(".training-entry").forEach(entry => {
+    section.querySelectorAll(".training-entry").forEach(entry => {
       const from = entry.querySelector('[name="training_from[]"]');
       const to = entry.querySelector('[name="training_to[]"]');
       const hours = entry.querySelector('[name="hours[]"]');
@@ -1896,7 +1931,7 @@ function validateSection(section){
         markInvalid(hours, "Hours must be a positive number.");
       }
 
-      if (from && to && !isValidDateOrder(from.value, to.value)) {
+      if (from && to && from.value && to.value && !isValidDateOrder(from.value, to.value)) {
         markInvalid(to, '"To" date must not be earlier than "From" date.');
       }
     });
@@ -1905,20 +1940,47 @@ function validateSection(section){
   return firstInvalid;
 }
 
+function nextSection(){
+  clearFieldErrors();
+  hideSummary();
+
+  const invalidField = validateSection(sections[currentSection]);
+
+  if(invalidField){
+    const pageName = getSectionName(sections[currentSection].id);
+    const fieldName = getFieldLabel(invalidField);
+
+    showSummary(`⚠ Please fix "<strong>${fieldName}</strong>" in <strong>${pageName}</strong> before proceeding.`);
+    invalidField.focus();
+    invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+    saveFormDraft();
+    return;
+  }
+
+  if(currentSection < sections.length - 1){
+    updateProgress(currentSection + 1);
+  }
+}
+
 function validateAllSections(){
   clearFieldErrors();
   hideSummary();
 
   for(let i = 0; i < sections.length; i++){
+    updateProgress(i);
     const invalidField = validateSection(sections[i]);
 
     if(invalidField){
-      updateProgress(i);
-      showSummary("Please fix the highlighted field(s) in " + getSectionName(sections[i].id) + ".");
+      const pageName = getSectionName(sections[i].id);
+      const fieldName = getFieldLabel(invalidField);
+
+      showSummary(`⚠ Please fix "<strong>${fieldName}</strong>" in <strong>${pageName}</strong> before submitting.`);
+
       setTimeout(() => {
         invalidField.focus();
         invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 100);
+
       return false;
     }
   }
@@ -1927,7 +1989,7 @@ function validateAllSections(){
 }
 
 function getDraftKey() {
-  return "personal_record_create_draft_v2";
+  return "personal_record_create_draft_v3";
 }
 
 function collectRepeatedEntries(selector, fieldNames) {
@@ -1985,7 +2047,6 @@ function saveFormDraft() {
   }
 
   data.currentSection = currentSection;
-
   localStorage.setItem(getDraftKey(), JSON.stringify(data));
 }
 
@@ -2113,6 +2174,11 @@ function clearAllForm() {
 
   if (sameAddressCheckbox) {
     sameAddressCheckbox.checked = false;
+  }
+
+  if (dualCountry) {
+    dualCountry.disabled = true;
+    dualCountry.value = "";
   }
 
   updateProgress(0);
@@ -2301,9 +2367,26 @@ function removeEntry(button, selector) {
 
 function markRequiredLabels() {
   document.querySelectorAll("[required]").forEach(input => {
-    const wrapper = input.parentElement;
-    if (!wrapper) return;
-    const label = wrapper.querySelector("label");
+    let label = null;
+
+    if (input.id) {
+      label = document.querySelector(`label[for="${input.id}"]`);
+    }
+
+    if (!label) {
+      const wrapper = input.closest(".field-pair, .citizenship-pair, .contact-row, .address-row, .address-house-row");
+      if (wrapper) {
+        label = wrapper.querySelector("label");
+      }
+    }
+
+    if (!label) {
+      const prev = input.previousElementSibling;
+      if (prev && prev.tagName === "LABEL") {
+        label = prev;
+      }
+    }
+
     if (label) {
       label.classList.add("required");
     }
@@ -2359,23 +2442,45 @@ form.addEventListener("submit", function(e){
 document.addEventListener("DOMContentLoaded", function () {
   restoreDraft();
   markRequiredLabels();
+
   if (typeof currentSection !== "number" || Number.isNaN(currentSection)) {
     currentSection = 0;
   }
+
   updateProgress(currentSection);
+
+  const citizenshipField = document.getElementById("citizenship");
+  const dualCountryField = document.getElementById("dual_country");
+
+  if (citizenshipField && dualCountryField) {
+    if (citizenshipField.value === "Dual Citizen") {
+      dualCountryField.disabled = false;
+    } else {
+      dualCountryField.disabled = true;
+      dualCountryField.value = "";
+      clearFieldErrorState(dualCountryField);
+    }
+  }
 });
 
 const citizenship = document.getElementById("citizenship");
 const dualCountry = document.getElementById("dual_country");
 
-citizenship.addEventListener("change", function () {
+if (citizenship && dualCountry) {
+  citizenship.addEventListener("change", function () {
     if (this.value === "Dual Citizen") {
-        dualCountry.disabled = false;
+      dualCountry.disabled = false;
     } else {
-        dualCountry.disabled = true;
-        dualCountry.value = ""; // clear input when disabled
+      dualCountry.disabled = true;
+      dualCountry.value = "";
+      clearFieldErrorState(dualCountry);
     }
-});
+
+    validateSingleField(this);
+    validateSingleField(dualCountry);
+    saveFormDraft();
+  });
+}
 </script>
 
 </body>
