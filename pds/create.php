@@ -332,6 +332,28 @@ body{
   box-sizing:border-box;
 }
 
+.optional-field-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.optional-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:600;
+  color:#2f402c;
+  cursor:pointer;
+}
+
+.optional-toggle input{
+  width:auto;
+  height:auto;
+  margin:0;
+}
+
 /* =========================
    EDUCATION
 ========================= */
@@ -890,7 +912,16 @@ label.required::after{
             <input id="surname" name="surname" required>
 
             <label for="extension">Name Extension:</label>
-            <input id="extension" name="extension">
+            <select id="extension" name="extension">
+              <option value=""></option>
+              <option value="Jr.">Jr.</option>
+              <option value="Sr.">Sr.</option>
+              <option value="I">I</option>
+              <option value="II">II</option>
+              <option value="III">III</option>
+              <option value="IV">IV</option>
+              <option value="V">V</option>
+            </select>
 
             <label for="firstname">First Name:</label>
             <input id="firstname" class="input" name="firstname" placeholder="Enter your first name" required>
@@ -899,7 +930,13 @@ label.required::after{
             <input id="dob" type="date" name="dob" required>
 
             <label for="middlename">Middle Name:</label>
-            <input id="middlename" name="middlename" required>
+            <div class="optional-field-wrap">
+              <input id="middlename" name="middlename" required>
+              <label class="optional-toggle">
+                <input type="checkbox" id="no_middlename" name="no_middlename" value="1">
+                No Middle Name
+              </label>
+            </div>
 
             <label for="birth_place">Place of Birth:</label>
             <input id="birth_place" name="birth_place" placeholder="ex. Pasig City" required>
@@ -1039,8 +1076,8 @@ label.required::after{
               </div>
             </div>
 
-            <div style="margin:10px 0 15px 0; text-align:center;">
-              <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+            <div style="margin:10px 0 15px 0; text-align:right;">
+              <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#c62828;">
                 <input type="checkbox" id="sameAddress" style="width:auto;">
                 Same as Residential Address
               </label>
@@ -1101,7 +1138,13 @@ label.required::after{
             <div class="contact-grid">
               <div class="contact-row">
                 <label for="telephone">Telephone Number:</label>
-                <input id="telephone" name="telephone" placeholder="ex. 02-xxxx-xxxx">
+                <div class="optional-field-wrap">
+                  <input id="telephone" name="telephone" placeholder="ex. 02-xxxx-xxxx">
+                  <label class="optional-toggle">
+                    <input type="checkbox" id="no_telephone" name="no_telephone" value="1">
+                    No Telephone Number
+                  </label>
+                </div>
               </div>
 
               <div class="contact-row">
@@ -1441,6 +1484,25 @@ if (sameAddressCheckbox) {
   });
 }
 
+const noMiddleNameCheckbox = document.getElementById("no_middlename");
+const noTelephoneCheckbox = document.getElementById("no_telephone");
+
+if (noMiddleNameCheckbox) {
+  noMiddleNameCheckbox.addEventListener("change", function(){
+    syncOptionalField("middlename", "no_middlename", true);
+    validateSingleField(document.getElementById("middlename"));
+    saveFormDraft();
+  });
+}
+
+if (noTelephoneCheckbox) {
+  noTelephoneCheckbox.addEventListener("change", function(){
+    syncOptionalField("telephone", "no_telephone", false);
+    validateSingleField(document.getElementById("telephone"));
+    saveFormDraft();
+  });
+}
+
 function showSummary(message){
   errorSummary.style.display = "block";
   errorSummary.innerHTML = message;
@@ -1588,6 +1650,32 @@ function shouldSkipValidation(input){
   return false;
 }
 
+function syncOptionalField(fieldId, checkboxId, requiredWhenEnabled = false) {
+  const field = document.getElementById(fieldId);
+  const checkbox = document.getElementById(checkboxId);
+
+  if (!field || !checkbox) return;
+
+  if (checkbox.checked) {
+    field.value = "";
+    field.disabled = true;
+    field.removeAttribute("required");
+    clearFieldErrorState(field);
+  } else {
+    field.disabled = false;
+    if (requiredWhenEnabled) {
+      field.setAttribute("required", "required");
+    } else {
+      field.removeAttribute("required");
+    }
+  }
+}
+
+function applyOptionalFieldStates() {
+  syncOptionalField("middlename", "no_middlename", true);
+  syncOptionalField("telephone", "no_telephone", false);
+}
+
 function validateSingleField(input) {
   if (!input || !input.name) return true;
   if (input.disabled) {
@@ -1615,7 +1703,7 @@ function validateSingleField(input) {
       return markInvalid("Country is required for dual citizenship.");
     }
   } else if (isRequired && value === "") {
-    return markInvalid("This field is required.");
+    return markInvalid("");
   }
 
   if (value === "") return true;
@@ -1623,7 +1711,11 @@ function validateSingleField(input) {
   switch (name) {
     case "surname":
     case "firstname":
+      if (!isLettersOnly(value)) return markInvalid("Letters only.");
+      return true;
+
     case "middlename":
+      if (document.getElementById("no_middlename")?.checked) return true;
       if (!isLettersOnly(value)) return markInvalid("Letters only.");
       return true;
 
@@ -1711,6 +1803,7 @@ function validateSingleField(input) {
       return true;
 
     case "telephone":
+      if (document.getElementById("no_telephone")?.checked) return true;
       if (!isValidTelephone(value)) {
         return markInvalid("Invalid telephone number.");
       }
@@ -1761,7 +1854,7 @@ function validateSection(section){
     }
 
     if (isRequired && value === "") {
-      markInvalid(input, "This field is required.");
+      markInvalid(input, "");
       return;
     }
 
@@ -1770,7 +1863,11 @@ function validateSection(section){
     switch (name) {
       case "surname":
       case "firstname":
+        if (!isLettersOnly(value)) markInvalid(input, "Letters only.");
+        break;
+
       case "middlename":
+        if (document.getElementById("no_middlename")?.checked) break;
         if (!isLettersOnly(value)) markInvalid(input, "Letters only.");
         break;
 
@@ -1859,6 +1956,7 @@ function validateSection(section){
         break;
 
       case "telephone":
+        if (document.getElementById("no_telephone")?.checked) break;
         if (!isValidTelephone(value)) {
           markInvalid(input, "Invalid telephone number.");
         }
@@ -2103,6 +2201,7 @@ function restoreDraft() {
   }
 
   restoreSimpleFields(data);
+  applyOptionalFieldStates();
 
   if (document.getElementById('education-container') && Array.isArray(data.education) && !containerHasPopulatedInputs('#education-container')) {
     clearContainer('#education-container');
@@ -2175,6 +2274,19 @@ function clearAllForm() {
   if (sameAddressCheckbox) {
     sameAddressCheckbox.checked = false;
   }
+
+  const noMiddleNameCheckbox = document.getElementById("no_middlename");
+  const noTelephoneCheckbox = document.getElementById("no_telephone");
+
+  if (noMiddleNameCheckbox) {
+    noMiddleNameCheckbox.checked = false;
+  }
+
+  if (noTelephoneCheckbox) {
+    noTelephoneCheckbox.checked = false;
+  }
+
+  applyOptionalFieldStates();
 
   if (dualCountry) {
     dualCountry.disabled = true;
@@ -2441,6 +2553,7 @@ form.addEventListener("submit", function(e){
 
 document.addEventListener("DOMContentLoaded", function () {
   restoreDraft();
+  applyOptionalFieldStates();
   markRequiredLabels();
 
   if (typeof currentSection !== "number" || Number.isNaN(currentSection)) {

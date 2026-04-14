@@ -321,6 +321,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $telephone       = clean_value($_POST['telephone'] ?? '');
     $mobile          = clean_value($_POST['mobile'] ?? '');
     $email           = clean_value($_POST['email'] ?? '');
+    $no_middlename   = isset($_POST['no_middlename']);
+    $no_telephone    = isset($_POST['no_telephone']);
 
     $newPhotoData = null;
     $newPhotoType = null;
@@ -375,7 +377,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     */
     require_field($errors, 'Surname', $surname);
     require_field($errors, 'First name', $firstname);
-    require_field($errors, 'Middle name', $middlename);
+    if (!$no_middlename) {
+        require_field($errors, 'Middle name', $middlename);
+    }
     require_field($errors, 'Date of birth', $dob);
     require_field($errors, 'Birth place', $birth_place);
     require_field($errors, 'Sex', $sex);
@@ -407,7 +411,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     require_field($errors, 'Permanent province', $p_province);
     require_field($errors, 'Permanent zip', $p_zip);
 
-    require_field($errors, 'Telephone', $telephone);
+    if (!$no_telephone) {
+        require_field($errors, 'Telephone', $telephone);
+    }
     require_field($errors, 'Mobile', $mobile);
     require_field($errors, 'Email', $email);
 
@@ -417,12 +423,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
 
     validate_regex_field($errors, 'Surname', $surname, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
     validate_regex_field($errors, 'First name', $firstname, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
-    validate_regex_field($errors, 'Middle name', $middlename, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+    if (!$no_middlename && $middlename !== '') {
+        validate_regex_field($errors, 'Middle name', $middlename, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+    }
 
-    $allowed_extensions = ['', 'Jr.', 'Sr.', 'II', 'III', 'IV', 'V'];
-
-    if (!in_array($extension, $allowed_extensions, true)) {
-        $errors[] = 'Invalid name extension selected.';
+    if ($extension !== '') {
+        validate_regex_field($errors, 'Name extension', $extension, "/^[A-Za-z0-9.\s-]{1,10}$/", 'is invalid.');
     }
 
     validate_date_field($errors, 'Date of birth', $dob, false);
@@ -450,7 +456,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     validate_regex_field($errors, 'Residential zip', $r_zip, "/^\d{4}$/", 'must be 4 digits.');
     validate_regex_field($errors, 'Permanent zip', $p_zip, "/^\d{4}$/", 'must be 4 digits.');
 
-    validate_regex_field($errors, 'Telephone', $telephone, "/^[0-9()\-\s]{7,15}$/", 'is invalid.');
+    if (!$no_telephone && $telephone !== '') {
+        validate_regex_field($errors, 'Telephone', $telephone, "/^[0-9()\-\s]{7,15}$/", 'is invalid.');
+    }
     validate_regex_field($errors, 'Mobile', $mobile, "/^(09\d{9}|\+639\d{9})$/", 'must be 09XXXXXXXXX or +639XXXXXXXXX.');
 
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -1733,6 +1741,36 @@ th{
   box-sizing:border-box;
 }
 
+
+.field-with-checkbox{
+  display:flex;
+  flex-direction:column;
+}
+
+.under-input-checkbox{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:4px;
+  font-size:12px;
+  font-weight:normal;
+}
+
+.under-input-checkbox input[type="checkbox"]{
+  width:auto;
+  height:auto;
+  padding:0;
+  margin:0;
+  border:none;
+  border-radius:0;
+  background:transparent;
+}
+
+.under-input-checkbox span{
+  font-size:12px;
+  font-weight:normal;
+}
+
 /* CONTACT */
 .contact-section{
   padding-top:110px;
@@ -2413,14 +2451,18 @@ body.modal-open{
         <table>
             <thead>
                 <tr>
+                    <th style="width:80px;">ID</th>
                     <th style="width:100px;">Photo</th>
                     <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
                     <th style="width:110px;">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($results as $row): ?>
                     <tr>
+                        <td><?php echo e($row['id']); ?></td>
                         <td>
                             <img
                                 src="<?php echo e(make_photo_src($row['photo'] ?? null, $row['photo_type'] ?? null)); ?>"
@@ -2438,6 +2480,8 @@ body.modal-open{
                             ));
                             ?>
                         </td>
+                        <td><?php echo e($row['email'] ?? ''); ?></td>
+                        <td><?php echo e($row['mobile'] ?? ''); ?></td>
                         <td>
                             <a class="btn-link btn-primary" href="?search=<?php echo urlencode($search); ?>&sort=<?php echo urlencode($sort); ?>&id=<?php echo (int)$row['id']; ?>">
                                 ✎ Edit
@@ -2549,15 +2593,7 @@ body.modal-open{
                                 <input name="surname" value="<?php echo e($person['surname'] ?? ''); ?>">
 
                                 <label>Name Extension:</label>
-                                <select name="extension">
-                                    <option value="" <?php echo (($person['extension'] ?? '') === '') ? 'selected' : ''; ?>>None</option>
-                                    <option value="Jr." <?php echo (($person['extension'] ?? '') === 'Jr.') ? 'selected' : ''; ?>>Jr.</option>
-                                    <option value="Sr." <?php echo (($person['extension'] ?? '') === 'Sr.') ? 'selected' : ''; ?>>Sr.</option>
-                                    <option value="II" <?php echo (($person['extension'] ?? '') === 'II') ? 'selected' : ''; ?>>II</option>
-                                    <option value="III" <?php echo (($person['extension'] ?? '') === 'III') ? 'selected' : ''; ?>>III</option>
-                                    <option value="IV" <?php echo (($person['extension'] ?? '') === 'IV') ? 'selected' : ''; ?>>IV</option>
-                                    <option value="V" <?php echo (($person['extension'] ?? '') === 'V') ? 'selected' : ''; ?>>V</option>
-                                </select>
+                                <input name="extension" value="<?php echo e($person['extension'] ?? ''); ?>">
 
                                 <label>First Name:</label>
                                 <input name="firstname" value="<?php echo e($person['firstname'] ?? ''); ?>">
@@ -2566,7 +2602,13 @@ body.modal-open{
                                 <input type="date" name="dob" value="<?php echo e($person['dob'] ?? ''); ?>" required>
 
                                 <label>Middle Name:</label>
-                                <input name="middlename" value="<?php echo e($person['middlename'] ?? ''); ?>">
+                                <div class="field-with-checkbox">
+                                    <input id="middlename" name="middlename" value="<?php echo e($person['middlename'] ?? ''); ?>">
+                                    <label class="under-input-checkbox">
+                                        <input type="checkbox" id="no_middlename" name="no_middlename" <?php echo empty(trim((string)($person['middlename'] ?? ''))) ? 'checked' : ''; ?>>
+                                        <span>No Middle Name</span>
+                                    </label>
+                                </div>
 
                                 <label>Place of Birth:</label>
                                 <input name="birth_place" value="<?php echo e($person['birth_place'] ?? ''); ?>">
@@ -2696,18 +2738,8 @@ body.modal-open{
                                     </div>
                                 </div>
 
-                                <div style="display:flex; justify-content:flex-end; margin-top:18px; margin-bottom:5px;">
-                                    <label style="display:inline-flex; align-items:center; gap:6px; font-size:10px; font-weight:600; color:red; text-transform:uppercase; white-space:nowrap; cursor:pointer;">
-                                        <input type="checkbox" id="sameAsResidentAddress" style="width:14px; height:14px; margin:0;">
-                                        SAME AS RESIDENT ADDRESS
-                                    </label>
-                                </div>
-
-                                <div class="address-title" style="margin-top:0; text-align:center;">
-                                    PERMANENT ADDRESS
-                                </div>
+                                <div class="address-title" style="margin-top:18px;">PERMANENT ADDRESS</div>
                                 <div class="address-block">
-
                                     <div class="address-house-row">
                                         <label>House / Block / Lot No.</label>
                                         <input name="p_house1" value="<?php echo e($permanent['house1']); ?>">
@@ -2759,7 +2791,13 @@ body.modal-open{
                                 <div class="contact-grid">
                                     <div class="contact-row">
                                         <label>Telephone Number:</label>
-                                        <input name="telephone" value="<?php echo e($person['telephone'] ?? ''); ?>">
+                                        <div class="field-with-checkbox">
+                                            <input id="telephone" name="telephone" value="<?php echo e($person['telephone'] ?? ''); ?>">
+                                            <label class="under-input-checkbox">
+                                                <input type="checkbox" id="no_telephone" name="no_telephone" <?php echo empty(trim((string)($person['telephone'] ?? ''))) ? 'checked' : ''; ?>>
+                                                <span>No Telephone Number</span>
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <div class="contact-row">
@@ -3612,6 +3650,32 @@ function isPastOrToday(value) {
     return inputDate <= today;
 }
 
+function syncOptionalFieldState() {
+    const middleCheckbox = document.getElementById("no_middlename");
+    const middleInput = document.getElementById("middlename");
+    if (middleCheckbox && middleInput) {
+        if (middleCheckbox.checked) {
+            middleInput.value = "";
+            middleInput.readOnly = true;
+        } else {
+            middleInput.readOnly = false;
+        }
+        clearFieldErrorState(middleInput);
+    }
+
+    const telephoneCheckbox = document.getElementById("no_telephone");
+    const telephoneInput = document.getElementById("telephone");
+    if (telephoneCheckbox && telephoneInput) {
+        if (telephoneCheckbox.checked) {
+            telephoneInput.value = "";
+            telephoneInput.readOnly = true;
+        } else {
+            telephoneInput.readOnly = false;
+        }
+        clearFieldErrorState(telephoneInput);
+    }
+}
+
 function validateSingleField(input) {
     if (!input || !input.name) return true;
 
@@ -3629,13 +3693,18 @@ function validateSingleField(input) {
     switch (name) {
         case "surname":
         case "firstname":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isLettersOnly(value)) return markInvalid("Letters only.");
+            return true;
+
         case "middlename":
+            if (form.querySelector('#no_middlename')?.checked) return true;
             if (value === "") return markInvalid("This field is required.");
             if (!isLettersOnly(value)) return markInvalid("Letters only.");
             return true;
 
         case "extension":
-            if (value !== "" && !["Jr.", "Sr.", "II", "III", "IV", "V"].includes(value)) {
+            if (value !== "" && !/^[A-Za-z0-9.\s-]{1,10}$/.test(value)) {
                 return markInvalid("Invalid name extension.");
             }
             return true;
@@ -3732,6 +3801,7 @@ function validateSingleField(input) {
             return true;
 
         case "telephone":
+            if (form.querySelector('#no_telephone')?.checked) return true;
             if (value === "") return markInvalid("This field is required.");
             if (!isValidTelephone(value)) {
                 return markInvalid("Invalid telephone number.");
@@ -3885,6 +3955,27 @@ document.addEventListener("DOMContentLoaded", function () {
     restoreDraft();
     updateProgress(0);
     setUnsavedState(false);
+    syncOptionalFieldState();
+
+    const optionalCheckboxes = form.querySelectorAll('#no_middlename, #no_telephone');
+    optionalCheckboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            syncOptionalFieldState();
+
+            if (checkbox.id === 'no_middlename') {
+                const middleInput = document.getElementById('middlename');
+                if (middleInput) validateSingleField(middleInput);
+            }
+
+            if (checkbox.id === 'no_telephone') {
+                const telephoneInput = document.getElementById('telephone');
+                if (telephoneInput) validateSingleField(telephoneInput);
+            }
+
+            saveFormDraft();
+            setUnsavedState(true);
+        });
+    });
 
     form.addEventListener("input", function(e) {
         const field = e.target;
@@ -3975,48 +4066,6 @@ function toggleDual() {
 
 citizenship.addEventListener("change", toggleDual);
 toggleDual(); // run on load
-
-const sameAsResidentAddress = document.getElementById("sameAsResidentAddress");
-
-function copyResidentToPermanent() {
-  const pairs = [
-    ["r_house1", "p_house1"],
-    ["r_street", "p_street"],
-    ["r_subdivision", "p_subdivision"],
-    ["r_barangay", "p_barangay"],
-    ["r_city", "p_city"],
-    ["r_province", "p_province"],
-    ["r_zip", "p_zip"]
-  ];
-
-  pairs.forEach(([residentName, permanentName]) => {
-    const residentField = document.querySelector(`[name="${residentName}"]`);
-    const permanentField = document.querySelector(`[name="${permanentName}"]`);
-
-    if (residentField && permanentField) {
-      permanentField.value = residentField.value;
-    }
-  });
-}
-
-if (sameAsResidentAddress) {
-  sameAsResidentAddress.addEventListener("change", function () {
-    if (this.checked) {
-      copyResidentToPermanent();
-    }
-  });
-
-  ["r_house1", "r_street", "r_subdivision", "r_barangay", "r_city", "r_province", "r_zip"].forEach(name => {
-    const field = document.querySelector(`[name="${name}"]`);
-    if (field) {
-      field.addEventListener("input", function () {
-        if (sameAsResidentAddress.checked) {
-          copyResidentToPermanent();
-        }
-      });
-    }
-  });
-}
 </script>
 </body>
 </html>
