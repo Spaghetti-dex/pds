@@ -173,6 +173,16 @@ try {
     $telephone       = clean($_POST['telephone'] ?? '');
     $mobile          = clean($_POST['mobile'] ?? '');
     $email           = clean($_POST['email'] ?? '');
+    $no_middlename   = isset($_POST['no_middlename']) && $_POST['no_middlename'] === '1';
+    $no_telephone    = isset($_POST['no_telephone']) && $_POST['no_telephone'] === '1';
+
+    if ($no_middlename) {
+        $middlename = '';
+    }
+
+    if ($no_telephone) {
+        $telephone = '';
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -183,7 +193,9 @@ try {
 
     requireField($errors, 'Surname', $surname);
     requireField($errors, 'First name', $firstname);
-    requireField($errors, 'Middle name', $middlename);
+    if (!$no_middlename) {
+        requireField($errors, 'Middle name', $middlename);
+    }
     requireField($errors, 'Date of birth', $dob);
     requireField($errors, 'Birth place', $birth_place);
     requireField($errors, 'Sex', $sex);
@@ -215,7 +227,10 @@ try {
     requireField($errors, 'Permanent province', $p_province);
     requireField($errors, 'Permanent zip', $p_zip);
 
-    requireField($errors, 'Telephone', $telephone);
+    if (!$no_telephone) {
+        requireField($errors, 'Telephone', $telephone);
+    }
+
     requireField($errors, 'Mobile', $mobile);
     requireField($errors, 'Email', $email);
 
@@ -225,7 +240,9 @@ try {
 
     validateRegex($errors, 'Surname', $surname, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
     validateRegex($errors, 'First name', $firstname, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
-    validateRegex($errors, 'Middle name', $middlename, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+    if (!$no_middlename && $middlename !== '') {
+        validateRegex($errors, 'Middle name', $middlename, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+    }
 
     if ($extension !== '') {
         validateRegex($errors, 'Name extension', $extension, "/^[A-Za-z0-9.\s-]{1,10}$/", 'is invalid.');
@@ -256,7 +273,10 @@ try {
     validateRegex($errors, 'Residential zip', $r_zip, "/^\d{4}$/", 'must be 4 digits.');
     validateRegex($errors, 'Permanent zip', $p_zip, "/^\d{4}$/", 'must be 4 digits.');
 
-    validateRegex($errors, 'Telephone', $telephone, "/^[0-9()\-\s]{7,15}$/", 'is invalid.');
+    if (!$no_telephone && $telephone !== '') {
+        validateRegex($errors, 'Telephone', $telephone, "/^[0-9()\-\s]{7,15}$/", 'is invalid.');
+    }
+
     validateRegex($errors, 'Mobile', $mobile, "/^(09\d{9}|\+639\d{9})$/", 'must be 09XXXXXXXXX or +639XXXXXXXXX.');
 
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -633,26 +653,30 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | SAVE LEARNING AND DEVELOPMENT
+    | SAVE TRAINING
     |--------------------------------------------------------------------------
     */
-   $stmt = $conn->prepare("
-    INSERT INTO learning_development
-    (person_id, title, hours)
-    VALUES (?, ?, ?)
-        ");
+    $stmt = $conn->prepare("
+        INSERT INTO training
+        (person_id, title, training_from, training_to, hours, type, sponsor)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
 
-        foreach ($trainingRows as $row) {
-            $stmt->bind_param(
-                "iss",
-                $person_id,
-                $row['title'],
-                $row['hours']
-            );
-            $stmt->execute();
-        }
+    foreach ($trainingRows as $row) {
+        $stmt->bind_param(
+            "issssss",
+            $person_id,
+            $row['title'],
+            $row['training_from'],
+            $row['training_to'],
+            $row['hours'],
+            $row['type'],
+            $row['sponsor']
+        );
+        $stmt->execute();
+    }
 
-        $stmt->close();
+    $stmt->close();
 
     /*
     |--------------------------------------------------------------------------

@@ -3,6 +3,7 @@ require_once "../includes/admin_check.php";
 include "../config/database.php";
 
 $message = "";
+$messageType = "";
 
 // Load USER accounts only
 $users = [];
@@ -24,10 +25,13 @@ if (isset($_POST['update'])) {
 
     if ($target_id <= 0 || $new_username === '' || $new_email === '') {
         $message = "Please fill in the required fields.";
+        $messageType = "error";
     } elseif (strlen($new_username) < 3) {
         $message = "Username must be at least 3 characters.";
+        $messageType = "error";
     } elseif (!filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email format.";
+        $messageType = "error";
     } else {
         $checkUser = $conn->prepare("SELECT id FROM users WHERE id = ? AND role = 'user' LIMIT 1");
         $checkUser->bind_param("i", $target_id);
@@ -36,6 +40,7 @@ if (isset($_POST['update'])) {
 
         if ($userResult->num_rows === 0) {
             $message = "Selected user account not found.";
+            $messageType = "error";
         } else {
             $checkUsername = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ? LIMIT 1");
             $checkUsername->bind_param("si", $new_username, $target_id);
@@ -44,6 +49,7 @@ if (isset($_POST['update'])) {
 
             if ($usernameResult->num_rows > 0) {
                 $message = "Username is already in use.";
+                $messageType = "error";
             } else {
                 $checkEmail = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
                 $checkEmail->bind_param("si", $new_email, $target_id);
@@ -52,38 +58,45 @@ if (isset($_POST['update'])) {
 
                 if ($emailResult->num_rows > 0) {
                     $message = "Email is already in use.";
+                    $messageType = "error";
                 } else {
-                    $stmt = $conn->prepare("UPDATE users SET username = ?, email = ? WHERE id = ? AND role = 'user'");
-                    $stmt->bind_param("ssi", $new_username, $new_email, $target_id);
-
-                    if ($stmt->execute()) {
-                        if ($new_password !== '' || $confirm_password !== '') {
-                            if (strlen($new_password) < 6) {
-                                $message = "Password must be at least 6 characters.";
-                            } elseif ($new_password !== $confirm_password) {
-                                $message = "Passwords do not match.";
-                            } else {
-                                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-
-                                $stmt2 = $conn->prepare("UPDATE users SET password = ? WHERE id = ? AND role = 'user'");
-                                $stmt2->bind_param("si", $hashed_password, $target_id);
-
-                                if ($stmt2->execute()) {
-                                    $message = "User account updated successfully.";
-                                } else {
-                                    $message = "Username/email updated, but password update failed.";
-                                }
-
-                                $stmt2->close();
-                            }
+                    if ($new_password !== '' || $confirm_password !== '') {
+                        if (strlen($new_password) < 6) {
+                            $message = "Password must be at least 6 characters.";
+                            $messageType = "error";
+                        } elseif ($new_password !== $confirm_password) {
+                            $message = "Passwords do not match.";
+                            $messageType = "error";
                         } else {
-                            $message = "User account updated successfully.";
+                            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+
+                            $stmt = $conn->prepare("UPDATE users SET username = ?, email = ?, password = ? WHERE id = ? AND role = 'user'");
+                            $stmt->bind_param("sssi", $new_username, $new_email, $hashed_password, $target_id);
+
+                            if ($stmt->execute()) {
+                                $message = "User account updated successfully.";
+                                $messageType = "success";
+                            } else {
+                                $message = "Error updating user account.";
+                                $messageType = "error";
+                            }
+
+                            $stmt->close();
                         }
                     } else {
-                        $message = "Error updating user account.";
-                    }
+                        $stmt = $conn->prepare("UPDATE users SET username = ?, email = ? WHERE id = ? AND role = 'user'");
+                        $stmt->bind_param("ssi", $new_username, $new_email, $target_id);
 
-                    $stmt->close();
+                        if ($stmt->execute()) {
+                            $message = "User account updated successfully.";
+                            $messageType = "success";
+                        } else {
+                            $message = "Error updating user account.";
+                            $messageType = "error";
+                        }
+
+                        $stmt->close();
+                    }
                 }
 
                 $checkEmail->close();
@@ -95,6 +108,55 @@ if (isset($_POST['update'])) {
         $checkUser->close();
     }
 }
+
+// DELETE USER
+if (isset($_POST['delete'])) {
+    $target_id = (int)($_POST['target_id'] ?? 0);
+
+    if ($target_id <= 0) {
+        $message = "Please select a user account to delete.";
+        $messageType = "error";
+    } else {
+        $checkUser = $conn->prepare("SELECT id FROM users WHERE id = ? AND role = 'user' LIMIT 1");
+        $checkUser->bind_param("i", $target_id);
+        $checkUser->execute();
+        $userResult = $checkUser->get_result();
+
+        if ($userResult->num_rows === 0) {
+            $message = "Selected user account not found.";
+            $messageType = "error";
+        } else {
+            $deleteStmt = $conn->prepare("DELETE FROM users WHERE id = ? AND role = 'user'");
+            $deleteStmt->bind_param("i", $target_id);
+
+            if ($deleteStmt->execute()) {
+                $message = "User account deleted successfully.";
+                $messageType = "success";
+                $_POST['target_id'] = '';
+                $_POST['new_username'] = '';
+                $_POST['new_email'] = '';
+            } else {
+                $message = "Error deleting user account.";
+                $messageType = "error";
+            }
+
+            $deleteStmt->close();
+        }
+
+        $checkUser->close();
+    }
+}
+
+// Reload USER accounts after update/delete
+$users = [];
+$stmtUsers = $conn->prepare("SELECT id, username, email FROM users WHERE role = 'user' ORDER BY username ASC");
+$stmtUsers->execute();
+$resultUsers = $stmtUsers->get_result();
+
+while ($row = $resultUsers->fetch_assoc()) {
+    $users[] = $row;
+}
+$stmtUsers->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -114,97 +176,237 @@ if (isset($_POST['update'])) {
 }
 
 body{
-    background:#efefef url("../assets/bg-wave.png") no-repeat center center fixed;
-    background-size:cover;
     min-height:100vh;
+    background:
+        radial-gradient(circle at top left, rgba(116, 163, 112, 0.22), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(34, 54, 30, 0.18), transparent 28%),
+        linear-gradient(135deg, #eef2ea 0%, #dfe8da 100%);
     display:flex;
     justify-content:center;
     align-items:flex-start;
-    padding:20px;
-    overflow-x:hidden;
+    padding:28px 14px;
+    color:#1f2f1e;
+}
+
+.page{
+    width:100%;
+    max-width:760px;
 }
 
 .container{
-    width:500px;
-    max-width:95vw;
-    max-height:none;
-    background:#f8f8f8;
-    border:3px solid #22361e;
-    border-radius:25px;
+    width:100%;
+    background:rgba(255,255,255,0.94);
+    border:1px solid rgba(34,54,30,0.14);
+    border-radius:28px;
     overflow:hidden;
-    box-shadow:0 8px 20px rgba(0,0,0,0.20);
-    margin:20px 0;
+    box-shadow:0 18px 46px rgba(0,0,0,0.12);
+    backdrop-filter:blur(6px);
 }
 
 .header{
     position:relative;
-    background:#22361e;
+    background:linear-gradient(135deg, #22361e 0%, #2f4b2b 100%);
     color:#fff;
-    text-align:center;
-    padding:24px 20px;
-    font-size:26px;
-    font-weight:bold;
+    padding:30px 24px 26px;
+}
+
+.header-top{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:14px;
 }
 
 .home-btn{
-    position:absolute;
-    left:15px;
-    top:50%;
-    transform:translateY(-50%);
-    width:36px;
-    height:36px;
+    width:42px;
+    height:42px;
     border-radius:50%;
-    background:rgba(255,255,255,0.2);
+    background:rgba(255,255,255,0.16);
     display:flex;
     align-items:center;
     justify-content:center;
     color:#fff;
     text-decoration:none;
-    transition:0.3s;
+    transition:0.25s;
+    flex-shrink:0;
 }
 
 .home-btn:hover{
-    background:rgba(255,255,255,0.35);
+    background:rgba(255,255,255,0.28);
+    transform:translateY(-1px);
+}
+
+.header-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.14);
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.4px;
+}
+
+.header h1{
+    font-size:31px;
+    margin-bottom:8px;
+    line-height:1.2;
+}
+
+.header p{
+    font-size:14px;
+    line-height:1.6;
+    color:rgba(255,255,255,0.88);
+    max-width:580px;
 }
 
 .form-area{
-    padding:20px;
+    padding:26px;
+}
+
+.message{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 16px;
+    border-radius:16px;
+    margin-bottom:20px;
+    font-size:14px;
+    line-height:1.6;
+    border:1px solid transparent;
+    font-weight:600;
+}
+
+.message i{
+    margin-top:2px;
+}
+
+.message.success{
+    background:#edf7ec;
+    color:#1d5a1f;
+    border-color:#bfd8bc;
+}
+
+.message.error{
+    background:#fff1f1;
+    color:#a12828;
+    border-color:#efc5c5;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+    margin-bottom:24px;
+}
+
+.stat-box{
+    background:#f5f8f3;
+    border:1px solid #d9e4d5;
+    border-radius:18px;
+    padding:16px 14px;
+}
+
+.stat-label{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.7px;
+    color:#607260;
+    font-weight:700;
+    margin-bottom:8px;
+}
+
+.stat-value{
+    font-size:18px;
+    font-weight:700;
+    color:#1a341d;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.form-group.full{
+    grid-column:1 / -1;
 }
 
 label{
     display:block;
-    margin-bottom:6px;
-    font-weight:bold;
+    margin-bottom:8px;
+    font-weight:700;
     color:#22361e;
+    font-size:14px;
+}
+
+.input-wrap{
+    position:relative;
 }
 
 input, select{
     width:100%;
-    padding:10px 12px;
-    border:2px solid #888;
-    border-radius:10px;
-    background:#efe8c2;
-    margin-bottom:14px;
-    font-size:14px;
+    min-height:54px;
+    padding:14px 16px;
+    border:1.5px solid #c8d4c2;
+    border-radius:16px;
+    background:#fbfcfa;
+    font-size:15px;
+    color:#203120;
+    transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
 }
 
 input:focus, select:focus{
     outline:none;
-    border-color:#22361e;
+    border-color:#5f8a59;
+    box-shadow:0 0 0 4px rgba(95,138,89,0.14);
+    background:#fff;
+}
+
+select{
+    appearance:none;
+    cursor:pointer;
+    padding-right:46px;
+}
+
+.select-icon{
+    position:absolute;
+    right:16px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#607260;
+    pointer-events:none;
+    font-size:14px;
 }
 
 .info-box{
-    background:#eef4ec;
-    border:1px solid #c7d5c2;
-    border-radius:12px;
-    padding:12px;
-    margin-bottom:14px;
+    background:linear-gradient(180deg, #f7faf5 0%, #eff5ec 100%);
+    border:1px solid #d5e1d1;
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:2px;
+}
+
+.info-box-title{
+    font-size:13px;
+    font-weight:700;
+    color:#547054;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-bottom:12px;
 }
 
 .info-row{
-    font-size:13px;
-    margin-bottom:6px;
+    font-size:14px;
+    margin-bottom:10px;
     word-break:break-word;
+    color:#253625;
 }
 
 .info-row:last-child{
@@ -213,18 +415,10 @@ input:focus, select:focus{
 
 .password-wrap{
     position:relative;
-    margin-bottom:14px;
 }
 
 .password-wrap input{
-    width:100%;
-    height:52px;
-    padding:10px 50px 10px 14px;
-    border:2px solid #888;
-    border-radius:18px;
-    background:#cfd8e7;
-    font-size:15px;
-    margin-bottom:0;
+    padding-right:48px;
 }
 
 .eye{
@@ -238,177 +432,303 @@ input:focus, select:focus{
     width:24px;
     height:24px;
     font-size:15px;
-    color:#3b3128;
+    color:#4c5e4d;
     cursor:pointer;
-    line-height:1;
 }
 
 .eye:hover{
     color:#000;
 }
 
-button{
-    width:45%;
-    padding:11px;
-    border:none;
-    border-radius:20px;
-    background:#8fae8d;
-    font-weight:bold;
-    cursor:pointer;
-    transition:0.3s;
-    display:block;
-    margin:20px auto 0;
-}
-
-button:hover{
-    background:#789c78;
-}
-
-.message{
-    margin-bottom:12px;
-    font-weight:bold;
-    color:#b00020;
-    word-break:break-word;
-}
-
-.success{
-    color:#1f5f1f;
-}
-
 .note{
-    font-size:12px;
-    margin-top:-4px;
-    margin-bottom:12px;
-    color:#444;
+    font-size:13px;
+    margin-top:8px;
+    color:#617462;
+    line-height:1.5;
 }
 
-@media (max-width: 520px){
-    body{
-        padding:10px;
-    }
+.danger-box{
+    margin-top:24px;
+    border:1px solid #efcaca;
+    background:linear-gradient(180deg, #fff8f8 0%, #fff2f2 100%);
+    border-radius:20px;
+    padding:18px;
+}
 
-    .container{
-        width:100%;
-        max-width:100%;
-        border-width:2px;
-        border-radius:20px;
-        margin:10px 0;
-    }
+.danger-box h3{
+    color:#983434;
+    font-size:18px;
+    margin-bottom:8px;
+}
 
-    .header{
-        padding:18px 14px;
-        font-size:22px;
-    }
+.danger-box p{
+    color:#7d4646;
+    font-size:14px;
+    line-height:1.6;
+}
 
-    .home-btn{
-        left:10px;
-        width:34px;
-        height:34px;
+.btn-row{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-top:26px;
+}
+
+.btn{
+    border:none;
+    border-radius:16px;
+    padding:15px 22px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .2s ease;
+}
+
+.btn:hover{
+    transform:translateY(-1px);
+}
+
+.btn-primary{
+    flex:1 1 240px;
+    color:#fff;
+    background:linear-gradient(135deg, #2f6a28 0%, #214b1a 100%);
+    box-shadow:0 10px 22px rgba(33,75,26,0.18);
+}
+
+.btn-primary:hover{
+    box-shadow:0 14px 26px rgba(33,75,26,0.24);
+}
+
+.btn-danger{
+    flex:1 1 240px;
+    color:#fff;
+    background:linear-gradient(135deg, #cf5c5c 0%, #b34141 100%);
+    box-shadow:0 10px 22px rgba(179,65,65,0.18);
+}
+
+.btn-danger:hover{
+    box-shadow:0 14px 26px rgba(179,65,65,0.24);
+}
+
+.footer-note{
+    margin-top:18px;
+    font-size:12.5px;
+    color:#667767;
+    line-height:1.6;
+    text-align:center;
+}
+
+@media (max-width: 768px){
+    .stats,
+    .form-grid{
+        grid-template-columns:1fr;
     }
 
     .form-area{
-        padding:16px 12px;
+        padding:20px;
     }
 
-    input, select{
-        font-size:15px;
-        padding:10px 12px;
+    .header{
+        padding:24px 20px 22px;
     }
 
-    .password-wrap input{
-        height:auto;
-        min-height:48px;
-        padding:10px 44px 10px 12px;
-        border-radius:14px;
-        font-size:15px;
+    .header h1{
+        font-size:26px;
     }
 
-    button{
-        width:100%;
+    .btn-row{
+        flex-direction:column;
+    }
+}
+
+@media (max-width: 480px){
+    body{
+        padding:14px 10px;
+    }
+
+    .container{
+        border-radius:22px;
+    }
+
+    .header h1{
+        font-size:22px;
+    }
+
+    .header p{
+        font-size:13px;
+    }
+
+    input, select, .btn{
+        min-height:50px;
+        font-size:14px;
+    }
+
+    .home-btn{
+        width:38px;
+        height:38px;
     }
 }
 </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <a href="../dashboard/dashboard.php" class="home-btn" title="Home">
-            <i class="fa-solid fa-house"></i>
-        </a>
-        Manage User Account
-    </div>
+<div class="page">
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <a href="../dashboard/dashboard.php" class="home-btn" title="Home">
+                    <i class="fa-solid fa-house"></i>
+                </a>
 
-    <div class="form-area">
-
-        <?php if ($message !== ""): ?>
-            <div class="message <?php echo (stripos($message, 'successfully') !== false) ? 'success' : ''; ?>">
-                <?php echo htmlspecialchars($message); ?>
+                <div class="header-badge">
+                    <i class="fa-solid fa-users"></i>
+                    User Management
+                </div>
             </div>
-        <?php endif; ?>
 
-        <form method="POST">
+            <h1>Manage User Account</h1>
+            <p>
+                Update account details for user accounts or remove a selected user account from the system.
+            </p>
+        </div>
 
-            <label>Select User Account</label>
-            <select name="target_id" id="target_id" required>
-                <option value="">-- Select User --</option>
-                <?php foreach ($users as $user): ?>
-                    <option
-                        value="<?php echo $user['id']; ?>"
-                        data-username="<?php echo htmlspecialchars($user['username']); ?>"
-                        data-email="<?php echo htmlspecialchars($user['email']); ?>"
-                        <?php echo (isset($_POST['target_id']) && (int)$_POST['target_id'] === (int)$user['id']) ? 'selected' : ''; ?>
+        <div class="form-area">
+
+            <?php if ($message !== ""): ?>
+                <div class="message <?php echo $messageType; ?>">
+                    <i class="fa-solid <?php echo $messageType === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'; ?>"></i>
+                    <div><?php echo htmlspecialchars($message); ?></div>
+                </div>
+            <?php endif; ?>
+
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">User Accounts</div>
+                    <div class="stat-value"><?php echo count($users); ?></div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Access Level</div>
+                    <div class="stat-value">Admin Only</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Available Actions</div>
+                    <div class="stat-value">Update / Delete</div>
+                </div>
+            </div>
+
+            <form method="POST">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label for="target_id">Select User Account</label>
+                        <div class="input-wrap">
+                            <select name="target_id" id="target_id" required>
+                                <option value="">-- Select User --</option>
+                                <?php foreach ($users as $user): ?>
+                                    <option
+                                        value="<?php echo $user['id']; ?>"
+                                        data-username="<?php echo htmlspecialchars($user['username']); ?>"
+                                        data-email="<?php echo htmlspecialchars($user['email']); ?>"
+                                        <?php echo (isset($_POST['target_id']) && (int)$_POST['target_id'] === (int)$user['id']) ? 'selected' : ''; ?>
+                                    >
+                                        <?php echo htmlspecialchars($user['username'] . " (" . $user['email'] . ")"); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <span class="select-icon">
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full">
+                        <div class="info-box">
+                            <div class="info-box-title">Current Selected User Details</div>
+                            <div class="info-row">
+                                <strong>Current Username:</strong>
+                                <span id="current_username">None</span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Current Email:</strong>
+                                <span id="current_email_text">None</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_username">New Username</label>
+                        <input
+                            type="text"
+                            name="new_username"
+                            id="new_username"
+                            value="<?php echo htmlspecialchars($_POST['new_username'] ?? ''); ?>"
+                            placeholder="Enter new username"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_email">New Email</label>
+                        <input
+                            type="email"
+                            name="new_email"
+                            id="new_email"
+                            value="<?php echo htmlspecialchars($_POST['new_email'] ?? ''); ?>"
+                            placeholder="Enter new email address"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <div class="password-wrap">
+                            <input type="password" name="new_password" id="new_password" placeholder="Enter new password">
+                            <i class="fa-solid fa-eye-slash eye" onclick="togglePassword('new_password', this)"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password</label>
+                        <div class="password-wrap">
+                            <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm new password">
+                            <i class="fa-solid fa-eye-slash eye" onclick="togglePassword('confirm_password', this)"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group full">
+                        <div class="note">Leave password fields blank if you do not want to change the password.</div>
+                    </div>
+                </div>
+
+                <div class="danger-box">
+                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</h3>
+                    <p>
+                        Deleting a user account permanently removes it from the system.
+                        This action cannot be undone.
+                    </p>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" name="update" class="btn btn-primary">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        Update User Account
+                    </button>
+
+                    <button
+                        type="submit"
+                        name="delete"
+                        class="btn btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this user account? This action cannot be undone.');"
                     >
-                        <?php echo htmlspecialchars($user['username'] . " (" . $user['email'] . ")"); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-
-            <div class="info-box">
-                <div class="info-row">
-                    <strong>Current Username:</strong>
-                    <span id="current_username">None</span>
+                        <i class="fa-solid fa-trash"></i>
+                        Delete User Account
+                    </button>
                 </div>
-                <div class="info-row">
-                    <strong>Current Email:</strong>
-                    <span id="current_email_text">None</span>
+
+                <div class="footer-note">
+                    Select a user account first. The form fields will auto-fill based on your selected user.
                 </div>
-            </div>
-
-            <label>New Username</label>
-            <input
-                type="text"
-                name="new_username"
-                id="new_username"
-                value="<?php echo htmlspecialchars($_POST['new_username'] ?? ''); ?>"
-                required
-            >
-
-            <label>New Email</label>
-            <input
-                type="email"
-                name="new_email"
-                id="new_email"
-                value="<?php echo htmlspecialchars($_POST['new_email'] ?? ''); ?>"
-                required
-            >
-
-            <label>New Password</label>
-            <div class="password-wrap">
-                <input type="password" name="new_password" id="new_password">
-                <i class="fa-solid fa-eye-slash eye" onclick="togglePassword('new_password', this)"></i>
-            </div>
-
-            <label>Confirm New Password</label>
-            <div class="password-wrap">
-                <input type="password" name="confirm_password" id="confirm_password">
-                <i class="fa-solid fa-eye-slash eye" onclick="togglePassword('confirm_password', this)"></i>
-            </div>
-
-            <div class="note">Leave password fields blank if you do not want to change the password.</div>
-
-            <button type="submit" name="update">Update User Account</button>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -466,7 +786,7 @@ userSelect.addEventListener("change", function(){
     updateUserInfo();
 });
 
-updateUserInfo();
+window.addEventListener("load", updateUserInfo);
 </script>
 
 </body>

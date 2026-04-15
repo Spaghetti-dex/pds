@@ -5,17 +5,10 @@ include "../config/database.php";
 $message = "";
 $messageType = "";
 
-// Load ADMIN users only
-$users = [];
-$stmtUsers = $conn->prepare("SELECT id, username, email, role FROM users WHERE role = 'admin' ORDER BY username ASC");
-$stmtUsers->execute();
-$resultUsers = $stmtUsers->get_result();
+// Adjust this if your session uses a different key
+$currentUserId = $_SESSION['user_id'] ?? 0;
 
-while ($row = $resultUsers->fetch_assoc()) {
-    $users[] = $row;
-}
-$stmtUsers->close();
-
+// Handle update
 if (isset($_POST['update'])) {
     $id = (int)($_POST['user_id'] ?? 0);
     $new_username = trim($_POST['username'] ?? '');
@@ -80,15 +73,71 @@ if (isset($_POST['update'])) {
         $checkRole->close();
     }
 }
-?>
 
+// Handle delete
+if (isset($_POST['delete'])) {
+    $id = (int)($_POST['user_id'] ?? 0);
+
+    if ($id <= 0) {
+        $message = "Please select an admin account to delete.";
+        $messageType = "error";
+    } else {
+        $checkRole = $conn->prepare("SELECT id, username FROM users WHERE id = ? AND role = 'admin' LIMIT 1");
+        $checkRole->bind_param("i", $id);
+        $checkRole->execute();
+        $roleResult = $checkRole->get_result();
+
+        if ($roleResult->num_rows === 0) {
+            $message = "Selected admin account not found.";
+            $messageType = "error";
+        } else {
+            $adminRow = $roleResult->fetch_assoc();
+
+            if ((int)$currentUserId === $id) {
+                $message = "You cannot delete your own account.";
+                $messageType = "error";
+            } else {
+                $countStmt = $conn->prepare("SELECT COUNT(*) AS total_admins FROM users WHERE role = 'admin'");
+                $countStmt->execute();
+                $countResult = $countStmt->get_result()->fetch_assoc();
+                $countStmt->close();
+
+                if ((int)$countResult['total_admins'] <= 1) {
+                    $message = "Cannot delete the last admin account.";
+                    $messageType = "error";
+                } else {
+                    $deleteStmt = $conn->prepare("DELETE FROM users WHERE id = ? AND role = 'admin'");
+                    $deleteStmt->bind_param("i", $id);
+                    $deleteStmt->execute();
+                    $deleteStmt->close();
+
+                    $message = "Admin account deleted successfully.";
+                    $messageType = "success";
+                }
+            }
+        }
+
+        $checkRole->close();
+    }
+}
+
+// Reload admin users after actions
+$users = [];
+$stmtUsers = $conn->prepare("SELECT id, username, email, role FROM users WHERE role = 'admin' ORDER BY username ASC");
+$stmtUsers->execute();
+$resultUsers = $stmtUsers->get_result();
+
+while ($row = $resultUsers->fetch_assoc()) {
+    $users[] = $row;
+}
+$stmtUsers->close();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Admin Account</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
@@ -100,119 +149,211 @@ if (isset($_POST['update'])) {
         }
 
         body {
-            background: #e9e9e9;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
-            overflow-x: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(120, 160, 110, 0.22), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(31, 74, 24, 0.20), transparent 28%),
+                linear-gradient(135deg, #eef2ea 0%, #dde6d8 100%);
+            padding: 28px 16px;
+            color: #16311b;
         }
 
-        .wrapper {
+        .page {
             width: 100%;
-            max-width: 650px;
-            background: #f5f5f5;
-            border: 3px solid #2d4725;
-            border-radius: 30px;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(32, 67, 29, 0.14);
+            border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-            margin: 20px 0;
+            box-shadow: 0 18px 50px rgba(29, 49, 24, 0.12);
+            backdrop-filter: blur(6px);
         }
 
         .header {
             position: relative;
-            background: linear-gradient(90deg, #1f4a18, #173714);
+            padding: 34px 28px 30px;
+            background: linear-gradient(135deg, #214b1a 0%, #173714 100%);
             color: #fff;
-            text-align: center;
-            padding: 28px 20px;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .home-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.24);
+            transform: translateY(-1px);
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            letter-spacing: 0.4px;
         }
 
         .header h1 {
             font-size: 32px;
-            font-weight: 700;
-        }
-
-        .home-btn {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.14);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            text-decoration: none;
-            font-size: 16px;
-            transition: 0.2s ease;
-        }
-
-        .home-btn:hover {
-            background: rgba(255, 255, 255, 0.28);
-        }
-
-        .content {
-            padding: 30px 34px;
-        }
-
-        .message {
-            margin-bottom: 18px;
-            padding: 13px 15px;
-            border-radius: 14px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .message.success {
-            background: #dde4da;
-            color: #1f5f1f;
-            border: 1px solid #b9c7b2;
-        }
-
-        .message.error {
-            background: #f3dede;
-            color: #8a1f1f;
-            border: 1px solid #dfb2b2;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        label {
-            display: block;
-            font-size: 18px;
-            font-weight: 700;
-            color: #102d1a;
+            line-height: 1.2;
             margin-bottom: 8px;
         }
 
+        .header p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.88);
+            max-width: 560px;
+        }
+
+        .content {
+            padding: 28px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 22px;
+            padding: 15px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            border: 1px solid transparent;
+        }
+
+        .message i {
+            margin-top: 2px;
+            font-size: 16px;
+        }
+
+        .message.success {
+            background: #edf7ec;
+            color: #1d5a1f;
+            border-color: #bfd8bc;
+        }
+
+        .message.error {
+            background: #fff0f0;
+            color: #a12828;
+            border-color: #efc3c3;
+        }
+
+        .info-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .info-box {
+            background: #f4f7f2;
+            border: 1px solid #d9e3d4;
+            border-radius: 18px;
+            padding: 16px 14px;
+        }
+
+        .info-box .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #5d715f;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .info-box .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #18351c;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1b351f;
+            margin-bottom: 8px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
         input,
-        select {    
+        select {
             width: 100%;
-            height: 52px;
-            border: 2px solid #8e8e8e;
-            border-radius: 14px;
-            padding: 0 14px;
-            font-size: 16px !important;
-            line-height: 1;
+            min-height: 54px;
+            border: 1.5px solid #c8d4c2;
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-size: 15px;
             outline: none;
+            background: #fbfcfa;
+            color: #1d2d20;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #5e8a57;
+            box-shadow: 0 0 0 4px rgba(94, 138, 87, 0.14);
+            background: #fff;
         }
 
         select {
-            background: #dfd7b3;
+            appearance: none;
+            cursor: pointer;
+            padding-right: 46px;
         }
 
-        .input-blue {
-            background: #cfd8e7;
-        }
-
-        .input-yellow {
-            background: #dfd7b3;
+        .select-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #5f6f61;
+            font-size: 14px;
         }
 
         .password-wrap {
@@ -220,181 +361,300 @@ if (isset($_POST['update'])) {
         }
 
         .password-wrap input {
-            padding-right: 46px;
+            padding-right: 50px;
         }
 
         .toggle-password {
             position: absolute;
-            right: 14px;
+            right: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: #333;
-            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #4a5c4c;
             font-size: 15px;
+            cursor: pointer;
         }
 
         .helper-text {
-            margin-top: -4px;
-            margin-bottom: 18px;
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #627364;
+        }
+
+        .danger-box {
+            margin-top: 26px;
+            border: 1px solid #f0caca;
+            background: linear-gradient(180deg, #fff8f8 0%, #fff2f2 100%);
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .danger-box h3 {
+            color: #962f2f;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .danger-box p {
+            color: #7f4444;
             font-size: 14px;
-            color: #333;
+            line-height: 1.6;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 14px;
+            margin-top: 28px;
+            flex-wrap: wrap;
         }
 
         .btn {
-            width: 50%;
-            background: #98b38e;
             border: none;
-            border-radius: 24px;
-            padding: 14px;
-            font-size: 18px;
+            border-radius: 16px;
+            padding: 15px 22px;
+            font-size: 15px;
             font-weight: 700;
             cursor: pointer;
-            transition: 0.2s ease;
-            display: block;
-            margin: 20px auto 0;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
         }
 
         .btn:hover {
-            background: #87a57d;
+            transform: translateY(-1px);
         }
 
-        @media (max-width: 700px) {
-            .wrapper {
-                max-width: 95%;
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            flex: 1 1 240px;
+            color: #fff;
+            background: linear-gradient(135deg, #2f6a28 0%, #214b1a 100%);
+            box-shadow: 0 10px 22px rgba(33, 75, 26, 0.18);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 14px 26px rgba(33, 75, 26, 0.24);
+        }
+
+        .btn-danger {
+            flex: 1 1 240px;
+            color: #fff;
+            background: linear-gradient(135deg, #cf5c5c 0%, #b34141 100%);
+            box-shadow: 0 10px 22px rgba(179, 65, 65, 0.18);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 14px 26px rgba(179, 65, 65, 0.24);
+        }
+
+        .footer-note {
+            margin-top: 20px;
+            font-size: 12.5px;
+            color: #667767;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 26px 20px 24px;
             }
 
             .content {
-                padding: 24px 20px;
+                padding: 20px;
             }
 
             .header h1 {
                 font-size: 27px;
             }
+
+            .info-panel,
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-row {
+                flex-direction: column;
+            }
         }
 
         @media (max-width: 480px) {
             body {
-                padding: 10px;
+                padding: 14px 10px;
             }
 
-            .wrapper {
-                border-radius: 20px;
-                border-width: 2px;
-            }
-
-            .content {
-                padding: 18px 14px;
-            }
-
-            .header {
-                padding: 18px 14px;
+            .card {
+                border-radius: 22px;
             }
 
             .header h1 {
-                font-size: 22px;
+                font-size: 23px;
             }
 
-            .home-btn {
-                width: 34px;
-                height: 34px;
-                left: 10px;
+            .header p {
                 font-size: 14px;
             }
 
             input,
-            select {
-                height: auto;
-                min-height: 48px;
-                padding: 10px 12px;
-                font-size: 15px !important;
+            select,
+            .btn {
+                min-height: 50px;
+                font-size: 14px;
             }
 
-            .btn {
-                width: 100%;
+            .home-btn {
+                width: 40px;
+                height: 40px;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <div class="header">
-        <a href="../dashboard/dashboard.php" class="home-btn" title="Home">
-            <i class="fa-solid fa-house"></i>
-        </a>
-        <h1>Manage Admin Account</h1>
-    </div>
+<div class="page">
+    <div class="card">
+        <div class="header">
+            <div class="header-top">
+                <a href="../dashboard/dashboard.php" class="home-btn" title="Home">
+                    <i class="fa-solid fa-house"></i>
+                </a>
 
-    <div class="content">
-        <?php if ($message != ""): ?>
-            <div class="message <?php echo $messageType; ?>">
-                <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-
-        <form method="POST">
-            <div class="form-group">
-                <label for="user_id">Select Admin Account</label>
-                <select name="user_id" id="user_id" required>
-                    <option value="">Select Admin Account</option>
-                    <?php foreach ($users as $u): ?>
-                        <option
-                            value="<?php echo $u['id']; ?>"
-                            data-username="<?php echo htmlspecialchars($u['username']); ?>"
-                            data-email="<?php echo htmlspecialchars($u['email']); ?>"
-                            <?php echo (isset($_POST['user_id']) && $_POST['user_id'] == $u['id']) ? 'selected' : ''; ?>
-                        >
-                            <?php echo htmlspecialchars($u['username'] . " (" . $u['email'] . ")"); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="username">New Username</label>
-                <input
-                    type="text"
-                    name="username"
-                    id="username"
-                    class="input-blue"
-                    value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="email">New Email</label>
-                <input
-                    type="email"
-                    name="email"
-                    id="email"
-                    class="input-yellow"
-                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="password">New Password</label>
-                <div class="password-wrap">
-                    <input
-                        type="password"
-                        name="password"
-                        id="password"
-                        class="input-blue"
-                    >
-                    <span class="toggle-password" onclick="togglePassword()">
-                        <i id="eyeIcon" class="fa-solid fa-eye-slash"></i>
-                    </span>
+                <div class="header-badge">
+                    <i class="fa-solid fa-user-shield"></i>
+                    Admin Settings
                 </div>
             </div>
 
-            <div class="helper-text">
-                Leave password blank if you do not want to change it.
+            <h1>Manage Admin Account</h1>
+            <p>
+                Update login details for an admin account or remove an admin account safely.
+                Deleting your own account and deleting the last admin are both blocked.
+            </p>
+        </div>
+
+        <div class="content">
+            <?php if ($message !== ""): ?>
+                <div class="message <?php echo $messageType; ?>">
+                    <i class="fa-solid <?php echo $messageType === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'; ?>"></i>
+                    <div><?php echo htmlspecialchars($message); ?></div>
+                </div>
+            <?php endif; ?>
+
+            <div class="info-panel">
+                <div class="info-box">
+                    <div class="label">Admin Accounts</div>
+                    <div class="value"><?php echo count($users); ?></div>
+                </div>
+                <div class="info-box">
+                    <div class="label">Page Access</div>
+                    <div class="value">Restricted</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">Actions</div>
+                    <div class="value">Update / Delete</div>
+                </div>
             </div>
 
-            <button type="submit" name="update" class="btn">Update Admin Account</button>
-        </form>
+            <form method="POST">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label for="user_id">Select Admin Account</label>
+                        <div class="input-wrap">
+                            <select name="user_id" id="user_id" required>
+                                <option value="">Select Admin Account</option>
+                                <?php foreach ($users as $u): ?>
+                                    <option
+                                        value="<?php echo $u['id']; ?>"
+                                        data-username="<?php echo htmlspecialchars($u['username']); ?>"
+                                        data-email="<?php echo htmlspecialchars($u['email']); ?>"
+                                        <?php echo (isset($_POST['user_id']) && (int)$_POST['user_id'] === (int)$u['id']) ? 'selected' : ''; ?>
+                                    >
+                                        <?php echo htmlspecialchars($u['username'] . " (" . $u['email'] . ")"); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <span class="select-icon">
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input
+                            type="text"
+                            name="username"
+                            id="username"
+                            value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
+                            placeholder="Enter username"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
+                            placeholder="Enter email address"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="password">New Password</label>
+                        <div class="password-wrap">
+                            <input
+                                type="password"
+                                name="password"
+                                id="password"
+                                placeholder="Leave blank if you do not want to change the password"
+                            >
+                            <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Toggle password visibility">
+                                <i id="eyeIcon" class="fa-solid fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <div class="helper-text">
+                            Password will only be updated if you enter a new one.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="danger-box">
+                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</h3>
+                    <p>
+                        Deleting an admin account permanently removes it from the system.
+                        This action cannot be undone.
+                    </p>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" name="update" class="btn btn-primary">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        Update Admin Account
+                    </button>
+
+                    <button
+                        type="submit"
+                        name="delete"
+                        class="btn btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this admin account? This action cannot be undone.');"
+                    >
+                        <i class="fa-solid fa-trash"></i>
+                        Delete Admin Account
+                    </button>
+                </div>
+
+                <div class="footer-note">
+                    Select an admin account first. The username and email fields will auto-fill based on your selection.
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -418,6 +678,13 @@ function fillFieldsFromSelected() {
 
 select.addEventListener("change", function () {
     const opt = this.options[this.selectedIndex];
+
+    if (!opt || !opt.value) {
+        username.value = "";
+        email.value = "";
+        return;
+    }
+
     username.value = opt.getAttribute("data-username") || "";
     email.value = opt.getAttribute("data-email") || "";
 });

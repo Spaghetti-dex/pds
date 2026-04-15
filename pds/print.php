@@ -228,6 +228,23 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDS Print</title>
     <style>
+        :root {
+            --green-900: #1b2c17;
+            --green-800: #22361e;
+            --green-700: #2f4a2a;
+            --green-100: #eef3ea;
+            --green-050: #f7faf5;
+            --ink: #1b1b1b;
+            --muted: #5b6755;
+            --line: #dce4f0;
+            --line-strong: #cdd7e3;
+            --panel: #ffffff;
+            --panel-soft: #f7f8f5;
+            --thead: #e9eee4;
+            --shadow-soft: 0 10px 24px rgba(16, 24, 40, 0.06);
+            --shadow-sheet: 0 18px 44px rgba(15, 23, 42, 0.14);
+        }
+
         * {
             box-sizing: border-box;
             -webkit-print-color-adjust: exact;
@@ -239,8 +256,11 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
             margin: 0;
             padding: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: #f5f6f4;
-            color: #1b1b1b;
+            background:
+                radial-gradient(circle at top left, rgba(47, 74, 42, 0.08), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(34, 54, 30, 0.08), transparent 24%),
+                linear-gradient(180deg, #f6f7f4 0%, #eef1ec 100%);
+            color: var(--ink);
         }
 
         .page-wrap {
@@ -255,12 +275,12 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            background: #ffffff;
-            border: 1px solid #d7dde8;
-            border-radius: 14px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfcfa 100%);
+            border: 1px solid var(--line-strong);
+            border-radius: 16px;
             padding: 16px;
             margin-bottom: 18px;
-            box-shadow: 0 10px 24px rgba(16, 24, 40, 0.06);
+            box-shadow: var(--shadow-soft);
         }
 
         .toolbar .left,
@@ -274,21 +294,30 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
         .toolbar label {
             font-weight: 700;
             font-size: 14px;
+            color: var(--green-800);
         }
 
         .toolbar select {
             min-width: 360px;
             max-width: 100%;
-            padding: 10px 12px;
-            border-radius: 10px;
+            padding: 11px 13px;
+            border-radius: 12px;
             border: 1px solid #c9d3e1;
             font-size: 14px;
             background: #fff;
+            color: #1f2e1b;
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        .toolbar select:focus {
+            border-color: var(--green-700);
+            box-shadow: 0 0 0 4px rgba(47, 74, 42, 0.10);
         }
 
         .btn {
             border: 0;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 11px 16px;
             font-size: 14px;
             font-weight: 700;
@@ -297,21 +326,29 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            transition: transform .15s ease, box-shadow .2s ease, opacity .2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
         }
 
         .btn-primary {
-            background: #22361e;
+            background: linear-gradient(135deg, var(--green-800) 0%, var(--green-700) 100%);
             color: #fff;
+            box-shadow: 0 10px 18px rgba(34, 54, 30, 0.18);
         }
 
         .btn-secondary {
-            background: #eef2eb;
-            color: #22361e;
+            background: linear-gradient(180deg, #f6f8f4 0%, #edf2e8 100%);
+            color: var(--green-800);
+            border: 1px solid #d7e0d2;
         }
 
         .home-btn {
-            background: #22361e;
+            background: linear-gradient(135deg, var(--green-800) 0%, var(--green-700) 100%);
             color: #fff;
+            box-shadow: 0 10px 18px rgba(34, 54, 30, 0.18);
         }
 
         .resume-sheet {
@@ -319,8 +356,10 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
             min-height: 297mm;
             margin: 0 auto;
             background: #fff;
-            box-shadow: 0 14px 38px rgba(15, 23, 42, 0.12);
+            box-shadow: var(--shadow-sheet);
             padding: 18mm 15mm 16mm;
+            border: 1px solid #e5ebf2;
+            border-radius: 6px;
         }
 
         .resume-header {
@@ -328,9 +367,20 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
             grid-template-columns: 1fr 110px;
             gap: 16px;
             align-items: start;
-            border-bottom: 3px solid #22361e;
+            border-bottom: 3px solid var(--green-800);
             padding-bottom: 12px;
             margin-bottom: 16px;
+            position: relative;
+        }
+
+        .resume-header::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -3px;
+            width: 120px;
+            height: 3px;
+            background: linear-gradient(90deg, #c7d4bf 0%, var(--green-800) 100%);
         }
 
         .name-block h1 {
@@ -339,6 +389,7 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
             letter-spacing: 0.5px;
             text-transform: uppercase;
             line-height: 1.1;
+            color: var(--green-900);
         }
 
         .title-text {
@@ -360,6 +411,10 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
             max-width: 96px;
             max-height: 96px;
             object-fit: contain;
+            padding: 6px;
+            background: linear-gradient(180deg, #ffffff 0%, #f7faf5 100%);
+            border: 1px solid #dfe6de;
+            border-radius: 14px;
         }
 
         .top-grid {
@@ -373,15 +428,18 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
             width: 130px;
             height: 130px;
             object-fit: cover;
-            border-radius: 12px;
+            border-radius: 14px;
             border: 1px solid #d8dee9;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+            background: #fff;
         }
 
         .summary-box {
-            background: #f7f8f5;
-            border: 1px solid #dce4f0;
-            border-radius: 12px;
+            background: linear-gradient(180deg, #fafbf8 0%, #f3f6f0 100%);
+            border: 1px solid var(--line);
+            border-radius: 14px;
             padding: 14px;
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.03);
         }
 
         .contact-grid {
@@ -393,13 +451,16 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
         .field strong {
             display: block;
             font-size: 12px;
-            color: #5b6755;
+            color: var(--muted);
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
+            letter-spacing: 0.35px;
         }
 
         .field span {
             font-size: 14px;
+            line-height: 1.45;
+            color: #182217;
         }
 
         .section {
@@ -408,47 +469,70 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
 
         .section h2 {
             font-size: 15px;
-            color: #22361e;
+            color: var(--green-800);
             border-bottom: 2px solid #d6e0f2;
             padding-bottom: 6px;
             margin: 0 0 10px;
             letter-spacing: 0.7px;
             text-transform: uppercase;
+            position: relative;
+        }
+
+        .section h2::before {
+            content: "";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--green-800) 0%, #7d9874 100%);
+            vertical-align: middle;
+            transform: translateY(-1px);
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px 20px;
+            background: linear-gradient(180deg, #fcfdfb 0%, #f7f9f5 100%);
+            border: 1px solid #e6ecf2;
+            border-radius: 14px;
+            padding: 14px;
         }
 
         .resume-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 13px;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
         .resume-table th,
         .resume-table td {
-            border: 1px solid #dce4f0;
+            border: 1px solid var(--line);
             padding: 8px 9px;
             vertical-align: top;
             text-align: left;
         }
 
         .resume-table th {
-            background: #e9eee4;
+            background: var(--thead);
             color: #2f3f2b;
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.4px;
         }
 
-        .empty-note {
-            padding: 10px 12px;
+        .resume-table tbody tr:nth-child(even) {
             background: #fbfcfa;
+        }
+
+        .empty-note {
+            padding: 12px 14px;
+            background: linear-gradient(180deg, #fcfdfb 0%, #f7f9f5 100%);
             border: 1px dashed #c9d3e1;
-            border-radius: 10px;
+            border-radius: 12px;
             color: #667061;
             font-size: 13px;
         }
@@ -487,6 +571,8 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
                 background: #fff !important;
                 box-shadow: 0 14px 38px rgba(15, 23, 42, 0.12) !important;
                 padding: 18mm 15mm 16mm !important;
+                border-radius: 0 !important;
+                border: none !important;
             }
 
             .resume-header {
@@ -497,6 +583,16 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
                 border-bottom: 3px solid #22361e !important;
                 padding-bottom: 12px !important;
                 margin-bottom: 16px !important;
+            }
+
+            .resume-header::after {
+                content: "" !important;
+                position: absolute !important;
+                left: 0 !important;
+                bottom: -3px !important;
+                width: 120px !important;
+                height: 3px !important;
+                background: linear-gradient(90deg, #c7d4bf 0%, #22361e 100%) !important;
             }
 
             .top-grid {
@@ -516,13 +612,18 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
                 display: grid !important;
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
                 gap: 10px 20px !important;
+                background: linear-gradient(180deg, #fcfdfb 0%, #f7f9f5 100%) !important;
+                border: 1px solid #e6ecf2 !important;
+                border-radius: 14px !important;
+                padding: 14px !important;
             }
 
             .summary-box {
-                background: #f7f8f5 !important;
+                background: linear-gradient(180deg, #fafbf8 0%, #f3f6f0 100%) !important;
                 border: 1px solid #dce4f0 !important;
-                border-radius: 12px !important;
+                border-radius: 14px !important;
                 padding: 14px !important;
+                box-shadow: none !important;
             }
 
             .resume-table {
@@ -550,6 +651,7 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
                 object-fit: cover !important;
                 border-radius: 12px !important;
                 border: 1px solid #d8dee9 !important;
+                box-shadow: none !important;
             }
 
             .logo-box {
@@ -562,6 +664,10 @@ $photoSrc = $person ? make_photo_src($person['photo'] ?? null, $person['photo_ty
                 max-width: 96px !important;
                 max-height: 96px !important;
                 object-fit: contain !important;
+                padding: 6px !important;
+                background: linear-gradient(180deg, #ffffff 0%, #f7faf5 100%) !important;
+                border: 1px solid #dfe6de !important;
+                border-radius: 14px !important;
             }
 
             .section,

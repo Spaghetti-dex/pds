@@ -64,6 +64,24 @@ body{
 .input::placeholder {
 }
 
+input[type="text"],
+input:not([type]),
+textarea{
+  text-transform: uppercase;
+}
+
+.entry-title{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:12px;
+  padding:8px 12px;
+  background:#2f402c;
+  color:#fff;
+  border-radius:6px;
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+}
+
 /* NAV ITEM */
 .nav-item{
   display:flex;
@@ -212,6 +230,14 @@ body{
   background:#cfcfcf;
   color:#666;
   border:1px solid #999;
+  cursor:not-allowed;
+  opacity:1;
+}
+
+.optional-readonly{
+  background:#cfcfcf !important;
+  color:#666 !important;
+  border:1px solid #999 !important;
   cursor:not-allowed;
   opacity:1;
 }
@@ -913,7 +939,7 @@ label.required::after{
 
             <label for="extension">Name Extension:</label>
             <select id="extension" name="extension">
-              <option value=""></option>
+              <option value=" ">None</option>
               <option value="Jr.">Jr.</option>
               <option value="Sr.">Sr.</option>
               <option value="I">I</option>
@@ -1079,7 +1105,7 @@ label.required::after{
             <div style="margin:10px 0 15px 0; text-align:right;">
               <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#c62828;">
                 <input type="checkbox" id="sameAddress" style="width:auto;">
-                Same as Residential Address
+                SAME AS RESIDENT ADDRESS
               </label>
             </div>
 
@@ -1490,7 +1516,9 @@ const noTelephoneCheckbox = document.getElementById("no_telephone");
 if (noMiddleNameCheckbox) {
   noMiddleNameCheckbox.addEventListener("change", function(){
     syncOptionalField("middlename", "no_middlename", true);
-    validateSingleField(document.getElementById("middlename"));
+    clearFieldErrorState(document.getElementById("middlename"));
+    refreshOptionalRequiredLabels();
+    hideSummary();
     saveFormDraft();
   });
 }
@@ -1498,7 +1526,9 @@ if (noMiddleNameCheckbox) {
 if (noTelephoneCheckbox) {
   noTelephoneCheckbox.addEventListener("change", function(){
     syncOptionalField("telephone", "no_telephone", false);
-    validateSingleField(document.getElementById("telephone"));
+    clearFieldErrorState(document.getElementById("telephone"));
+    refreshOptionalRequiredLabels();
+    hideSummary();
     saveFormDraft();
   });
 }
@@ -1646,6 +1676,9 @@ function shouldSkipValidation(input){
   if (!input) return true;
   if (input.type === "hidden") return true;
   if (input.disabled) return true;
+  if (input.dataset.optionalDisabled === "1") return true;
+  if (input.name === "middlename" && document.getElementById("no_middlename")?.checked) return true;
+  if (input.name === "telephone" && document.getElementById("no_telephone")?.checked) return true;
   if (input.closest(".section") && !input.closest(".section").classList.contains("active")) return true;
   return false;
 }
@@ -1658,11 +1691,17 @@ function syncOptionalField(fieldId, checkboxId, requiredWhenEnabled = false) {
 
   if (checkbox.checked) {
     field.value = "";
+    field.readOnly = false;
     field.disabled = true;
+    field.classList.add("optional-readonly");
     field.removeAttribute("required");
+    field.setAttribute("data-optional-disabled", "1");
     clearFieldErrorState(field);
   } else {
     field.disabled = false;
+    field.readOnly = false;
+    field.classList.remove("optional-readonly");
+    field.removeAttribute("data-optional-disabled");
     if (requiredWhenEnabled) {
       field.setAttribute("required", "required");
     } else {
@@ -2164,6 +2203,7 @@ function restoreSimpleFields(data) {
     if (currentValue !== '') return;
 
     field.value = data.simple[name];
+    forceUppercaseValue(field);
   });
 }
 
@@ -2185,6 +2225,50 @@ function clearContainer(selector) {
   if (container) {
     container.innerHTML = '';
   }
+}
+
+
+function getUppercaseCapableField(field) {
+  if (!field || !field.name) return false;
+
+  const tagName = (field.tagName || "").toLowerCase();
+  if (tagName === "select") return false;
+
+  const excludedTypes = ["email", "date", "number", "hidden", "file", "checkbox", "radio", "select-one", "select-multiple"];
+  if (excludedTypes.includes((field.type || "").toLowerCase())) return false;
+
+  const excludedNames = [
+    "email", "mobile", "telephone",
+    "umid", "philsys", "pagibig", "tin", "philhealth", "agency_employee",
+    "r_zip", "p_zip", "height", "weight",
+    "rating[]", "hours[]", "year_graduated[]", "license_number[]",
+    "civil_status", "sex", "citizenship", "blood_type", "extension", "education_level[]"
+  ];
+
+  return !excludedNames.includes(field.name);
+}
+
+function forceUppercaseValue(field) {
+  if (!getUppercaseCapableField(field)) return;
+  const uppercased = (field.value || "").toUpperCase();
+  if (field.value !== uppercased) {
+    field.value = uppercased;
+  }
+}
+
+function applyUppercaseToContainer(container) {
+  if (!container) return;
+  container.querySelectorAll("input, textarea").forEach(forceUppercaseValue);
+}
+
+function updateEntryNumbers(selector, titleClass, labelText) {
+  const entries = document.querySelectorAll(selector);
+  entries.forEach((entry, index) => {
+    const title = entry.querySelector(titleClass);
+    if (title) {
+      title.textContent = `${labelText} #${index + 1}`;
+    }
+  });
 }
 
 function restoreDraft() {
@@ -2237,6 +2321,10 @@ function restoreDraft() {
     }
   }
 
+  updateEntryNumbers('.education-entry', '.entry-title', 'Educational Background');
+  updateEntryNumbers('.eligibility-entry', '.entry-title', 'Service Eligibility');
+  updateEntryNumbers('.training-entry', '.entry-title', 'Learning and Development');
+
   if (typeof data.currentSection === 'number' && data.currentSection >= 0 && data.currentSection < sections.length) {
     updateProgress(data.currentSection);
   } else {
@@ -2287,6 +2375,7 @@ function clearAllForm() {
   }
 
   applyOptionalFieldStates();
+  applyUppercaseToContainer(form);
 
   if (dualCountry) {
     dualCountry.disabled = true;
@@ -2301,6 +2390,7 @@ function addEducation(data = {}) {
   const div = document.createElement("div");
   div.classList.add("education-entry", "education-box");
   div.innerHTML = `
+    <div class="entry-title">EDUCATIONAL BACKGROUND #1</div>
     <div class="education-grid">
       <div>
         <label>Level</label>
@@ -2360,6 +2450,8 @@ function addEducation(data = {}) {
   div.querySelector('[name="edu_to[]"]').value = data.edu_to || '';
   div.querySelector('[name="year_graduated[]"]').value = data.year_graduated || '';
   div.querySelector('[name="honors[]"]').value = data.honors || '';
+  applyUppercaseToContainer(div);
+  updateEntryNumbers('.education-entry', '.entry-title', 'Educational Background');
 }
 
 function addEligibility(data = {}) {
@@ -2367,6 +2459,7 @@ function addEligibility(data = {}) {
   const div = document.createElement("div");
   div.classList.add("eligibility-entry", "eligibility-box");
   div.innerHTML = `
+    <div class="entry-title">SERVICE ELIGIBILITY #1</div>
     <div class="eligibility-grid">
       <div>
         <label>Career Service / CSC / CES</label>
@@ -2414,6 +2507,8 @@ function addEligibility(data = {}) {
   div.querySelector('[name="license[]"]').value = data.license || '';
   div.querySelector('[name="license_number[]"]').value = data.license_number || '';
   div.querySelector('[name="valid_until[]"]').value = data.valid_until || '';
+  applyUppercaseToContainer(div);
+  updateEntryNumbers('.eligibility-entry', '.entry-title', 'Service Eligibility');
 }
 
 function addTraining(data = {}) {
@@ -2421,6 +2516,7 @@ function addTraining(data = {}) {
   const div = document.createElement("div");
   div.classList.add("training-entry", "training-box");
   div.innerHTML = `
+    <div class="entry-title">LEARNING AND DEVELOPMENT #1</div>
     <div class="training-grid">
       <div>
         <label>Training Title</label>
@@ -2462,6 +2558,8 @@ function addTraining(data = {}) {
   div.querySelector('[name="training_to[]"]').value = data.training_to || '';
   div.querySelector('[name="type[]"]').value = data.type || '';
   div.querySelector('[name="sponsor[]"]').value = data.sponsor || '';
+  applyUppercaseToContainer(div);
+  updateEntryNumbers('.training-entry', '.entry-title', 'Learning and Development');
 }
 
 function removeEntry(button, selector) {
@@ -2473,7 +2571,27 @@ function removeEntry(button, selector) {
   const item = button.closest(selector);
   if (item) {
     item.remove();
+
+    if (selector === '.education-entry') {
+      updateEntryNumbers('.education-entry', '.entry-title', 'Educational Background');
+    } else if (selector === '.eligibility-entry') {
+      updateEntryNumbers('.eligibility-entry', '.entry-title', 'Service Eligibility');
+    } else if (selector === '.training-entry') {
+      updateEntryNumbers('.training-entry', '.entry-title', 'Learning and Development');
+    }
+
     saveFormDraft();
+  }
+}
+
+function refreshOptionalRequiredLabels() {
+  const middleNameLabel = document.querySelector('label[for="middlename"]');
+  const telephoneLabel = document.querySelector('label[for="telephone"]');
+  if (middleNameLabel) {
+    middleNameLabel.classList.toggle('required', !document.getElementById("no_middlename")?.checked);
+  }
+  if (telephoneLabel) {
+    telephoneLabel.classList.toggle('required', false);
   }
 }
 
@@ -2509,6 +2627,8 @@ document.addEventListener("input", function(e){
   if(!e.target.matches("input, select, textarea")) return;
 
   const field = e.target;
+
+  forceUppercaseValue(field);
 
   if (["umid", "philsys", "pagibig", "tin", "philhealth", "agency_employee"].includes(field.name)) {
     const cleaned = sanitizeIdNumber(field.value);
@@ -2555,6 +2675,11 @@ document.addEventListener("DOMContentLoaded", function () {
   restoreDraft();
   applyOptionalFieldStates();
   markRequiredLabels();
+  refreshOptionalRequiredLabels();
+  applyUppercaseToContainer(form);
+  updateEntryNumbers('.education-entry', '.entry-title', 'Educational Background');
+  updateEntryNumbers('.eligibility-entry', '.entry-title', 'Service Eligibility');
+  updateEntryNumbers('.training-entry', '.entry-title', 'Learning and Development');
 
   if (typeof currentSection !== "number" || Number.isNaN(currentSection)) {
     currentSection = 0;

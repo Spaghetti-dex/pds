@@ -322,6 +322,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $mobile          = clean_value($_POST['mobile'] ?? '');
     $email           = clean_value($_POST['email'] ?? '');
 
+    $no_middlename   = isset($_POST['no_middlename']) ? 1 : 0;
+    $no_telephone    = isset($_POST['no_telephone']) ? 1 : 0;
+
+    if ($no_middlename) {
+        $middlename = '';
+    }
+
+    if ($no_telephone) {
+        $telephone = '';
+    }
+
     $newPhotoData = null;
     $newPhotoType = null;
     $hasNewPhotoUpload = isset($_FILES['photo']) && ($_FILES['photo']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK;
@@ -375,7 +386,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     */
     require_field($errors, 'Surname', $surname);
     require_field($errors, 'First name', $firstname);
-    require_field($errors, 'Middle name', $middlename);
+    if (!$no_middlename) {
+        require_field($errors, 'Middle name', $middlename);
+    }
     require_field($errors, 'Date of birth', $dob);
     require_field($errors, 'Birth place', $birth_place);
     require_field($errors, 'Sex', $sex);
@@ -407,7 +420,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     require_field($errors, 'Permanent province', $p_province);
     require_field($errors, 'Permanent zip', $p_zip);
 
-    require_field($errors, 'Telephone', $telephone);
+    if (!$no_telephone) {
+        require_field($errors, 'Telephone', $telephone);
+    }
     require_field($errors, 'Mobile', $mobile);
     require_field($errors, 'Email', $email);
 
@@ -417,7 +432,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
 
     validate_regex_field($errors, 'Surname', $surname, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
     validate_regex_field($errors, 'First name', $firstname, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
-    validate_regex_field($errors, 'Middle name', $middlename, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+    if (!$no_middlename && $middlename !== '') {
+        validate_regex_field($errors, 'Middle name', $middlename, "/^[A-Za-zÑñ\s.'-]+$/", 'contains invalid characters.');
+    }
 
     $allowed_extensions = ['', 'Jr.', 'Sr.', 'II', 'III', 'IV', 'V'];
 
@@ -450,7 +467,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     validate_regex_field($errors, 'Residential zip', $r_zip, "/^\d{4}$/", 'must be 4 digits.');
     validate_regex_field($errors, 'Permanent zip', $p_zip, "/^\d{4}$/", 'must be 4 digits.');
 
-    validate_regex_field($errors, 'Telephone', $telephone, "/^[0-9()\-\s]{7,15}$/", 'is invalid.');
+    if (!$no_telephone && $telephone !== '') {
+        validate_regex_field($errors, 'Telephone', $telephone, "/^[0-9()\-\s]{7,15}$/", 'is invalid.');
+    }
     validate_regex_field($errors, 'Mobile', $mobile, "/^(09\d{9}|\+639\d{9})$/", 'must be 09XXXXXXXXX or +639XXXXXXXXX.');
 
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -1778,6 +1797,27 @@ th{
   box-sizing:border-box;
 }
 
+.optional-check{
+  margin-top:6px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+}
+
+.optional-check input[type="checkbox"]{
+  width:auto;
+  height:auto;
+  margin:0;
+}
+
+.optional-check label{
+  font-size:13px;
+  font-weight:normal;
+  text-align:left;
+  white-space:normal;
+}
+
 /* EDUCATION */
 .education-box{
   background:#d7dfd3;
@@ -1870,6 +1910,25 @@ th{
   background:#e9e9ee;
   font-size:14px;
   box-sizing:border-box;
+}
+
+
+.entry-title{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:12px;
+  padding:8px 12px;
+  background:#22361e;
+  color:#fff;
+  border-radius:6px;
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+}
+
+input[type="text"],
+input:not([type]),
+textarea{
+  text-transform: uppercase;
 }
 
 /* GENERAL */
@@ -2566,7 +2625,25 @@ body.modal-open{
                                 <input type="date" name="dob" value="<?php echo e($person['dob'] ?? ''); ?>" required>
 
                                 <label>Middle Name:</label>
-                                <input name="middlename" value="<?php echo e($person['middlename'] ?? ''); ?>">
+                                <div>
+                                    <input
+                                        type="text"
+                                        name="middlename"
+                                        id="middlename"
+                                        value="<?php echo e($person['middlename'] ?? ''); ?>"
+                                        <?php echo empty($person['middlename'] ?? '') ? 'disabled' : ''; ?>
+                                    >
+                                    <div class="optional-check">
+                                        <input
+                                            type="checkbox"
+                                            name="no_middlename"
+                                            id="no_middlename"
+                                            value="1"
+                                            <?php echo empty($person['middlename'] ?? '') ? 'checked' : ''; ?>
+                                        >
+                                        <label for="no_middlename">No Middle Name</label>
+                                    </div>
+                                </div>
 
                                 <label>Place of Birth:</label>
                                 <input name="birth_place" value="<?php echo e($person['birth_place'] ?? ''); ?>">
@@ -2697,7 +2774,7 @@ body.modal-open{
                                 </div>
 
                                 <div style="display:flex; justify-content:flex-end; margin-top:18px; margin-bottom:5px;">
-                                    <label style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:red; text-transform:uppercase; white-space:nowrap; cursor:pointer;">
+                                    <label style="display:inline-flex; align-items:center; gap:6px; font-size:10px; font-weight:600; color:#c62828; text-transform:uppercase; white-space:nowrap; cursor:pointer;">
                                         <input type="checkbox" id="sameAsResidentAddress" style="width:14px; height:14px; margin:0;">
                                         SAME AS RESIDENT ADDRESS
                                     </label>
@@ -2759,7 +2836,25 @@ body.modal-open{
                                 <div class="contact-grid">
                                     <div class="contact-row">
                                         <label>Telephone Number:</label>
-                                        <input name="telephone" value="<?php echo e($person['telephone'] ?? ''); ?>">
+                                        <div>
+                                            <input
+                                                type="text"
+                                                name="telephone"
+                                                id="telephone"
+                                                value="<?php echo e($person['telephone'] ?? ''); ?>"
+                                                <?php echo empty($person['telephone'] ?? '') ? 'disabled' : ''; ?>
+                                            >
+                                            <div class="optional-check">
+                                                <input
+                                                    type="checkbox"
+                                                    name="no_telephone"
+                                                    id="no_telephone"
+                                                    value="1"
+                                                    <?php echo empty($person['telephone'] ?? '') ? 'checked' : ''; ?>
+                                                >
+                                                <label for="no_telephone">No Telephone Number</label>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="contact-row">
@@ -2783,6 +2878,7 @@ body.modal-open{
                                 <?php if (!empty($education_records)): ?>
                                     <?php foreach ($education_records as $edu): ?>
                                         <div class="education-entry education-box">
+                                            <div class="entry-title">EDUCATIONAL BACKGROUND #1</div>
                                             <div class="education-grid">
                                                 <div>
                                                     <label>Level</label>
@@ -2836,6 +2932,7 @@ body.modal-open{
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <div class="education-entry education-box">
+                                        <div class="entry-title">EDUCATIONAL BACKGROUND #1</div>
                                         <div class="education-grid">
                                             <div>
                                                 <label>Level</label>
@@ -2901,6 +2998,7 @@ body.modal-open{
                                 <?php if (!empty($eligibility_records)): ?>
                                     <?php foreach ($eligibility_records as $elig): ?>
                                         <div class="eligibility-entry eligibility-box">
+                                            <div class="entry-title">SERVICE ELIGIBILITY #1</div>
                                             <div class="eligibility-grid">
                                                 <div>
                                                     <label>Career Service /CSC /CES</label>
@@ -2943,6 +3041,7 @@ body.modal-open{
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <div class="eligibility-entry eligibility-box">
+                                        <div class="entry-title">SERVICE ELIGIBILITY #1</div>
                                         <div class="eligibility-grid">
                                             <div>
                                                 <label>Career Service /CSC /CES</label>
@@ -2997,6 +3096,7 @@ body.modal-open{
                                 <?php if (!empty($training_records)): ?>
                                     <?php foreach ($training_records as $train): ?>
                                         <div class="training-entry training-box">
+                                            <div class="entry-title">LEARNING AND DEVELOPMENT #1</div>
                                             <div class="training-grid">
                                                 <div>
                                                     <label>Training Title</label>
@@ -3034,6 +3134,7 @@ body.modal-open{
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <div class="training-entry training-box">
+                                        <div class="entry-title">LEARNING AND DEVELOPMENT #1</div>
                                         <div class="training-grid">
                                             <div>
                                                 <label>Training Title</label>
@@ -3191,9 +3292,23 @@ function loadImage(event) {
 }
 
 function removeEntry(button, selector) {
+    const items = document.querySelectorAll(selector);
+    if (items.length <= 1) {
+        return;
+    }
+
     const item = button.closest(selector);
     if (item) {
         item.remove();
+
+        if (selector === '.education-entry') {
+            updateEntryNumbers('.education-entry', '.entry-title', 'Educational Background');
+        } else if (selector === '.eligibility-entry') {
+            updateEntryNumbers('.eligibility-entry', '.entry-title', 'Service Eligibility');
+        } else if (selector === '.training-entry') {
+            updateEntryNumbers('.training-entry', '.entry-title', 'Learning and Development');
+        }
+
         saveFormDraft();
     }
 }
@@ -3249,6 +3364,12 @@ function saveFormDraft() {
     const fields = form.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not([name$="[]"]), select:not([name$="[]"]), textarea:not([name$="[]"])');
     fields.forEach(field => {
         if (!field.name) return;
+
+        if (field.type === "checkbox") {
+            data.simple[field.name] = field.checked ? "1" : "";
+            return;
+        }
+
         data.simple[field.name] = field.value;
     });
 
@@ -3262,11 +3383,25 @@ function restoreSimpleFields(form, data) {
         const field = form.querySelector(`[name="${name}"]`);
         if (!field) return;
 
+        if (field.type === "checkbox") {
+            field.checked = data.simple[name] === "1";
+            return;
+        }
+
         const currentValue = (field.value || "").trim();
         if (currentValue !== "") return;
 
         field.value = data.simple[name];
+        forceUppercaseValue(field);
     });
+
+    if (typeof toggleMiddleNameField === "function") {
+        toggleMiddleNameField();
+    }
+
+    if (typeof toggleTelephoneField === "function") {
+        toggleTelephoneField();
+    }
 }
 
 function containerHasPopulatedInputs(selector) {
@@ -3290,6 +3425,47 @@ function clearContainer(selector) {
     }
 }
 
+function getUppercaseCapableField(field) {
+    if (!field || !field.name) return false;
+
+    const tagName = (field.tagName || '').toUpperCase();
+    if (tagName === 'SELECT') return false;
+
+    const excludedTypes = ["email", "date", "number", "hidden", "file", "checkbox", "radio"];
+    if (excludedTypes.includes((field.type || "").toLowerCase())) return false;
+
+    const excludedNames = [
+        "email", "mobile", "telephone",
+        "umid", "philsys", "pagibig", "tin", "philhealth", "agency_employee",
+        "r_zip", "p_zip", "height", "weight",
+        "rating[]", "hours[]", "year_graduated[]", "license_number[]"
+    ];
+
+    return !excludedNames.includes(field.name);
+}
+
+function forceUppercaseValue(field) {
+    if (!getUppercaseCapableField(field)) return;
+    const uppercased = (field.value || "").toUpperCase();
+    if (field.value !== uppercased) {
+        field.value = uppercased;
+    }
+}
+
+function applyUppercaseToContainer(container) {
+    if (!container) return;
+    container.querySelectorAll("input, textarea").forEach(forceUppercaseValue);
+}
+
+function updateEntryNumbers(selector, titleClass, labelText) {
+    document.querySelectorAll(selector).forEach((entry, index) => {
+        const title = entry.querySelector(titleClass);
+        if (title) {
+            title.textContent = `${labelText} #${index + 1}`;
+        }
+    });
+}
+
 function addEducation(data = {}) {
     const container = document.getElementById("education-container");
     if (!container) return;
@@ -3297,6 +3473,7 @@ function addEducation(data = {}) {
     const div = document.createElement("div");
     div.classList.add("education-entry", "education-box");
     div.innerHTML = `
+        <div class="entry-title">EDUCATIONAL BACKGROUND #1</div>
         <div class="education-grid">
             <div>
                 <label>Level</label>
@@ -3358,6 +3535,8 @@ function addEducation(data = {}) {
     div.querySelector('[name="year_graduated[]"]').value = data.year_graduated || "";
     div.querySelector('[name="honors[]"]').value = data.honors || "";
 
+    applyUppercaseToContainer(div);
+    updateEntryNumbers('.education-entry', '.entry-title', 'Educational Background');
     saveFormDraft();
 }
 
@@ -3368,6 +3547,7 @@ function addEligibility(data = {}) {
     const div = document.createElement("div");
     div.classList.add("eligibility-entry", "eligibility-box");
     div.innerHTML = `
+        <div class="entry-title">SERVICE ELIGIBILITY #1</div>
         <div class="eligibility-grid">
             <div>
                 <label>Career Service / CSC / CES</label>
@@ -3417,6 +3597,8 @@ function addEligibility(data = {}) {
     div.querySelector('[name="license_number[]"]').value = data.license_number || "";
     div.querySelector('[name="valid_until[]"]').value = data.valid_until || "";
 
+    applyUppercaseToContainer(div);
+    updateEntryNumbers('.eligibility-entry', '.entry-title', 'Service Eligibility');
     saveFormDraft();
 }
 
@@ -3427,6 +3609,7 @@ function addTraining(data = {}) {
     const div = document.createElement("div");
     div.classList.add("training-entry", "training-box");
     div.innerHTML = `
+        <div class="entry-title">LEARNING AND DEVELOPMENT #1</div>
         <div class="training-grid">
             <div>
                 <label>Training Title</label>
@@ -3470,6 +3653,8 @@ function addTraining(data = {}) {
     div.querySelector('[name="type[]"]').value = data.type || "";
     div.querySelector('[name="sponsor[]"]').value = data.sponsor || "";
 
+    applyUppercaseToContainer(div);
+    updateEntryNumbers('.training-entry', '.entry-title', 'Learning and Development');
     saveFormDraft();
 }
 
@@ -3518,6 +3703,10 @@ function restoreDraft() {
             addTraining();
         }
     }
+
+    updateEntryNumbers('.education-entry', '.entry-title', 'Educational Background');
+    updateEntryNumbers('.eligibility-entry', '.entry-title', 'Service Eligibility');
+    updateEntryNumbers('.training-entry', '.entry-title', 'Learning and Development');
 }
 
 function clearDraft() {
@@ -3629,7 +3818,13 @@ function validateSingleField(input) {
     switch (name) {
         case "surname":
         case "firstname":
+            if (value === "") return markInvalid("This field is required.");
+            if (!isLettersOnly(value)) return markInvalid("Letters only.");
+            return true;
+
         case "middlename":
+            const noMiddleName = form.querySelector('[name="no_middlename"]')?.checked;
+            if (noMiddleName) return true;
             if (value === "") return markInvalid("This field is required.");
             if (!isLettersOnly(value)) return markInvalid("Letters only.");
             return true;
@@ -3732,6 +3927,8 @@ function validateSingleField(input) {
             return true;
 
         case "telephone":
+            const noTelephone = form.querySelector('[name="no_telephone"]')?.checked;
+            if (noTelephone) return true;
             if (value === "") return markInvalid("This field is required.");
             if (!isValidTelephone(value)) {
                 return markInvalid("Invalid telephone number.");
@@ -3863,6 +4060,38 @@ function setUnsavedState(state) {
     }
 }
 
+function toggleMiddleNameField() {
+    const middleNameInput = document.getElementById("middlename");
+    const noMiddleNameCheckbox = document.getElementById("no_middlename");
+    if (!middleNameInput || !noMiddleNameCheckbox) return;
+
+    if (noMiddleNameCheckbox.checked) {
+        middleNameInput.value = "";
+        middleNameInput.disabled = true;
+        middleNameInput.style.background = "#d9d9d9";
+        clearFieldErrorState(middleNameInput);
+    } else {
+        middleNameInput.disabled = false;
+        middleNameInput.style.background = "#e9e9ee";
+    }
+}
+
+function toggleTelephoneField() {
+    const telephoneInput = document.getElementById("telephone");
+    const noTelephoneCheckbox = document.getElementById("no_telephone");
+    if (!telephoneInput || !noTelephoneCheckbox) return;
+
+    if (noTelephoneCheckbox.checked) {
+        telephoneInput.value = "";
+        telephoneInput.disabled = true;
+        telephoneInput.style.background = "#d9d9d9";
+        clearFieldErrorState(telephoneInput);
+    } else {
+        telephoneInput.disabled = false;
+        telephoneInput.style.background = "#e9e9ee";
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("editModal");
 
@@ -3882,13 +4111,40 @@ document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("editRecordForm");
     if (!form) return;
 
+    const noMiddleNameCheckbox = document.getElementById("no_middlename");
+    const noTelephoneCheckbox = document.getElementById("no_telephone");
+
     restoreDraft();
+    toggleMiddleNameField();
+    toggleTelephoneField();
+    applyUppercaseToContainer(form);
+    updateEntryNumbers('.education-entry', '.entry-title', 'Educational Background');
+    updateEntryNumbers('.eligibility-entry', '.entry-title', 'Service Eligibility');
+    updateEntryNumbers('.training-entry', '.entry-title', 'Learning and Development');
     updateProgress(0);
     setUnsavedState(false);
+
+    if (noMiddleNameCheckbox) {
+        noMiddleNameCheckbox.addEventListener("change", function () {
+            toggleMiddleNameField();
+            saveFormDraft();
+            setUnsavedState(true);
+        });
+    }
+
+    if (noTelephoneCheckbox) {
+        noTelephoneCheckbox.addEventListener("change", function () {
+            toggleTelephoneField();
+            saveFormDraft();
+            setUnsavedState(true);
+        });
+    }
 
     form.addEventListener("input", function(e) {
         const field = e.target;
         if (!field.matches("input, select, textarea")) return;
+
+        forceUppercaseValue(field);
 
         if (["umid", "philsys", "pagibig", "tin", "philhealth", "agency_employee"].includes(field.name)) {
             const cleaned = sanitizeIdNumber(field.value);
@@ -3963,6 +4219,8 @@ const citizenship = document.getElementById("citizenship");
 const dualCountry = document.querySelector('[name="dual_country"]');
 
 function toggleDual() {
+  if (!citizenship || !dualCountry) return;
+
   if (citizenship.value === "Dual Citizen") {
     dualCountry.disabled = false;
     dualCountry.classList.remove("disabled-look");
@@ -3973,13 +4231,15 @@ function toggleDual() {
   }
 }
 
-citizenship.addEventListener("change", toggleDual);
-toggleDual(); // run on load
+if (citizenship && dualCountry) {
+  citizenship.addEventListener("change", toggleDual);
+  toggleDual();
+}
 
 const sameAsResidentAddress = document.getElementById("sameAsResidentAddress");
 
-function copyResidentToPermanent() {
-  const pairs = [
+function getAddressFieldPairs() {
+  return [
     ["r_house1", "p_house1"],
     ["r_street", "p_street"],
     ["r_subdivision", "p_subdivision"],
@@ -3988,8 +4248,10 @@ function copyResidentToPermanent() {
     ["r_province", "p_province"],
     ["r_zip", "p_zip"]
   ];
+}
 
-  pairs.forEach(([residentName, permanentName]) => {
+function copyResidentToPermanent() {
+  getAddressFieldPairs().forEach(([residentName, permanentName]) => {
     const residentField = document.querySelector(`[name="${residentName}"]`);
     const permanentField = document.querySelector(`[name="${permanentName}"]`);
 
@@ -3999,10 +4261,22 @@ function copyResidentToPermanent() {
   });
 }
 
+function clearPermanentAddress() {
+  getAddressFieldPairs().forEach(([, permanentName]) => {
+    const permanentField = document.querySelector(`[name="${permanentName}"]`);
+
+    if (permanentField) {
+      permanentField.value = "";
+    }
+  });
+}
+
 if (sameAsResidentAddress) {
   sameAsResidentAddress.addEventListener("change", function () {
     if (this.checked) {
       copyResidentToPermanent();
+    } else {
+      clearPermanentAddress();
     }
   });
 

@@ -24,11 +24,17 @@ if (isset($_POST['create'])) {
     if (empty($username) || empty($email) || empty($password)) {
         $message = "Please fill in all fields.";
         $messageType = "error";
+    } elseif (strlen($username) < 3) {
+        $message = "Username must be at least 3 characters.";
+        $messageType = "error";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email format.";
         $messageType = "error";
     } elseif (strlen($password) < 6) {
         $message = "Password must be at least 6 characters.";
+        $messageType = "error";
+    } elseif (!in_array($role, ['user', 'admin'], true)) {
+        $message = "Invalid role selected.";
         $messageType = "error";
     } else {
         $check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
@@ -48,6 +54,9 @@ if (isset($_POST['create'])) {
             if ($stmt->execute()) {
                 $messageType = "success";
                 $message = "Account created successfully!";
+
+                // Clear form after success
+                $_POST = [];
             } else {
                 $message = "Error creating account.";
                 $messageType = "error";
@@ -66,7 +75,7 @@ if (isset($_POST['create'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Account</title>
+    <title>Create Account</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
@@ -79,113 +88,215 @@ if (isset($_POST['create'])) {
         }
 
         body {
-            background: #e9e9e9;
             min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(116, 163, 112, 0.22), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(34, 54, 30, 0.18), transparent 28%),
+                linear-gradient(135deg, #eef2ea 0%, #dfe8da 100%);
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 20px;
-            overflow-x: hidden;
+            padding: 28px 14px;
+            color: #1f2f1e;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 760px;
         }
 
         .wrapper {
             width: 100%;
-            max-width: 600px;
-            background: #f5f5f5;
-            border: 3px solid #2d4725;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(34, 54, 30, 0.14);
             border-radius: 28px;
             overflow: hidden;
-            margin: 20px 0;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.12);
+            backdrop-filter: blur(6px);
         }
 
         .header {
             position: relative;
-            background: linear-gradient(90deg, #1f4a18, #173714);
+            background: linear-gradient(135deg, #22361e 0%, #2f4b2b 100%);
             color: #fff;
-            text-align: center;
-            padding: 24px 18px;
+            padding: 30px 24px 26px;
         }
 
-        .header h1 {
-            font-size: 28px;
-            line-height: 1.2;
-            padding: 0 45px;
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
         }
 
         .home-btn {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.14);
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            background: rgba(255, 255, 255, 0.16);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 16px;
             text-decoration: none;
-            transition: 0.2s ease;
+            transition: 0.25s;
+            flex-shrink: 0;
         }
 
         .home-btn:hover {
             background: rgba(255, 255, 255, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+
+        .header h1 {
+            font-size: 31px;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .header p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.88);
+            max-width: 580px;
         }
 
         .content {
-            padding: 25px 30px;
+            padding: 26px;
         }
 
         .message {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
             font-size: 14px;
-            line-height: 1.4;
-            word-wrap: break-word;
+            line-height: 1.6;
+            border: 1px solid transparent;
+            font-weight: 600;
+        }
+
+        .message i {
+            margin-top: 2px;
         }
 
         .message.success {
-            background: #dde4da;
-            color: #1f5f1f;
+            background: #edf7ec;
+            color: #1d5a1f;
+            border-color: #bfd8bc;
         }
 
         .message.error {
-            background: #f3dede;
-            color: #8a1f1f;
+            background: #fff1f1;
+            color: #a12828;
+            border-color: #efc5c5;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background: #f5f8f3;
+            border: 1px solid #d9e4d5;
+            border-radius: 18px;
+            padding: 16px 14px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #607260;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a341d;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
         }
 
         .form-group {
-            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
         }
 
         label {
             display: block;
-            font-weight: bold;
-            margin-bottom: 6px;
-            font-size: 15px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #22361e;
+            font-size: 14px;
+        }
+
+        .input-wrap {
+            position: relative;
         }
 
         input,
         select {
             width: 100%;
-            min-height: 48px;
-            padding: 12px;
-            border-radius: 10px;
-            border: 2px solid #8e8e8e;
+            min-height: 54px;
+            padding: 14px 16px;
+            border: 1.5px solid #c8d4c2;
+            border-radius: 16px;
+            background: #fbfcfa;
+            font-size: 15px;
+            color: #203120;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        input:focus,
+        select:focus {
             outline: none;
-            font-size: 16px;
+            border-color: #5f8a59;
+            box-shadow: 0 0 0 4px rgba(95, 138, 89, 0.14);
+            background: #fff;
         }
 
-        .input-blue {
-            background: #cfd8e7;
+        select {
+            appearance: none;
+            cursor: pointer;
+            padding-right: 46px;
         }
 
-        .input-yellow {
-            background: #dfd7b3;
+        .select-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #607260;
+            pointer-events: none;
+            font-size: 14px;
         }
 
         .password-wrap {
@@ -193,194 +304,257 @@ if (isset($_POST['create'])) {
         }
 
         .password-wrap input {
-            padding-right: 45px;
+            padding-right: 48px;
         }
 
         .toggle-password {
             position: absolute;
-            right: 12px;
+            right: 16px;
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
-            color: #333;
+            color: #4c5e4d;
             font-size: 15px;
+            border: none;
+            background: transparent;
+        }
+
+        .toggle-password:hover {
+            color: #000;
+        }
+
+        .helper-box {
+            background: linear-gradient(180deg, #f7faf5 0%, #eff5ec 100%);
+            border: 1px solid #d5e1d1;
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 2px;
+        }
+
+        .helper-box-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #547054;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 10px;
+        }
+
+        .helper-row {
+            font-size: 14px;
+            color: #253625;
+            line-height: 1.6;
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: center;
+            margin-top: 26px;
         }
 
         .btn {
-            width: 100%;
-            max-width: 220px;
-            background: #98b38e;
             border: none;
-            padding: 14px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 16px;
+            border-radius: 16px;
+            padding: 15px 24px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
-            transition: 0.2s ease;
-            display: block;
-            margin: 20px auto 0;
+            transition: transform .15s ease, box-shadow .2s ease;
+            min-width: 240px;
+            color: #fff;
+            background: linear-gradient(135deg, #2f6a28 0%, #214b1a 100%);
+            box-shadow: 0 10px 22px rgba(33, 75, 26, 0.18);
         }
 
         .btn:hover {
-            background: #87a57d;
+            transform: translateY(-1px);
+            box-shadow: 0 14px 26px rgba(33, 75, 26, 0.24);
+        }
+
+        .footer-note {
+            margin-top: 18px;
+            font-size: 12.5px;
+            color: #667767;
+            line-height: 1.6;
+            text-align: center;
         }
 
         @media (max-width: 768px) {
-            body {
-                padding: 14px;
-            }
-
-            .wrapper {
-                border-radius: 22px;
-                margin: 10px 0;
+            .stats,
+            .form-grid {
+                grid-template-columns: 1fr;
             }
 
             .content {
-                padding: 22px 20px;
+                padding: 20px;
             }
 
             .header {
-                padding: 20px 16px;
+                padding: 24px 20px 22px;
             }
 
             .header h1 {
-                font-size: 24px;
-                padding: 0 42px;
+                font-size: 26px;
             }
         }
 
         @media (max-width: 480px) {
             body {
-                padding: 10px;
+                padding: 14px 10px;
             }
 
             .wrapper {
-                border-width: 2px;
-                border-radius: 18px;
-            }
-
-            .header {
-                padding: 18px 14px;
+                border-radius: 22px;
             }
 
             .header h1 {
-                font-size: 20px;
-                padding: 0 38px;
+                font-size: 22px;
             }
 
-            .home-btn {
-                width: 34px;
-                height: 34px;
-                left: 10px;
-                font-size: 14px;
-            }
-
-            .content {
-                padding: 18px 14px;
-            }
-
-            label {
-                font-size: 14px;
+            .header p {
+                font-size: 13px;
             }
 
             input,
-            select {
-                min-height: 46px;
-                font-size: 15px;
-                padding: 10px 12px;
+            select,
+            .btn {
+                min-height: 50px;
+                font-size: 14px;
+            }
+
+            .home-btn {
+                width: 38px;
+                height: 38px;
             }
 
             .btn {
-                width: 100%;
-                max-width: 100%;
-                padding: 13px;
-                font-size: 15px;
-                border-radius: 14px;
-            }
-
-            .message {
-                font-size: 13px;
-                padding: 10px;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .header h1 {
-                font-size: 18px;
-            }
-
-            .content {
-                padding: 14px 12px;
+                min-width: 100%;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <div class="header">
-        <a href="../dashboard/dashboard.php" class="home-btn" title="Home">
-            <i class="fa-solid fa-house"></i>
-        </a>
-        <h1>Add User Account</h1>
-    </div>
+<div class="page">
+    <div class="wrapper">
+        <div class="header">
+            <div class="header-top">
+                <a href="../dashboard/dashboard.php" class="home-btn" title="Home">
+                    <i class="fa-solid fa-house"></i>
+                </a>
 
-    <div class="content">
-        <?php if ($message): ?>
-            <div class="message <?php echo $messageType; ?>">
-                <?php echo $message; ?>
-            </div>
-        <?php endif; ?>
-
-        <form method="POST">
-            <div class="form-group">
-                <label>Username</label>
-                <input
-                    type="text"
-                    name="username"
-                    class="input-blue"
-                    value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label>Email</label>
-                <input
-                    type="email"
-                    name="email"
-                    class="input-yellow"
-                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label>Password</label>
-                <div class="password-wrap">
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        class="input-blue"
-                        required
-                    >
-                    <span class="toggle-password" onclick="togglePassword()">
-                        <i id="eyeIcon" class="fa-solid fa-eye-slash"></i>
-                    </span>
+                <div class="header-badge">
+                    <i class="fa-solid fa-user-plus"></i>
+                    Account Creation
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Role</label>
-                <select name="role" class="input-yellow">
-                    <option value="user" <?php echo (($_POST['role'] ?? '') === 'user') ? 'selected' : ''; ?>>User</option>
-                    <option value="admin" <?php echo (($_POST['role'] ?? '') === 'admin') ? 'selected' : ''; ?>>Admin</option>
-                </select>
+            <h1>Add User Account</h1>
+            <p>
+                Create a new account for a user or admin. Fill in the account details below and choose the correct role before saving.
+            </p>
+        </div>
+
+        <div class="content">
+            <?php if ($message): ?>
+                <div class="message <?php echo $messageType; ?>">
+                    <i class="fa-solid <?php echo $messageType === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'; ?>"></i>
+                    <div><?php echo htmlspecialchars($message); ?></div>
+                </div>
+            <?php endif; ?>
+
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">Action</div>
+                    <div class="stat-value">Create</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Access Level</div>
+                    <div class="stat-value">Admin Only</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Roles</div>
+                    <div class="stat-value">User / Admin</div>
+                </div>
             </div>
 
-            <button type="submit" name="create" class="btn">Create Account</button>
-        </form>
+            <form method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
+                            placeholder="Enter username"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
+                            placeholder="Enter email address"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-wrap">
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Enter password"
+                                required
+                            >
+                            <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Toggle password visibility">
+                                <i id="eyeIcon" class="fa-solid fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <div class="input-wrap">
+                            <select name="role" id="role">
+                                <option value="user" <?php echo (($_POST['role'] ?? '') === 'user') ? 'selected' : ''; ?>>User</option>
+                                <option value="admin" <?php echo (($_POST['role'] ?? '') === 'admin') ? 'selected' : ''; ?>>Admin</option>
+                            </select>
+                            <span class="select-icon">
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full">
+                        <div class="helper-box">
+                            <div class="helper-box-title">Account Creation Notes</div>
+                            <div class="helper-row">
+                                Password must be at least 6 characters long. Username and email must be unique. Choose <strong>User</strong> for regular accounts and <strong>Admin</strong> for administrator access.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" name="create" class="btn">
+                        <i class="fa-solid fa-plus"></i>
+                        Create Account
+                    </button>
+                </div>
+
+                <div class="footer-note">
+                    Double-check the selected role before creating the account.
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
